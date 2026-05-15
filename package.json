@@ -53,6 +53,14 @@
       "!gpu-info.txt",
       "!fps-info.txt"
     ],
+    "asarUnpack": [
+      "*.mp3",
+      "*.mp4",
+      "*.webm",
+      "*.wav",
+      "*.ogg",
+      "audios/**/*"
+    ],
     "extraResources": [
       {
         "from": "config.json",
