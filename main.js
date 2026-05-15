@@ -672,10 +672,14 @@ function createWindow() {
     }
     
     const promosJson = JSON.stringify(promoFiles);
+    // Ruta absoluta de promos para construir URLs file:// correctas
+    // (cuando esta empaquetado, promos esta en resources/, no en el asar)
+    const promosBaseUrl = 'file:///' + promosDir.replace(/\\/g, '/') + '/';
     
     await safeExecJs(`
       window.CASINO_CONFIG = ${configJson};
       window.PROMO_FILES = ${promosJson};
+      window.PROMO_BASE_URL = ${JSON.stringify(promosBaseUrl)};
       // Desactivar console.log en produccion para no acumular memoria
       if (!window.CASINO_CONFIG.useTestData) {
         const origLog = console.log;
@@ -701,7 +705,7 @@ function createWindow() {
             video.playsInline = true;
             video.preload = 'metadata';
             const source = document.createElement('source');
-            source.src = 'promos/' + filename;
+            source.src = (window.PROMO_BASE_URL || 'promos/') + filename;
             source.type = filename.toLowerCase().endsWith('.webm') ? 'video/webm' : 'video/mp4';
             video.appendChild(source);
             container.appendChild(video);
