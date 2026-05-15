@@ -29,7 +29,10 @@ app.commandLine.appendSwitch('disable-software-rasterizer');
 // CONFIG
 // ============================================================
 function loadConfig() {
-  const configPath = path.join(__dirname, 'config.json');
+  // En empaquetado, config.json viene como extraResource fuera del asar
+  const configPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'config.json')
+    : path.join(__dirname, 'config.json');
   if (fs.existsSync(configPath)) {
     try {
       return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -51,13 +54,24 @@ let isWinnerActive = false;
 let isPromoActive = false;
 let pendingUpdates = [];
 let dashboardReady = false;
-const PENDING_FILE = path.join(__dirname, 'pending-updates.json');
+
+// ============================================================
+// RUTAS: separar lectura (empaquetadas) de escritura (userData)
+// __dirname dentro de app.asar es de SOLO LECTURA, por eso
+// los archivos que la app escribe (logs, db, pending) van a userData.
+// ============================================================
+// Ruta escribible: %AppData%/Casino Progresivo en Windows,
+// ~/Library/Application Support/Casino Progresivo en Mac, etc.
+const USER_DATA_DIR = app.getPath('userData');
+if (!fs.existsSync(USER_DATA_DIR)) fs.mkdirSync(USER_DATA_DIR, { recursive: true });
+
+const PENDING_FILE = path.join(USER_DATA_DIR, 'pending-updates.json');
 
 // ============================================================
 // LOGGER: escribe a archivo en disco con rotacion diaria
 // Solo loggea errores y eventos importantes, NO debug normal
 // ============================================================
-const LOGS_DIR = path.join(__dirname, 'logs');
+const LOGS_DIR = path.join(USER_DATA_DIR, 'logs');
 if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 
 function getLogFilePath() {
@@ -116,7 +130,7 @@ function cleanOldLogs() {
 // ============================================================
 let db = null;
 let dbReady = false;
-const DB_PATH = path.join(__dirname, 'dashboard.db');
+const DB_PATH = path.join(USER_DATA_DIR, 'dashboard.db');
 let dbSaveTimeout = null;
 let nextPeticionId = 1;
 let nextEventoId = 1;
@@ -563,7 +577,7 @@ function createWindow() {
         ''
       ].join('\n');
       
-      fs.writeFileSync(path.join(__dirname, 'gpu-info.txt'), report);
+      fs.writeFileSync(path.join(USER_DATA_DIR, 'gpu-info.txt'), report);
       logInfo('Diagnostico GPU escrito en gpu-info.txt');
       console.log('[GPU] Diagnostico escrito en gpu-info.txt');
     } catch (e) {
@@ -620,7 +634,7 @@ function createWindow() {
           fpsResultStr || '(no se pudo medir)',
           ''
         ].join('\n');
-        fs.writeFileSync(path.join(__dirname, 'fps-info.txt'), fpsReport);
+        fs.writeFileSync(path.join(USER_DATA_DIR, 'fps-info.txt'), fpsReport);
         logInfo('Medicion FPS escrita en fps-info.txt');
         console.log('[FPS] Medicion escrita en fps-info.txt');
       } catch (e) {
@@ -631,7 +645,10 @@ function createWindow() {
     const configJson = JSON.stringify(config);
     
     // Escanear carpeta promos/ y obtener lista de webm
-    const promosDir = path.join(__dirname, 'promos');
+    // En empaquetado promos/ viene como extraResource fuera del asar
+    const promosDir = app.isPackaged
+      ? path.join(process.resourcesPath, 'promos')
+      : path.join(__dirname, 'promos');
     let promoFiles = [];
     if (fs.existsSync(promosDir)) {
       try {

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Casino Progresivo Race - Dashboard 24/7",
   "main": "main.js",
-  "author": "Casino",
+  "author": {
+    "name": "Casino",
+    "email": "casino@progresivo.com"
+  },
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
@@ -30,16 +33,27 @@
     "files": [
       "main.js",
       "dashboard.html",
-      "config.json",
       "*.png",
       "*.jpg",
       "*.webp",
       "*.svg",
-      "promos/**/*",
       "node_modules/**/*",
       "!dist/**/*",
       "!logs/**/*",
-      "!pending-updates.json"
+      "!pending-updates.json",
+      "!dashboard.db",
+      "!gpu-info.txt",
+      "!fps-info.txt"
+    ],
+    "extraResources": [
+      {
+        "from": "config.json",
+        "to": "config.json"
+      },
+      {
+        "from": "promos",
+        "to": "promos"
+      }
     ],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
