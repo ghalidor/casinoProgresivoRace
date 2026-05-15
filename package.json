@@ -1,16 +1,70 @@
 {
-  "name": "casino-jackpot-dashboard",
+  "name": "casino-progresivo",
   "version": "1.0.0",
-  "description": "Casino progressive jackpot dashboard 24/7 kiosk",
+  "description": "Casino Progresivo Race - Dashboard 24/7",
   "main": "main.js",
+  "author": "Casino",
+  "license": "UNLICENSED",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
   "dependencies": {
     "express": "^4.18.2",
     "sql.js": "^1.10.3"
   },
   "devDependencies": {
-    "electron": "^28.0.0"
+    "electron": "^28.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.casino.progresivo",
+    "productName": "Casino Progresivo",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "dashboard.html",
+      "config.json",
+      "*.png",
+      "*.jpg",
+      "*.webp",
+      "*.svg",
+      "promos/**/*",
+      "node_modules/**/*",
+      "!dist/**/*",
+      "!logs/**/*",
+      "!pending-updates.json"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Casino Progresivo"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "build/icon.png",
+      "category": "public.app-category.entertainment"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.png",
+      "category": "Game"
+    }
   }
 }
