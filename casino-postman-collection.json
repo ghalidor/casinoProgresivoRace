@@ -1,0 +1,122 @@
+{
+  "info": {
+    "name": "Casino Jackpot Dashboard API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "== ENVIAR DATOS ==",
+      "item": [
+        {
+          "name": "Update MINI con monto",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"mini\",\n  \"amount\": 12345.67,\n  \"ganador\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Update MINOR con monto",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"minor\",\n  \"amount\": 5678.99,\n  \"ganador\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "GANADOR MINI",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"mini\",\n  \"amount\": 25000.00,\n  \"ganador\": true,\n  \"maquina\": \"102030\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GANADOR MINOR",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"minor\",\n  \"amount\": 75500.50,\n  \"ganador\": true,\n  \"maquina\": \"105520\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GANADOR MAJOR (moto)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"major\",\n  \"ganador\": true,\n  \"maquina\": \"102030\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GANADOR GRAND (auto)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/update",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sheet\": \"grand\",\n  \"ganador\": true,\n  \"maquina\": \"108800\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "== MONITORING ==",
+      "item": [
+        {
+          "name": "Health check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        },
+        {
+          "name": "Status (debug completo)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/status" }
+        }
+      ]
+    },
+    {
+      "name": "== CONSULTAR DB ==",
+      "item": [
+        {
+          "name": "Historial - ultimas 20",
+          "request": { "method": "GET", "url": "{{baseUrl}}/history?limit=20" }
+        },
+        {
+          "name": "Historial - ultimas 100",
+          "request": { "method": "GET", "url": "{{baseUrl}}/history?limit=100" }
+        },
+        {
+          "name": "Historial - ultimas 500",
+          "request": { "method": "GET", "url": "{{baseUrl}}/history?limit=500" }
+        },
+        {
+          "name": "Estadisticas por hoja",
+          "request": { "method": "GET", "url": "{{baseUrl}}/stats" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "homeViewDurationSec": 60,
+  "promoIntervalSec": 30,
+  "promoDurationSec": 8,
+  "kpiSpeed": 1.0,
+  "useTestData": false,
+  "winnerDelaySec": 5,
+  "winnerModalDurationSec": 12,
+  "modalVideoVolume": 0.7,
+  "bgMusicVolume": 0.3,
+  "httpPort": 3000,
+  "cleanupIntervalMin": 60,
+  "memoryReloadMB": 300,
+  "reloadCheckIntervalSec": 60
+}

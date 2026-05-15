@@ -1,0 +1,873 @@
+/* ============================================================
+   CASINO PROGRESIVOS - ESTILOS PRINCIPALES
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --color-fondo: #0a0a0e;
+  --color-marco-1: #2a2a32;
+  --color-marco-2: #1a1a1e;
+  --color-marco-3: #3a3a44;
+  --color-azul-met: #4a6cb8;
+  --color-azul-claro: #7aa0e0;
+  --color-azul-oscuro: #1a2540;
+
+  --led-cyan: #00d4ff;
+  --led-verde: #5ee85c;
+  --led-amarillo: #ffea00;
+  --led-naranja: #ff8c1a;
+  --led-rojo: #ff2d55;
+  --led-rosa: #ff00aa;
+  --oro: #ffd700;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-fondo);
+  font-family: 'Rajdhani', sans-serif;
+  cursor: none;
+}
+
+/* ============================================================
+   FONDO BASE: fibra de carbono oscura
+   ============================================================ */
+body {
+  background-color: #08080a;
+  background-image:
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px, transparent 4px),
+    repeating-linear-gradient(-45deg,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px, transparent 4px),
+    radial-gradient(ellipse at center,
+      #1a1a24 0%,
+      #08080a 70%);
+}
+
+/* ============================================================
+   ESCENARIO 3D: contenedor principal con perspectiva
+   ============================================================ */
+#escenario {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  perspective: 2500px;
+  perspective-origin: center center;
+  transform-style: preserve-3d;
+}
+
+/* ============================================================
+   HOJAS: cada panel del carrusel
+   ============================================================ */
+.hoja {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.hoja.activa {
+  opacity: 1;
+  visibility: visible;
+  z-index: 5;
+}
+
+/* Contenido interior de cada hoja */
+.hoja-contenido {
+  position: relative;
+  width: 92vw;
+  height: 88vh;
+  max-width: 1800px;
+  max-height: 1000px;
+  display: flex;
+  flex-direction: column;
+  padding: 70px 90px 50px;
+  /* Marco metálico cepillado */
+  background:
+    linear-gradient(135deg,
+      var(--color-marco-3) 0%,
+      var(--color-marco-1) 30%,
+      var(--color-marco-2) 50%,
+      var(--color-marco-1) 70%,
+      var(--color-marco-3) 100%);
+  background-image:
+    /* Trama de cepillado */
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px, transparent 3px),
+    /* Fibra de carbono base */
+    repeating-linear-gradient(45deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 2px,
+      transparent 2px, transparent 6px),
+    repeating-linear-gradient(-45deg,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 2px,
+      transparent 2px, transparent 6px);
+  border-radius: 35px;
+  box-shadow:
+    /* Sombras externas */
+    0 30px 80px rgba(0,0,0,0.95),
+    0 10px 30px rgba(0,0,0,0.7),
+    /* Borde exterior brillante */
+    0 0 0 3px rgba(255,255,255,0.04),
+    /* Sombra interna superior (luz) */
+    inset 0 3px 0 rgba(255,255,255,0.08),
+    /* Sombra interna inferior (oscuridad) */
+    inset 0 -3px 0 rgba(0,0,0,0.5);
+}
+
+/* Brillo difuso superior tipo "reflejo de cristal" */
+.hoja-contenido::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 35%;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.07) 0%,
+    transparent 100%);
+  border-radius: 35px 35px 0 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ============================================================
+   MARCO 3D con esquinas y LEDs
+   ============================================================ */
+.marco-3d {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Esquinas metálicas azules */
+.esquina {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  background:
+    linear-gradient(135deg,
+      #1a3060 0%,
+      #4a78c8 25%,
+      #7aa0e0 40%,
+      #5a88d0 60%,
+      #2a4878 80%,
+      #0a2050 100%);
+  box-shadow:
+    inset 2px 2px 4px rgba(180,210,255,0.5),
+    inset -2px -2px 6px rgba(0,0,0,0.7),
+    0 4px 8px rgba(0,0,0,0.7);
+}
+.e-tl {
+  top: 0; left: 0;
+  clip-path: polygon(0 0, 45% 0, 45% 18%, 18% 18%, 18% 45%, 0 45%);
+  border-top-left-radius: 35px;
+}
+.e-tr {
+  top: 0; right: 0;
+  clip-path: polygon(55% 0, 100% 0, 100% 45%, 82% 45%, 82% 18%, 55% 18%);
+  border-top-right-radius: 35px;
+}
+.e-bl {
+  bottom: 0; left: 0;
+  clip-path: polygon(0 55%, 18% 55%, 18% 82%, 45% 82%, 45% 100%, 0 100%);
+  border-bottom-left-radius: 35px;
+}
+.e-br {
+  bottom: 0; right: 0;
+  clip-path: polygon(82% 55%, 100% 55%, 100% 100%, 55% 100%, 55% 82%, 82% 82%);
+  border-bottom-right-radius: 35px;
+}
+
+/* Tornillos */
+.esquina::before, .esquina::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ccc 0%, #555 50%, #1a1a1a 100%);
+  box-shadow: inset 1px 1px 2px rgba(255,255,255,0.4), inset -1px -1px 2px rgba(0,0,0,0.6);
+}
+.e-tl::before { top: 25px; left: 25px; }
+.e-tr::before { top: 25px; right: 25px; }
+.e-bl::before { bottom: 25px; left: 25px; }
+.e-br::before { bottom: 25px; right: 25px; }
+
+/* LEDs corriendo por el borde interno
+   IMPORTANTE: el borde se queda QUIETO en su sitio (no rota como cuadrado).
+   Lo que se mueve son los COLORES dentro del gradiente conic.
+   Para esto usamos @property + animacion del angulo --angulo-leds. */
+@property --angulo-leds {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.leds-borde {
+  position: absolute;
+  inset: 30px;
+  border-radius: 25px;
+  padding: 4px;
+  background: conic-gradient(from var(--angulo-leds),
+    var(--led-cyan) 0%,
+    var(--led-verde) 20%,
+    var(--led-amarillo) 40%,
+    var(--led-naranja) 60%,
+    var(--led-rosa) 80%,
+    var(--led-cyan) 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: girar-colores-leds 6s linear infinite;
+  filter: blur(1px) drop-shadow(0 0 6px var(--led-cyan)) drop-shadow(0 0 8px var(--led-amarillo));
+  opacity: 0.9;
+  will-change: --angulo-leds;
+  pointer-events: none;
+}
+
+/* Animar el ANGULO del gradiente, no el elemento */
+@keyframes girar-colores-leds {
+  0%   { --angulo-leds: 0deg; }
+  100% { --angulo-leds: 360deg; }
+}
+
+/* Fallback para navegadores sin soporte de @property */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .leds-borde {
+    background: linear-gradient(90deg,
+      var(--led-cyan), var(--led-verde), var(--led-amarillo),
+      var(--led-naranja), var(--led-cyan));
+    background-size: 300% 100%;
+    animation: girar-colores-fallback 5s linear infinite;
+  }
+  @keyframes girar-colores-fallback {
+    0%   { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
+  }
+}
+
+/* ============================================================
+   HEADER de cada hoja: banderas + título metálico
+   ============================================================ */
+.hoja-header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+/* Banderas a cuadros (SVG inyectado por JS) */
+.bandera-svg {
+  display: inline-block;
+  width: 90px;
+  height: 65px;
+  flex-shrink: 0;
+  filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.8));
+  animation: bandera-ondear 2.5s ease-in-out infinite;
+}
+.bandera-svg[data-bandera="der"] {
+  transform: scaleX(-1);
+  animation-delay: -1.25s;
+}
+
+@keyframes bandera-ondear {
+  0%, 100% { transform: skewY(-3deg) skewX(0deg); }
+  25%      { transform: skewY(2deg) skewX(-1deg); }
+  50%      { transform: skewY(-1deg) skewX(0deg); }
+  75%      { transform: skewY(3deg) skewX(1deg); }
+}
+
+/* Título metálico con relieve */
+.titulo-metal {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(70px, 11vw, 160px);
+  letter-spacing: 8px;
+  background: linear-gradient(180deg,
+    #ffffff 0%,
+    #e8e8f0 12%,
+    #c0c0c8 25%,
+    #909098 40%,
+    #4a4a52 55%,
+    #909098 70%,
+    #c8c8d0 85%,
+    #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(2px 2px 0 #1a1a1e)
+    drop-shadow(3px 3px 0 #0a0a0c)
+    drop-shadow(0 6px 12px rgba(0,0,0,0.8));
+  animation: titulo-brillo 4s ease-in-out infinite;
+}
+
+.titulo-metal.grande {
+  font-size: clamp(50px, 8vw, 110px);
+  letter-spacing: 6px;
+}
+
+@keyframes titulo-brillo {
+  0%, 100% { filter: drop-shadow(2px 2px 0 #1a1a1e) drop-shadow(3px 3px 0 #0a0a0c) drop-shadow(0 6px 12px rgba(0,0,0,0.8)); }
+  50%      { filter: drop-shadow(2px 2px 0 #1a1a1e) drop-shadow(3px 3px 0 #0a0a0c) drop-shadow(0 6px 12px rgba(0,0,0,0.8)) drop-shadow(0 0 25px rgba(255,255,255,0.4)); }
+}
+
+/* ============================================================
+   DISPLAY LED (donde van los valores que cambian)
+   ============================================================ */
+.display-led {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  margin: 20px 40px;
+  border-radius: 28px;
+  padding: 8px;
+  /* Marco exterior plateado */
+  background: linear-gradient(180deg,
+    #6a6a76 0%,
+    #2a2a32 50%,
+    #6a6a76 100%);
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.8),
+    inset 0 0 0 2px rgba(0,0,0,0.5);
+}
+
+/* Borde RGB animado */
+.display-borde-rgb {
+  position: absolute;
+  inset: 4px;
+  border-radius: 24px;
+  padding: 5px;
+  background: linear-gradient(90deg,
+    var(--led-cyan) 0%,
+    var(--led-verde) 25%,
+    var(--led-amarillo) 50%,
+    var(--led-naranja) 75%,
+    var(--led-cyan) 100%);
+  background-size: 300% 100%;
+  animation: rgb-flow 5s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  filter: drop-shadow(0 0 6px var(--led-cyan)) drop-shadow(0 0 10px var(--led-amarillo));
+  z-index: 2;
+  pointer-events: none;
+  will-change: background-position;
+}
+
+@keyframes rgb-flow {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 300% 0; }
+}
+
+/* Pantalla negra interna del display */
+.display-pantalla {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at center, #050810 0%, #000 100%);
+  box-shadow:
+    inset 0 0 80px rgba(0,0,0,0.95),
+    inset 0 0 30px rgba(78,221,255,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  overflow: hidden;
+}
+
+/* Patrón de circuitos dentro del display */
+.display-circuitos {
+  position: absolute;
+  inset: 0;
+  background-image:
+    /* Lineas de circuito */
+    linear-gradient(90deg, transparent 49%, rgba(78,221,255,0.12) 50%, transparent 51%),
+    linear-gradient(0deg, transparent 49%, rgba(78,221,255,0.12) 50%, transparent 51%),
+    /* Patrón de puntos hexagonal */
+    radial-gradient(circle at 50% 50%, rgba(78,221,255,0.04) 1px, transparent 2px);
+  background-size: 80px 80px, 80px 80px, 6px 6px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Scanlines tipo CRT */
+.display-pantalla::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+    rgba(0,212,255,0.03) 0px,
+    rgba(0,212,255,0.03) 1px,
+    transparent 1px, transparent 4px);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Texto del valor en soles */
+.valor-soles {
+  position: relative;
+  z-index: 3;
+  font-family: 'VT323', monospace;
+  display: flex;
+  align-items: baseline;
+  gap: 25px;
+  white-space: nowrap;
+}
+
+.prefijo {
+  font-size: clamp(50px, 7vw, 110px);
+  color: var(--led-verde);
+  text-shadow:
+    0 0 15px var(--led-verde),
+    0 0 30px var(--led-verde),
+    0 0 60px rgba(94,232,92,0.5);
+  font-weight: bold;
+}
+
+.numero {
+  font-size: clamp(90px, 13vw, 200px);
+  font-weight: bold;
+  letter-spacing: 8px;
+  animation: led-pulse 3s ease-in-out infinite;
+}
+
+/* Colores del número según el tipo de progresivo */
+.display-led.mini .numero {
+  color: var(--led-verde);
+  text-shadow: 0 0 15px var(--led-verde), 0 0 30px var(--led-verde), 0 0 60px rgba(94,232,92,0.6);
+}
+.display-led.med .numero {
+  color: var(--led-amarillo);
+  text-shadow: 0 0 15px var(--led-amarillo), 0 0 30px var(--led-amarillo), 0 0 60px rgba(255,234,0,0.6);
+}
+.display-led.max .numero {
+  color: var(--led-cyan);
+  text-shadow: 0 0 15px var(--led-cyan), 0 0 30px var(--led-cyan), 0 0 60px rgba(0,212,255,0.7);
+}
+
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.93; }
+}
+
+/* Label del premio */
+.label-premio {
+  position: relative;
+  z-index: 3;
+  font-family: 'VT323', monospace;
+  font-size: clamp(20px, 2.5vw, 36px);
+  color: var(--led-amarillo);
+  letter-spacing: 8px;
+  text-shadow: 0 0 10px var(--led-amarillo), 0 0 20px rgba(255,234,0,0.4);
+  margin-top: 10px;
+}
+
+/* ============================================================
+   INDICADORES INFERIORES (gear, km/h, temp, status)
+   ============================================================ */
+.indicadores {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 40px;
+  margin-top: 25px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 18px;
+  border: 1px solid rgba(78,221,255,0.3);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.05),
+    0 4px 10px rgba(0,0,0,0.5);
+}
+
+.ind-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.ind-lbl {
+  font-size: clamp(14px, 1.4vw, 20px);
+  color: #4eddff;
+  letter-spacing: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ind-val {
+  font-family: 'VT323', monospace;
+  font-size: clamp(22px, 2.4vw, 38px);
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.ind-val.verde    { color: var(--led-verde);    text-shadow: 0 0 10px var(--led-verde); }
+.ind-val.amarillo { color: var(--led-amarillo); text-shadow: 0 0 10px var(--led-amarillo); }
+.ind-val.naranja  { color: var(--led-naranja);  text-shadow: 0 0 10px var(--led-naranja), 0 0 20px var(--led-naranja); }
+.ind-val.cyan     { color: var(--led-cyan);     text-shadow: 0 0 10px var(--led-cyan); }
+
+.ind-item.velocidad {
+  padding: 0 30px;
+  border-left: 1px solid rgba(78,221,255,0.3);
+  border-right: 1px solid rgba(78,221,255,0.3);
+}
+.ind-item.velocidad .ind-val { font-size: clamp(28px, 3vw, 48px); }
+
+/* ============================================================
+   HOJAS BANNER (auto y moto) con imagen de fondo
+   ============================================================ */
+.hoja.banner .hoja-contenido {
+  background-color: var(--color-marco-1);
+}
+
+.banner-fondo {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 35px;
+  z-index: 0;
+  filter: brightness(0.75) contrast(1.1) saturate(1.2);
+}
+
+.banner-auto {
+  /* Imagen de Pexels: F1 racing */
+  background-image: url('https://images.pexels.com/photos/12790463/pexels-photo-12790463.jpeg?auto=compress&cs=tinysrgb&w=1920');
+}
+
+.banner-moto {
+  /* Imagen de Pexels: MotoGP */
+  background-image: url('https://images.pexels.com/photos/2611689/pexels-photo-2611689.jpeg?auto=compress&cs=tinysrgb&w=1920');
+}
+
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(10,10,14,0.5) 0%,
+    rgba(10,10,14,0.2) 30%,
+    rgba(10,10,14,0.6) 80%,
+    rgba(10,10,14,0.9) 100%);
+  border-radius: 35px;
+  z-index: 1;
+}
+
+.hoja.banner .hoja-contenido > * {
+  position: relative;
+  z-index: 2;
+}
+
+.banner-header {
+  margin-top: 20px;
+}
+
+/* Stats centrales del banner */
+.banner-info {
+  position: relative;
+  z-index: 5;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.banner-stats {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding: 40px 70px;
+  background: rgba(0,0,0,0.7);
+  border-radius: 30px;
+  border: 2px solid rgba(78,221,255,0.4);
+  backdrop-filter: blur(15px);
+  box-shadow:
+    0 0 40px rgba(78,221,255,0.3),
+    inset 0 0 30px rgba(0,0,0,0.5);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-num {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(60px, 8vw, 110px);
+  background: linear-gradient(180deg, #fff 0%, #ffd700 50%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));
+  line-height: 1;
+}
+
+.stat-num.live {
+  background: linear-gradient(180deg, #ff2d55 0%, #ff6b00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,45,85,0.7));
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(255,45,85,0.7)); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 35px rgba(255,45,85,1)); transform: scale(1.05); }
+}
+
+.stat-lbl {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(14px, 1.5vw, 22px);
+  color: #aac;
+  letter-spacing: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.stat-sep {
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(180deg, transparent, var(--led-cyan), transparent);
+  box-shadow: 0 0 10px var(--led-cyan);
+}
+
+/* ============================================================
+   PANTALLA DE GANADOR (overlay encima de todo)
+   ============================================================ */
+#pantalla-ganador {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center,
+    rgba(50,30,0,0.85) 0%,
+    rgba(0,0,0,0.97) 70%);
+}
+
+#pantalla-ganador.oculto { display: none; }
+
+#confetti-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Flash de pantalla */
+.ganador-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center,
+    rgba(255,215,0,0.5) 0%,
+    rgba(255,140,0,0.3) 30%,
+    transparent 60%);
+  z-index: 2;
+  animation: ganador-flash 0.4s ease-in-out infinite;
+}
+
+@keyframes ganador-flash {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.05); }
+}
+
+/* Rayos de luz radiales */
+.ganador-rayos {
+  position: absolute;
+  width: 200vmax;
+  height: 200vmax;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%,
+      transparent 0deg,
+      rgba(255,215,0,0.15) 5deg,
+      transparent 10deg,
+      rgba(255,140,0,0.1) 15deg,
+      transparent 20deg);
+  z-index: 2;
+  animation: rayos-rotar 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rayos-rotar {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.ganador-rayos {
+  top: 50%; left: 50%;
+}
+
+/* Contenido central */
+.ganador-contenido {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.ganador-titulo-wrap { position: relative; }
+
+.ganador-titulo {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(60px, 9vw, 140px);
+  color: var(--oro);
+  text-shadow:
+    0 0 30px var(--oro),
+    0 0 60px var(--led-naranja),
+    0 0 100px var(--led-rojo);
+  letter-spacing: 8px;
+  animation: ganador-pulso 0.8s ease-in-out infinite;
+}
+
+@keyframes ganador-pulso {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+.ganador-tipo {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(40px, 5vw, 80px);
+  letter-spacing: 8px;
+  background: linear-gradient(180deg, #fff 0%, #ffd700 50%, #ff8c00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(3px 3px 6px #000);
+}
+
+.ganador-monto-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 30px;
+  font-family: 'VT323', monospace;
+  background: rgba(0,0,0,0.7);
+  padding: 30px 60px;
+  border-radius: 25px;
+  border: 3px solid var(--oro);
+  box-shadow:
+    0 0 60px rgba(255,215,0,0.6),
+    inset 0 0 40px rgba(255,215,0,0.2);
+}
+
+.ganador-soles {
+  font-size: clamp(60px, 7vw, 110px);
+  color: var(--led-verde);
+  text-shadow: 0 0 25px var(--led-verde);
+}
+
+.ganador-monto {
+  font-size: clamp(90px, 12vw, 180px);
+  color: var(--led-verde);
+  text-shadow:
+    0 0 25px var(--led-verde),
+    0 0 50px var(--led-verde),
+    0 0 80px rgba(94,232,92,0.6);
+  font-weight: bold;
+  letter-spacing: 6px;
+}
+
+.ganador-msg {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3vw, 42px);
+  color: #fff;
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px rgba(255,255,255,0.5);
+  animation: msg-fade 2s ease-in-out infinite;
+}
+
+@keyframes msg-fade {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* ============================================================
+   DEBUG y CONTROLES (quitar en producción)
+   ============================================================ */
+#debug {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.8);
+  color: var(--led-verde);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  letter-spacing: 1px;
+  z-index: 1000;
+  border: 1px solid var(--led-verde);
+  pointer-events: none;
+}
+#debug span { color: var(--led-amarillo); font-weight: bold; }
+
+#controles-demo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 400px;
+  justify-content: flex-end;
+  z-index: 1000;
+}
+
+#controles-demo button {
+  background: rgba(74,108,184,0.9);
+  color: white;
+  border: 1px solid #6a8fd8;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+#controles-demo button:hover {
+  background: #6a8fd8;
+  box-shadow: 0 0 10px rgba(74,108,184,0.7);
+}
