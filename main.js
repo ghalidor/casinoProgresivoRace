@@ -59,20 +59,29 @@ let dashboardReady = false;
 // RUTAS: separar lectura (empaquetadas) de escritura (userData)
 // __dirname dentro de app.asar es de SOLO LECTURA, por eso
 // los archivos que la app escribe (logs, db, pending) van a userData.
+// IMPORTANTE: las rutas se inicializan en app.whenReady() porque
+// app.getPath('userData') puede fallar antes de eso.
 // ============================================================
-// Ruta escribible: %AppData%/Casino Progresivo en Windows,
-// ~/Library/Application Support/Casino Progresivo en Mac, etc.
-const USER_DATA_DIR = app.getPath('userData');
-if (!fs.existsSync(USER_DATA_DIR)) fs.mkdirSync(USER_DATA_DIR, { recursive: true });
+let USER_DATA_DIR = null;
+let PENDING_FILE = null;
+let LOGS_DIR = null;
+let DB_PATH = null;
 
-const PENDING_FILE = path.join(USER_DATA_DIR, 'pending-updates.json');
+function initPaths() {
+  USER_DATA_DIR = app.getPath('userData');
+  if (!fs.existsSync(USER_DATA_DIR)) fs.mkdirSync(USER_DATA_DIR, { recursive: true });
+  
+  PENDING_FILE = path.join(USER_DATA_DIR, 'pending-updates.json');
+  LOGS_DIR = path.join(USER_DATA_DIR, 'logs');
+  DB_PATH = path.join(USER_DATA_DIR, 'dashboard.db');
+  
+  if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+}
 
 // ============================================================
 // LOGGER: escribe a archivo en disco con rotacion diaria
 // Solo loggea errores y eventos importantes, NO debug normal
 // ============================================================
-const LOGS_DIR = path.join(USER_DATA_DIR, 'logs');
-if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 
 function getLogFilePath() {
   const d = new Date();
@@ -130,7 +139,6 @@ function cleanOldLogs() {
 // ============================================================
 let db = null;
 let dbReady = false;
-const DB_PATH = path.join(USER_DATA_DIR, 'dashboard.db');
 let dbSaveTimeout = null;
 let nextPeticionId = 1;
 let nextEventoId = 1;
@@ -808,6 +816,9 @@ function startWatchdog(config) {
 // LIFECYCLE
 // ============================================================
 app.whenReady().then(async () => {
+  // CRITICAL: inicializar rutas userData ANTES de cualquier cosa
+  initPaths();
+  
   // Limpiar logs viejos al iniciar
   cleanOldLogs();
   
