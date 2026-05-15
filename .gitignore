@@ -1,0 +1,23 @@
+# Dependencias (se reinstalan con npm install)
+node_modules/
+
+# Instaladores generados (van por Releases, no por repo)
+dist/
+
+# Logs y runtime
+logs/
+pending-updates.json
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Datos sensibles
+.env
+.env.local
