@@ -1,12 +1,13 @@
 {
   "name": "casino-progresivo",
   "version": "1.0.0",
-  "description": "Casino Progresivo Race - Dashboard 24/7",
+  "description": "Casino Progresivo Race - Dashboard 24/7 para jackpots progresivos con sistema de premios MINI, MINOR, MAJOR y GRAND",
   "main": "main.js",
   "author": {
     "name": "Casino",
     "email": "casino@progresivo.com"
   },
+  "homepage": "https://github.com/ghalidor/casinoProgresivoRace",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
@@ -26,6 +27,7 @@
   "build": {
     "appId": "com.casino.progresivo",
     "productName": "Casino Progresivo",
+    "copyright": "Copyright © 2026 Casino Progresivo",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -44,6 +46,7 @@
       "*.ogg",
       "css/**/*",
       "js/**/*",
+      "fonts/**/*",
       "audios/**/*",
       "node_modules/**/*",
       "!dist/**/*",
@@ -73,7 +76,9 @@
     ],
     "win": {
       "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "publisherName": "Casino Progresivo",
+      "fileAssociations": []
     },
     "nsis": {
       "oneClick": false,
@@ -81,7 +86,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Casino Progresivo"
+      "shortcutName": "Casino Progresivo",
+      "installerIcon": "build/icon.png",
+      "uninstallerIcon": "build/icon.png",
+      "installerHeaderIcon": "build/icon.png"
     },
     "mac": {
       "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
