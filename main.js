@@ -708,7 +708,7 @@ function createWindow() {
         logError('Error leyendo carpeta promos: ' + e.message);
       }
     } else {
-      logWarn('Carpeta promos/ no existe - crear y poner .webm dentro');
+      logWarn('Carpeta promos/ no existe - crear y poner videos .mp4 dentro');
     }
     
     const promosJson = JSON.stringify(promoFiles);
