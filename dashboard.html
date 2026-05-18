@@ -54,7 +54,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 0;
   overflow: hidden;
   position: relative;
   z-index: 2;
@@ -2271,7 +2271,7 @@ body.production-mode .reel-strip {
 /* TITULO superior - letrero estilo marquee de casino, con saliente abajo */
 .home-marquee-title {
   position: absolute;
-  top: 135px;
+  top: 12.5vh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -5032,7 +5032,10 @@ function updateProgressLoop(now) {
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => buildShield(SHEETS_DATA[currentSheetIdx]), 150);
+  resizeTimer = setTimeout(() => {
+    buildShield(SHEETS_DATA[currentSheetIdx]);
+    if (typeof homePositionPots === 'function') homePositionPots();
+  }, 150);
 });
 
 // Watcher: si el video ACTIVO se pausa solo (por throttling del browser), lo reanuda
@@ -5314,6 +5317,25 @@ function homePositionPots() {
   place('home-pot-major', majorX, majorY, colW, bigH);
   place('home-pot-minor', minorX, minorY, colW, smallH);
   place('home-pot-mini', miniX, miniY, colW, smallH);
+
+  // AUTO-FIT del ODOMETRO en MINI y MINOR (si desborda, aplica scale)
+  requestAnimationFrame(() => {
+    ['home-pot-mini', 'home-pot-minor'].forEach(id => {
+      const pot = document.getElementById(id);
+      if (!pot) return;
+      const odo = pot.querySelector('.home-odometer');
+      if (!odo) return;
+      odo.style.transform = '';
+      odo.style.transformOrigin = 'center center';
+      const potW = pot.clientWidth;
+      const usable = potW * 0.90;
+      const odoW = odo.scrollWidth;
+      if (odoW > usable && usable > 0) {
+        const s = usable / odoW;
+        odo.style.transform = 'scale(' + s.toFixed(3) + ')';
+      }
+    });
+  });
 
   // BANNER ¡JUEGA YA! - centrado horizontalmente abajo
   const banner = document.getElementById('homePromoBanner');

@@ -41,6 +41,7 @@ function loadConfig() {
     }
   }
   return {
+    windowMode: 'window',
     promoIntervalSec: 30, promoDurationSec: 8, homeViewDurationSec: 60,
     sheetDurationsSec: { mini: 8, minor: 8, major: 8, grand: 8 },
     kpiSpeed: 1.0, useTestData: true, winnerDelaySec: 5, winnerModalDurationSec: 12,
@@ -526,11 +527,23 @@ function flushPendingUpdates() {
 function createWindow() {
   const config = loadConfig();
   
+  // ============================================================
+  // MODO DE VENTANA: 'kiosk' (pantalla completa sin bordes)
+  //                  'window' (con barra de titulo, movible)
+  // Por defecto es 'window' para poder mover entre pantallas.
+  // Se puede cambiar editando config.json o con Ctrl+Shift+K en caliente.
+  // ============================================================
+  const isKiosk = (config.windowMode === 'kiosk');
+  
   mainWindow = new BrowserWindow({
-    fullscreen: true,
+    fullscreen: isKiosk,
     autoHideMenuBar: true,
-    frame: false,
-    kiosk: true,
+    frame: !isKiosk,           // sin frame en kiosko, con frame en ventana
+    kiosk: isKiosk,
+    width: 1600,                // tamaño inicial cuando es ventana
+    height: 900,
+    minWidth: 900,              // mínimo para que entre en 14"
+    minHeight: 550,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -538,6 +551,33 @@ function createWindow() {
       backgroundThrottling: false
     },
     backgroundColor: '#0a0004'
+  });
+
+  // ============================================================
+  // AUTO-RELOAD AL REDIMENSIONAR la ventana.
+  // El diseño tiene muchos elementos que se calculan al cargar
+  // (paths SVG, posicion de pots, runners) y no se reajustan
+  // bien al cambiar tamaño. La forma mas segura de garantizar
+  // que todo quede alineado es hacer reload (igual que Ctrl+Shift+R).
+  // Debounce de 400ms para que solo dispare cuando se termina
+  // de arrastrar/redimensionar (no en cada pixel).
+  // No dispara si hay un ganador activo (igual proteccion que el
+  // reload manual).
+  // ============================================================
+  let resizeReloadTimer = null;
+  mainWindow.on('resize', () => {
+    if (resizeReloadTimer) clearTimeout(resizeReloadTimer);
+    resizeReloadTimer = setTimeout(() => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      if (isWinnerActive) {
+        logWarn('Resize ignorado (ganador activo)');
+        return;
+      }
+      logInfo('Resize detectado - reload automatico para reajustar layout');
+      dashboardReady = false;
+      savePendingToDisk();
+      mainWindow.reload();
+    }, 400);
   });
 
   mainWindow.webContents.on('did-finish-load', async () => {
@@ -848,6 +888,26 @@ app.whenReady().then(async () => {
       mainWindow.reload();
     } else {
       logWarn('Reload manual OMITIDO (ganador activo)');
+    }
+  });
+  
+  // Ctrl+Shift+K: alternar entre kiosko y ventana en caliente
+  // (no reinicia la app, solo cambia la ventana)
+  globalShortcut.register('Ctrl+Shift+K', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    
+    const ahoraEsKiosko = mainWindow.isKiosk();
+    
+    if (ahoraEsKiosko) {
+      // pasar a modo ventana
+      mainWindow.setKiosk(false);
+      mainWindow.setFullScreen(false);
+      logInfo('Modo cambiado a VENTANA (con barra de titulo)');
+    } else {
+      // pasar a modo kiosko
+      mainWindow.setKiosk(true);
+      mainWindow.setFullScreen(true);
+      logInfo('Modo cambiado a KIOSKO (pantalla completa)');
     }
   });
 });
