@@ -47,7 +47,7 @@
       "css/**/*",
       "js/**/*",
       "fonts/**/*",
-      "audios/**/*",
+      "audio/**/*",
       "node_modules/**/*",
       "!dist/**/*",
       "!logs/**/*",
@@ -62,7 +62,7 @@
       "*.webm",
       "*.wav",
       "*.ogg",
-      "audios/**/*"
+      "audio/**/*"
     ],
     "extraResources": [
       {
