@@ -5876,19 +5876,21 @@ function homeStopRunnerLoop() {
   text-align: center;
   z-index: 3;
   box-shadow: 
-    0 0 80px rgba(255,215,0,0.9),
+    0 0 80px var(--winner-accent, rgba(255,215,0,0.9)),
     0 0 200px rgba(255,100,0,0.5),
     inset 0 0 60px rgba(255,215,0,0.15),
     inset 0 0 0 2px rgba(255,215,0,0.4);
 }
 
-/* Marco exterior FIJO (no rotativo) - solo glow estatico */
+/* Marco exterior FIJO (no rotativo) - solo glow estatico.
+   El gradiente combina dorado base con el acento del sheet ganador
+   (--winner-accent) que se setea via JS por sheet. */
 .winner-frame::before {
   content: '';
   position: absolute;
   inset: -8px;
   border-radius: 28px;
-  background: linear-gradient(135deg, #ffd700, #ff6600, #ffd700, #ff8800);
+  background: linear-gradient(135deg, var(--winner-accent, #ffd700), #ff6600, var(--winner-accent, #ffd700), #ff8800);
   z-index: -1;
   opacity: 0.85;
   filter: blur(3px);
@@ -5935,6 +5937,73 @@ function homeStopRunnerLoop() {
 @keyframes trophyBounce {
   0%, 100% { transform: translateX(-50%) translateY(0) rotate(-3deg); }
   50% { transform: translateX(-50%) translateY(-10px) rotate(3deg); }
+}
+
+/* ============================================================
+   SPRITE giratorio en el modal ganador (solo grand/major).
+   Usa las mismas animaciones spX/spY/spX2/spY2 del HOME.
+   ============================================================ */
+.winner-vehicle-box {
+  --winner-sprite-size: 240px;
+  width: var(--winner-sprite-size);
+  height: var(--winner-sprite-size);
+  flex: 0 0 auto;
+  position: relative;
+  display: none;          /* oculto por defecto, JS lo muestra en grand/major */
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 18px var(--winner-accent, #ffd700));
+}
+.winner-vehicle-box.show {
+  display: flex;
+}
+.winner-sprite {
+  /* Reutilizamos --sprite-size porque los keyframes spX/spY usan esa var */
+  --sprite-size: var(--winner-sprite-size);
+  width: var(--sprite-size);
+  height: var(--sprite-size);
+  background-repeat: no-repeat;
+  background-size: calc(var(--sprite-size) * 6) calc(var(--sprite-size) * 6);
+  background-position: 0 0;
+}
+.winner-sprite.winner-moto {
+  background-image: url('moto_sprite.png');
+  animation: spX 0.3s steps(6) infinite, spY 1.8s steps(6) infinite;
+}
+.winner-sprite.winner-car {
+  background-image: url('auto_sprite.png');
+  animation: spX2 0.36s steps(6) infinite, spY2 2.16s steps(6) infinite;
+}
+/* Pedestal de luz debajo del sprite */
+.winner-vehicle-box::after {
+  content: '';
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, var(--winner-accent, #ffd700) 0%, transparent 70%);
+  opacity: 0.6;
+  filter: blur(4px);
+}
+
+/* Wrapper que pone sprite a la izquierda + textos a la derecha en grand/major.
+   En mini/minor el sprite queda display:none, asi que el wrapper se ve solo
+   con el texto (igual que antes). */
+.winner-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  position: relative;
+  z-index: 2;
+}
+.winner-title-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Rayos de luz radiales desde el centro */
@@ -6174,6 +6243,12 @@ function homeStopRunnerLoop() {
 
 <!-- Modal de ganador HTML -->
 <div class="winner-modal" id="winnerModal">
+  <!-- Audio del ganador (suena al aparecer el modal).
+       Si el archivo no existe, no rompe nada, solo no suena. -->
+  <audio id="winnerAudio" preload="auto" style="display:none;">
+    <source src="audio/winner.mp3" type="audio/mpeg">
+  </audio>
+  
   <!-- Confeti canvas -->
   <canvas class="winner-confetti" id="winnerConfetti"></canvas>
   
@@ -6373,8 +6448,20 @@ function homeStopRunnerLoop() {
       <text x="60" y="78" text-anchor="middle" font-family="Orbitron" font-size="14" font-weight="bold" fill="#aa5500">#1</text>
     </svg>
     
-    <div class="winner-title" id="winnerTitle">¡FELICIDADES!</div>
-    <div class="winner-message" id="winnerMessage">Te ganaste el premio</div>
+    <!-- Fila con sprite + texto del titulo.
+         El sprite arranca display:none y JS lo activa para grand/major. -->
+    <div class="winner-title-row">
+      <div class="winner-vehicle-box" id="winnerVehicleBoxLeft">
+        <div class="winner-sprite" id="winnerSpriteLeft"></div>
+      </div>
+      <div class="winner-title-text">
+        <div class="winner-title" id="winnerTitle">¡FELICIDADES!</div>
+        <div class="winner-message" id="winnerMessage">Te ganaste el premio</div>
+      </div>
+      <div class="winner-vehicle-box" id="winnerVehicleBoxRight">
+        <div class="winner-sprite" id="winnerSpriteRight"></div>
+      </div>
+    </div>
 
     <!-- MONTO con SVG decorativo de fondo -->
     <div class="winner-amount" id="winnerAmount" style="display:none;">
@@ -6566,6 +6653,67 @@ function homeStopRunnerLoop() {
     
     titleEl.textContent = '¡' + titles[sheetId] + '!';
     msgEl.textContent = messages[sheetId];
+
+    // ============================================================
+    // ACENTO DE COLOR por sheet (se aplica al borde del modal,
+    // glow exterior y al brillo del sprite). El dorado base se
+    // mantiene en banderas, trofeo y rayos.
+    // ============================================================
+    const accents = {
+      mini: '#00ff66',
+      minor: '#ff0033',
+      major: '#ffaa00',
+      grand: '#00e5d4'
+    };
+    modal.style.setProperty('--winner-accent', accents[sheetId] || '#ffd700');
+
+    // ============================================================
+    // SPRITE giratorio (auto/moto) al lado del titulo en grand/major.
+    // Mini/minor: ocultos (no son vehiculo, son efectivo).
+    // ============================================================
+    const boxL = document.getElementById('winnerVehicleBoxLeft');
+    const boxR = document.getElementById('winnerVehicleBoxRight');
+    const sprL = document.getElementById('winnerSpriteLeft');
+    const sprR = document.getElementById('winnerSpriteRight');
+    if (boxL && boxR && sprL && sprR) {
+      // Resetear clases de sprite
+      sprL.className = 'winner-sprite';
+      sprR.className = 'winner-sprite';
+      boxL.classList.remove('show');
+      boxR.classList.remove('show');
+      if (sheetId === 'grand') {
+        sprL.classList.add('winner-car');
+        sprR.classList.add('winner-car');
+        boxL.classList.add('show');
+        boxR.classList.add('show');
+      } else if (sheetId === 'major') {
+        sprL.classList.add('winner-moto');
+        sprR.classList.add('winner-moto');
+        boxL.classList.add('show');
+        boxR.classList.add('show');
+      }
+      // En mini/minor ambos quedan ocultos (no .show)
+    }
+
+    // ============================================================
+    // AUDIO del ganador. Si el archivo no existe, falla silencioso.
+    // Volumen segun config (modalVideoVolume).
+    // ============================================================
+    const winnerAudio = document.getElementById('winnerAudio');
+    if (winnerAudio) {
+      try {
+        winnerAudio.currentTime = 0;
+        winnerAudio.volume = (window.CASINO_CONFIG && window.CASINO_CONFIG.modalVideoVolume !== undefined)
+          ? window.CASINO_CONFIG.modalVideoVolume
+          : 0.7;
+        const playPromise = winnerAudio.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch(e => console.log('[WINNER] Audio no disponible:', e.message));
+        }
+      } catch (e) {
+        console.log('[WINNER] Error reproduciendo audio:', e.message);
+      }
+    }
     
     if (sheetId === 'mini' || sheetId === 'minor') {
       // Marcar el modal con el sheet para que el loop globalAnimate
@@ -6631,6 +6779,11 @@ function homeStopRunnerLoop() {
       if (window.__winnerCountdownInterval) {
         clearInterval(window.__winnerCountdownInterval);
         window.__winnerCountdownInterval = null;
+      }
+      // Detener audio del ganador al cerrar el modal
+      const wa = document.getElementById('winnerAudio');
+      if (wa) {
+        try { wa.pause(); wa.currentTime = 0; } catch (e) {}
       }
     }, duration);
     
