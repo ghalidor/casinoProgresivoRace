@@ -185,7 +185,11 @@ async function initDatabase() {
         ip_origen TEXT,
         fecha_registro TEXT NOT NULL,
         procesado INTEGER DEFAULT 0,
-        encolado INTEGER DEFAULT 0
+        encolado INTEGER DEFAULT 0,
+        endpoint TEXT NOT NULL DEFAULT 'update',
+        posicion INTEGER,
+        cod_sala TEXT,
+        id_race INTEGER
       );
       CREATE TABLE IF NOT EXISTS eventos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -215,23 +219,27 @@ async function initDatabase() {
   }
 }
 
-function guardarPeticion(data, ipOrigen, encolado = false) {
+function guardarPeticion(data, ipOrigen, encolado = false, endpoint = 'update') {
   if (!db || !dbReady) return null;
   try {
     const id = nextPeticionId++;
     const stmt = db.prepare(`
-      INSERT INTO peticiones (id, sheet, amount, ganador, maquina, ip_origen, fecha_registro, encolado)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO peticiones (id, sheet, amount, ganador, maquina, ip_origen, fecha_registro, encolado, endpoint, posicion, cod_sala, id_race)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run([
       id,
       data.sheet,
-      data.amount || null,
+      data.amount !== undefined && data.amount !== null ? data.amount : null,
       data.ganador ? 1 : 0,
       data.maquina || null,
       ipOrigen || 'unknown',
       new Date().toISOString(),
-      encolado ? 1 : 0
+      encolado ? 1 : 0,
+      endpoint,
+      (typeof data.posicion === 'number') ? data.posicion : null,
+      data.codSala || null,
+      (typeof data.idRace === 'number') ? data.idRace : null
     ]);
     stmt.free();
     scheduleDbSave();
@@ -372,17 +380,71 @@ function startHttpServer(config) {
     const data = req.body;
     const ipOrigen = req.ip || req.connection.remoteAddress || 'unknown';
     
+    // Validacion de campos obligatorios
     if (!data || !data.sheet) {
       return res.status(400).json({ error: 'sheet es requerido' });
     }
     if (!['mini','minor','major','grand'].includes(data.sheet)) {
       return res.status(400).json({ error: 'sheet debe ser: mini, minor, major o grand' });
     }
+    if (!data.codSala || typeof data.codSala !== 'string') {
+      return res.status(400).json({ error: 'codSala es requerido (string)' });
+    }
+    if (data.idRace === undefined || data.idRace === null || !Number.isInteger(data.idRace)) {
+      return res.status(400).json({ error: 'idRace es requerido (entero)' });
+    }
+    // posicion es opcional pero si viene debe ser numero entero
+    if (data.posicion !== undefined && data.posicion !== null && !Number.isInteger(data.posicion)) {
+      return res.status(400).json({ error: 'posicion debe ser entero (si se envia)' });
+    }
     
     // Guardar en SQLite ANTES de procesar (siempre se registra)
-    const peticionId = guardarPeticion(data, ipOrigen, false);
+    const peticionId = guardarPeticion(data, ipOrigen, false, 'update');
     
     sendUpdateToDashboard(data, peticionId);
+    
+    res.json({ 
+      ok: true, 
+      peticionId: peticionId,
+      dashboardReady: dashboardReady, 
+      queueSize: pendingUpdates.length 
+    });
+  });
+
+  // ============================================================
+  // ENDPOINT /reinicio
+  // Reinicia el odometro de mini o minor al amount enviado, sin
+  // animacion (snap directo). No es ganador, no dispara modal.
+  // Si hay modal ganador del mismo sheet activo, se encola hasta
+  // que cierre. Si es de otro sheet, se procesa inmediatamente.
+  // ============================================================
+  httpApp.post('/reinicio', (req, res) => {
+    const data = req.body;
+    const ipOrigen = req.ip || req.connection.remoteAddress || 'unknown';
+    
+    if (!data || !data.sheet) {
+      return res.status(400).json({ error: 'sheet es requerido' });
+    }
+    if (!['mini','minor'].includes(data.sheet)) {
+      return res.status(400).json({ error: 'sheet debe ser: mini o minor' });
+    }
+    if (data.amount === undefined || data.amount === null || typeof data.amount !== 'number') {
+      return res.status(400).json({ error: 'amount es requerido (numero decimal)' });
+    }
+    if (!data.codSala || typeof data.codSala !== 'string') {
+      return res.status(400).json({ error: 'codSala es requerido (string)' });
+    }
+    if (data.idRace === undefined || data.idRace === null || !Number.isInteger(data.idRace)) {
+      return res.status(400).json({ error: 'idRace es requerido (entero)' });
+    }
+    
+    // Marcar internamente que es reinicio para que el dashboard lo trate distinto.
+    // Esto NO va a la DB (la DB usa la columna endpoint).
+    const dataExt = Object.assign({}, data, { _endpoint: 'reinicio' });
+    
+    const peticionId = guardarPeticion(data, ipOrigen, false, 'reinicio');
+    
+    sendUpdateToDashboard(dataExt, peticionId);
     
     res.json({ 
       ok: true, 
@@ -451,6 +513,7 @@ function startHttpServer(config) {
   httpApp.listen(config.httpPort, '0.0.0.0', () => {
     logInfo('Servidor HTTP en puerto ' + config.httpPort);
     console.log('[HTTP] POST http://localhost:' + config.httpPort + '/update');
+    console.log('[HTTP] POST http://localhost:' + config.httpPort + '/reinicio');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/health');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/status');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/history?limit=50');
@@ -462,6 +525,8 @@ function startHttpServer(config) {
 // Enviar update al dashboard (con cola)
 // ============================================================
 async function sendUpdateToDashboard(data, peticionId) {
+  const isReinicio = (data._endpoint === 'reinicio');
+  
   if (!mainWindow || mainWindow.isDestroyed() || !dashboardReady) {
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
@@ -469,6 +534,32 @@ async function sendUpdateToDashboard(data, peticionId) {
     return;
   }
   
+  // REGLA REINICIO: si el modal ganador esta activo Y el reinicio es del
+  // MISMO sheet del ganador, encolar. Si es de OTRO sheet, procesar
+  // inmediatamente (actualiza el otro odometro mientras el modal sigue).
+  // Lamentablemente, main.js no sabe que sheet esta en el modal: solo
+  // sabe que hay ganador. Por eso le pasamos la info y el dashboard
+  // decide. Aqui solo encolamos si NO esta listo. La decision fina
+  // (mismo sheet o no) la hace el dashboard.
+  if (isReinicio) {
+    // El dashboard tiene la logica para decidir si aplicar inmediatamente
+    // o postergar. Pasamos siempre directo si esta listo.
+    // El unico bloqueo aqui: si dashboard no esta listo, encolar (ya cubierto arriba).
+    const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+    const code = `
+      if (window.casinoUpdate) {
+        window.casinoUpdate(${dataJson});
+      }
+      return 'sent';
+    `;
+    const result = await safeExecJs(code);
+    if (result === 'sent' && peticionId) {
+      marcarPeticionProcesada(peticionId);
+    }
+    return;
+  }
+  
+  // FLUJO ORIGINAL (update normal)
   if (isWinnerActive && data.ganador !== true) {
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
