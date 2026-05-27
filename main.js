@@ -46,7 +46,8 @@ function loadConfig() {
     sheetDurationsSec: { mini: 8, minor: 8, major: 8, grand: 8 },
     kpiSpeed: 1.0, useTestData: true, winnerDelaySec: 5, winnerModalDurationSec: 12,
     modalVideoVolume: 0.7, httpPort: 3000, cleanupIntervalMin: 60,
-    memoryReloadMB: 300, reloadCheckIntervalSec: 60
+    memoryReloadMB: 300, reloadCheckIntervalSec: 60,
+    iasEnabled: false, iasBaseUrl: '', iasRetryIntervalSec: 30
   };
 }
 
@@ -55,6 +56,8 @@ let isWinnerActive = false;
 let isPromoActive = false;
 let pendingUpdates = [];
 let dashboardReady = false;
+let iasConfig = null;
+let iasRetryTimer = null;
 
 // ============================================================
 // RUTAS: separar lectura (empaquetadas) de escritura (userData)
@@ -189,7 +192,8 @@ async function initDatabase() {
         endpoint TEXT NOT NULL DEFAULT 'update',
         posicion INTEGER,
         cod_sala TEXT,
-        id_race INTEGER
+        id_race INTEGER,
+        enviado_externo INTEGER DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS eventos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -201,6 +205,7 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_peticiones_fecha ON peticiones(fecha_registro);
       CREATE INDEX IF NOT EXISTS idx_peticiones_sheet ON peticiones(sheet);
       CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos(fecha_registro);
+      CREATE INDEX IF NOT EXISTS idx_peticiones_ias ON peticiones(ganador, enviado_externo);
     `);
     
     // Obtener el proximo ID de peticiones
@@ -271,6 +276,155 @@ function marcarPeticionEncolada(id) {
     scheduleDbSave();
   } catch (e) {
     logError('Error marcando encolada: ' + e.message);
+  }
+}
+
+// ============================================================
+// ENVIO A SERVIDOR EXTERNO (IAS)
+// Cuando llega un ganador, se intenta enviar al endpoint externo
+// /PraGanadores/CrearGanador. Si falla, queda con enviado_externo=0
+// y se reintenta automaticamente cada iasRetryIntervalSec.
+// ============================================================
+let iasStats = {
+  ultimoIntento: null,
+  ultimoExito: null,
+  ultimoError: null,
+  totalEnviados: 0,
+  totalErrores: 0
+};
+
+function marcarGanadorEnviadoIAS(peticionId) {
+  if (!db || !dbReady || !peticionId) return;
+  try {
+    const stmt = db.prepare('UPDATE peticiones SET enviado_externo = 1 WHERE id = ?');
+    stmt.run([peticionId]);
+    stmt.free();
+    scheduleDbSave();
+  } catch (e) {
+    logError('Error marcando enviado_externo: ' + e.message);
+  }
+}
+
+function mapearPozo(sheet) {
+  // Mapeo solicitado: Car=grand, Moto=major, Minor=minor, Mini=mini
+  const map = { mini: 'Mini', minor: 'Minor', major: 'Moto', grand: 'Car' };
+  return map[sheet] || sheet;
+}
+
+function formatearFechaGanador(fechaISO) {
+  // Convierte ISO (2026-05-25T...) a formato dd-mm-yyyy
+  try {
+    const d = fechaISO ? new Date(fechaISO) : new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return dd + '-' + mm + '-' + yyyy;
+  } catch (e) {
+    return '';
+  }
+}
+
+async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
+  // Verificar config
+  if (!iasConfig || !iasConfig.iasEnabled || !iasConfig.iasBaseUrl) {
+    return false;
+  }
+  
+  const url = iasConfig.iasBaseUrl.replace(/\/+$/, '') + '/PraGanadores/CrearGanador';
+  const body = {
+    IdRace: data.idRace,
+    CodSala: data.codSala,       // string como nosotros lo tenemos
+    CodMaquina: data.maquina,    // string como nosotros lo tenemos
+    Posicion: (typeof data.posicion === 'number') ? data.posicion : 0,
+    Monto: data.amount || 0,
+    Pozo: mapearPozo(data.sheet),
+    FechaGanador: formatearFechaGanador(fechaRegistro)
+  };
+  
+  iasStats.ultimoIntento = new Date().toISOString();
+  
+  try {
+    // fetch nativo de Node 18+ (Electron 28+ ya lo tiene)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    if (resp.ok) {
+      marcarGanadorEnviadoIAS(peticionId);
+      iasStats.ultimoExito = new Date().toISOString();
+      iasStats.totalEnviados++;
+      logInfo('IAS OK: ganador id=' + peticionId + ' sheet=' + data.sheet);
+      return true;
+    } else {
+      const txt = await resp.text().catch(() => '');
+      iasStats.ultimoError = 'HTTP ' + resp.status + ' - ' + txt.substring(0, 200);
+      iasStats.totalErrores++;
+      logWarn('IAS FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 200));
+      return false;
+    }
+  } catch (e) {
+    iasStats.ultimoError = e.message;
+    iasStats.totalErrores++;
+    logWarn('IAS ERROR id=' + peticionId + ': ' + e.message);
+    return false;
+  }
+}
+
+function reintentarPendientesIAS() {
+  if (!db || !dbReady) return;
+  if (!iasConfig || !iasConfig.iasEnabled) return;
+  
+  try {
+    const stmt = db.prepare(`
+      SELECT id, sheet, amount, maquina, posicion, cod_sala AS codSala, id_race AS idRace, fecha_registro
+      FROM peticiones
+      WHERE ganador = 1 AND enviado_externo = 0
+      ORDER BY id
+      LIMIT 50
+    `);
+    const filas = [];
+    while (stmt.step()) {
+      filas.push(stmt.getAsObject());
+    }
+    stmt.free();
+    
+    if (filas.length === 0) return;
+    
+    logInfo('IAS retry: ' + filas.length + ' ganadores pendientes');
+    
+    // Enviar uno por uno (secuencial para no saturar)
+    filas.forEach(fila => {
+      enviarGanadorAIas(fila.id, {
+        sheet: fila.sheet,
+        amount: fila.amount,
+        maquina: fila.maquina,
+        posicion: fila.posicion,
+        codSala: fila.codSala,
+        idRace: fila.idRace
+      }, fila.fecha_registro);
+    });
+  } catch (e) {
+    logError('Error en reintentarPendientesIAS: ' + e.message);
+  }
+}
+
+function contarPendientesIAS() {
+  if (!db || !dbReady) return 0;
+  try {
+    const stmt = db.prepare('SELECT COUNT(*) AS c FROM peticiones WHERE ganador = 1 AND enviado_externo = 0');
+    stmt.step();
+    const row = stmt.getAsObject();
+    stmt.free();
+    return row.c || 0;
+  } catch (e) {
+    return 0;
   }
 }
 
@@ -365,6 +519,26 @@ async function safeExecJs(jsCode) {
 // SERVIDOR HTTP
 // ============================================================
 function startHttpServer(config) {
+  // Guardar la config del IAS en una variable accesible desde otras funciones
+  iasConfig = {
+    iasEnabled: !!config.iasEnabled,
+    iasBaseUrl: config.iasBaseUrl || '',
+    iasRetryIntervalSec: config.iasRetryIntervalSec || 30
+  };
+  
+  // Arrancar timer de reintento de envios pendientes al IAS.
+  // Esto cubre: ganadores que estaban en la DB de un crash anterior,
+  // y ganadores cuyo POST inicial fallo (servidor externo caido).
+  if (iasConfig.iasEnabled && iasConfig.iasBaseUrl) {
+    logInfo('IAS habilitado: ' + iasConfig.iasBaseUrl + ' (retry cada ' + iasConfig.iasRetryIntervalSec + 's)');
+    // Primer reintento al arrancar (despues de 5s para dejar que la DB cargue)
+    setTimeout(reintentarPendientesIAS, 5000);
+    // Despues cada N segundos
+    iasRetryTimer = setInterval(reintentarPendientesIAS, iasConfig.iasRetryIntervalSec * 1000);
+  } else {
+    logInfo('IAS deshabilitado (iasEnabled=false o iasBaseUrl vacio)');
+  }
+  
   const httpApp = express();
   httpApp.use(express.json());
   
@@ -400,6 +574,14 @@ function startHttpServer(config) {
     
     // Guardar en SQLite ANTES de procesar (siempre se registra)
     const peticionId = guardarPeticion(data, ipOrigen, false, 'update');
+    
+    // Si es ganador, disparar envio al servidor IAS en paralelo (no bloquea).
+    // Si falla, queda con enviado_externo=0 y el retry timer lo intentara despues.
+    if (data.ganador === true && peticionId) {
+      setImmediate(() => {
+        enviarGanadorAIas(peticionId, data, new Date().toISOString());
+      });
+    }
     
     sendUpdateToDashboard(data, peticionId);
     
@@ -510,6 +692,21 @@ function startHttpServer(config) {
     }
   });
   
+  // Estado de envios al servidor IAS externo
+  httpApp.get('/ias-status', (req, res) => {
+    res.json({
+      iasEnabled: iasConfig ? iasConfig.iasEnabled : false,
+      iasBaseUrl: iasConfig ? iasConfig.iasBaseUrl : '',
+      iasRetryIntervalSec: iasConfig ? iasConfig.iasRetryIntervalSec : 0,
+      pendientes: contarPendientesIAS(),
+      ultimoIntento: iasStats.ultimoIntento,
+      ultimoExito: iasStats.ultimoExito,
+      ultimoError: iasStats.ultimoError,
+      totalEnviados: iasStats.totalEnviados,
+      totalErrores: iasStats.totalErrores
+    });
+  });
+  
   httpApp.listen(config.httpPort, '0.0.0.0', () => {
     logInfo('Servidor HTTP en puerto ' + config.httpPort);
     console.log('[HTTP] POST http://localhost:' + config.httpPort + '/update');
@@ -518,6 +715,7 @@ function startHttpServer(config) {
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/status');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/history?limit=50');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/stats');
+    console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ias-status');
   });
 }
 

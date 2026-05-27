@@ -12,5 +12,8 @@
   "httpPort": 3000,
   "cleanupIntervalMin": 60,
   "memoryReloadMB": 300,
-  "reloadCheckIntervalSec": 60
+  "reloadCheckIntervalSec": 60,
+  "iasEnabled": false,
+  "iasBaseUrl": "http://40.122.134.6/IAS",
+  "iasRetryIntervalSec": 30
 }
