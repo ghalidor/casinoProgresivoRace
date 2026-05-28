@@ -96,7 +96,7 @@ function getLogFilePath() {
 }
 
 function logToFile(level, message) {
-  const timestamp = new Date().toISOString();
+  const timestamp = fechaLocalISO();
   const line = `[${timestamp}] [${level}] ${message}\n`;
   
   try {
@@ -239,7 +239,7 @@ function guardarPeticion(data, ipOrigen, encolado = false, endpoint = 'update') 
       data.ganador ? 1 : 0,
       data.maquina || null,
       ipOrigen || 'unknown',
-      new Date().toISOString(),
+      fechaLocalISO(),
       encolado ? 1 : 0,
       endpoint,
       (typeof data.posicion === 'number') ? data.posicion : null,
@@ -311,14 +311,35 @@ function mapearPozo(sheet) {
   return map[sheet] || sheet;
 }
 
-function formatearFechaGanador(fechaISO) {
-  // Convierte ISO (2026-05-25T...) a formato dd-mm-yyyy
+function fechaLocalISO(fecha) {
+  // Devuelve la fecha/hora LOCAL del sistema (la PC del casino esta en Peru)
+  // en formato ISO sin zona: "2026-05-27T10:48:00.000"
+  // C# DateTime parsea esto como hora local sin convertir a UTC.
+  // Tambien se usa para guardar en la DB local, asi el history queda
+  // en hora de Peru (no UTC).
+  const d = fecha ? new Date(fecha) : new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  const ms = String(d.getMilliseconds()).padStart(3, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}.${ms}`;
+}
+
+function formatearFechaGanador(fechaLocal) {
+  // El IAS (C# MVC) espera DateTime. Mandamos ISO con hora local de Peru
+  // SIN la Z (sin indicador UTC) para que C# lo tome como hora local.
+  // Ej: "2026-05-27T10:48:00"
   try {
-    const d = fechaISO ? new Date(fechaISO) : new Date();
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    return dd + '-' + mm + '-' + yyyy;
+    // Si ya viene en formato fechaLocalISO, le quitamos los milisegundos
+    // para mandar limpio "2026-05-27T10:48:00"
+    if (fechaLocal && fechaLocal.includes('T')) {
+      return fechaLocal.split('.')[0];
+    }
+    // Fallback: generar ahora
+    return fechaLocalISO().split('.')[0];
   } catch (e) {
     return '';
   }
@@ -435,7 +456,7 @@ function guardarEvento(tipo, descripcion, memoriaMB = null) {
       INSERT INTO eventos (tipo, descripcion, memoria_mb, fecha_registro)
       VALUES (?, ?, ?, ?)
     `);
-    stmt.run([tipo, descripcion, memoriaMB, new Date().toISOString()]);
+    stmt.run([tipo, descripcion, memoriaMB, fechaLocalISO()]);
     stmt.free();
     scheduleDbSave();
   } catch (e) {
@@ -578,8 +599,9 @@ function startHttpServer(config) {
     // Si es ganador, disparar envio al servidor IAS en paralelo (no bloquea).
     // Si falla, queda con enviado_externo=0 y el retry timer lo intentara despues.
     if (data.ganador === true && peticionId) {
+      const fechaGanador = fechaLocalISO();  // hora local de Peru
       setImmediate(() => {
-        enviarGanadorAIas(peticionId, data, new Date().toISOString());
+        enviarGanadorAIas(peticionId, data, fechaGanador);
       });
     }
     
