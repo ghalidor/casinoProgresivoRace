@@ -211,7 +211,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   border: 0.5cqw solid;
   border-image: linear-gradient(135deg,#ffd600 0%,#ff8800 25%,#b8860b 50%,#ff8800 75%,#ffd600 100%) 1;
   border-radius: 10px;
-  padding: 2cqh 2cqw;
+  padding: 2.6cqh 2cqw;
   box-shadow: inset 0 0 40px rgba(255,80,0,.4), 0 0 25px rgba(255,0,51,.6), inset 0 0 0 2px #1a0000;
   margin-top: 1cqh;
   width: 100%;
@@ -220,11 +220,13 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 }
 
 .reel-row { display: flex; align-items: center; justify-content: center; gap: 4px; }
+/* Reel/coma oculto: ceros a la izquierda que aun no se muestran */
+.reel-digit.reel-hidden, .reel-sep.reel-hidden { display: none; }
 
 .reel-digit {
   display: inline-block;
-  width: 6cqw;
-  height: 11cqh;
+  width: 7.5cqw;
+  height: 14cqh;
   background: linear-gradient(180deg, #000 0%, #0a0000 50%, #000 100%);
   border: 1px solid rgba(255,180,0,.4);
   border-radius: 4px;
@@ -253,13 +255,13 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   flex-direction: column;
   font-family: 'Orbitron', sans-serif;
   font-weight: 900;
-  font-size: 4.5cqw;
-  line-height: 11cqh;
+  font-size: 5.7cqw;
+  line-height: 14cqh;
   text-align: center;
   color: #ffd700;
   text-shadow: 0 0 4px #fff8a0, 0 0 10px #ffaa00, 0 0 18px #ff6600;
 }
-.reel-strip span { height: 11cqh; display: block; }
+.reel-strip span { height: 14cqh; display: block; }
 
 /* Animaciones de reel deshabilitadas - JS controla todo */
 .r-1, .r-2, .r-3, .r-4, .r-5, .r-6 { animation: none !important; }
@@ -267,7 +269,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 
 .reel-sep {
   font-family: 'Orbitron', sans-serif;
-  font-size: 4.8cqw;
+  font-size: 6cqw;
   font-weight: 900;
   line-height: 1;
   color: #ffd700;
@@ -279,7 +281,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 
 .reel-prefix {
   font-family: 'Orbitron', sans-serif;
-  font-size: 4cqw;
+  font-size: 5cqw;
   font-weight: 900;
   color: #ffaa00;
   text-shadow: 0 0 6px #ff8800, 0 0 14px #ff5500;
@@ -289,12 +291,12 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 
 /* BOTTOM ROW */
 .bottom-row {
-  margin-top: 1.5cqh;
-  display: grid;
-  grid-template-columns: 11cqw 1fr;
-  gap: 1.5cqw;
-  width: 100%;
+  margin-top: 1cqh;
+  display: flex;
+  justify-content: center;
   align-items: stretch;
+  gap: 2cqw;
+  width: 100%;
 }
 
 .thermometer {
@@ -385,6 +387,18 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .stat-label { font-size: 1.1cqw; color: #ffd600; letter-spacing: 0.2cqw; font-family: 'Orbitron', sans-serif; }
 .stat-value { font-size: 1.8cqw; font-weight: 900; font-family: 'Orbitron', sans-serif; }
 
+/* MINI/MINOR: termometro y KPIs mas pequenos para dar protagonismo al odometro.
+   Limitado a .bottom-row para no afectar MAJOR/GRAND. */
+.bottom-row .thermometer { width: 6cqw; flex: 0 0 auto; min-height: 13cqh; padding: 0.6cqh 0.5cqw 0.8cqh; }
+.bottom-row .thermo-label { font-size: 0.72cqw; margin-bottom: 0.3cqh; }
+.bottom-row .thermo-value { font-size: 1.1cqw; margin-top: 0.3cqh; }
+.bottom-row .thermo-bulb  { width: 1.6cqw; height: 1.6cqw; min-width: 9px; min-height: 9px; }
+.bottom-row .thermo-tube  { width: 0.85cqw; min-width: 5px; }
+.bottom-row .stat-label   { font-size: 0.72cqw; }
+.bottom-row .stat-value   { font-size: 1.15cqw; }
+/* el contenedor de la cadena (no el termometro) centra su contenido verticalmente */
+.bottom-row > div:not(.thermometer) { justify-content: center; align-items: center; }
+
 .progress-block {
   background: #000;
   border: 1px solid var(--theme-accent);
@@ -428,7 +442,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* empuja al fondo */
-}
 
 
 /* ============================================================
@@ -1022,10 +1035,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
    ============================================================ */
 .kpis-chain-wrap {
   position: relative;
-  width: 100%;
-  /* la altura se controla con padding-top % (aspect ratio 800x120 -> 15%) */
-  padding-top: 15%;
-  min-height: 60px;
+  width: 36cqw;          /* ancho fijo, mas chico */
+  aspect-ratio: 800 / 120;   /* mantiene la proporcion real de la cadena */
 }
 .kpis-chain-svg {
   position: absolute;
@@ -1489,12 +1500,12 @@ body.production-mode .reel-strip {
   top: 0;
   left: 0;
   right: 0;
-  height: 100px;
+  height: clamp(100px, 12vh, 175px);
   display: none;
   align-items: center;
   justify-content: center;
-  gap: 25px;
-  padding: 15px 40px;
+  gap: clamp(18px, 2.5vw, 50px);
+  padding: clamp(12px, 1.5vh, 22px) clamp(30px, 3vw, 60px);
   background: linear-gradient(180deg, 
     rgba(0,0,0,0.92) 0%, 
     rgba(0,0,0,0.7) 60%, 
@@ -1515,15 +1526,15 @@ body.production-mode .reel-strip {
 }
 
 .promo-hud-side {
-  width: 75px;
-  height: 75px;
+  width: clamp(75px, 6vw, 115px);
+  height: clamp(75px, 6vw, 115px);
   flex-shrink: 0;
   filter: drop-shadow(0 0 8px currentColor);
 }
 
 .promo-hud-center {
-  width: 220px;
-  height: 60px;
+  width: clamp(220px, 18vw, 340px);
+  height: clamp(60px, 5vw, 92px);
   flex-shrink: 0;
 }
 
@@ -1533,7 +1544,7 @@ body.production-mode .reel-strip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 18px;
+  padding: clamp(10px, 1vh, 16px) clamp(18px, 1.6vw, 32px);
   border: 2px solid #00ff66;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(0,30,15,0.9), rgba(0,0,0,0.85));
@@ -1541,7 +1552,7 @@ body.production-mode .reel-strip {
     0 0 16px rgba(0,255,102,0.7),
     0 0 30px rgba(0,255,102,0.3),
     inset 0 0 12px rgba(0,255,102,0.15);
-  width: 270px;       /* mas ancho para que quepa cualquier numero */
+  width: clamp(280px, 24vw, 460px);       /* mas ancho para que quepa cualquier numero */
   flex-shrink: 0;
 }
 .promo-mini-odo.minor {
@@ -1574,7 +1585,7 @@ body.production-mode .reel-strip {
   align-items: center;
   gap: 6px;
   color: #00ff66;
-  font-size: 11px;
+  font-size: clamp(11px, 1.05vw, 19px);
   font-weight: bold;
   letter-spacing: 2px;
   margin-bottom: 3px;
@@ -1598,7 +1609,7 @@ body.production-mode .reel-strip {
 /* Valor del odometro - ancho FIJO para no moverse al cambiar valor */
 .promo-mini-reels {
   color: #fff;
-  font-size: 19px;                      /* reducido para que quepa "S/. 99,999.99" */
+  font-size: clamp(22px, 2.4vw, 44px);  /* mas grande y responsivo */
   font-weight: bold;
   font-family: 'Orbitron', 'Courier New', monospace;
   letter-spacing: 1px;
@@ -1606,7 +1617,7 @@ body.production-mode .reel-strip {
     0 0 10px #00ff66,
     0 0 20px rgba(0,255,102,0.5);
   font-variant-numeric: tabular-nums;
-  width: 220px;                         /* ancho fijo MAYOR */
+  width: clamp(240px, 22vw, 420px);     /* ancho que acompaña al texto */
   text-align: center;
   white-space: nowrap;
   font-feature-settings: "tnum";
@@ -1909,7 +1920,7 @@ body.production-mode .reel-strip {
 .home-pot.home-mini .home-odometer,
 .home-pot.home-minor .home-odometer {
   width: 100%;
-  justify-content: center;
+  justify-content: flex-end;
   flex: 1;
   background: transparent;
   border: none;
@@ -2034,6 +2045,7 @@ body.production-mode .reel-strip {
 
 .home-odometer { display: flex; gap: 0.4cqw; flex-shrink: 1; min-width: 0; align-items: center; }
 .home-odometer-prefix {
+  font-family: 'Share Tech Mono', monospace;
   font-size: 6cqw;
   color: var(--gold);
   margin-right: 1.5cqw;
@@ -2042,7 +2054,7 @@ body.production-mode .reel-strip {
   text-shadow: 0 0 6px var(--gold-deep);
 }
 .home-digit {
-  width: 11.6cqw;
+  width: 13.5cqw;
   height: 14.9cqw;
   background: linear-gradient(180deg, #1a0a00, #2a1500, #1a0a00);
   border: 1px solid var(--gold-dark);
@@ -2050,14 +2062,18 @@ body.production-mode .reel-strip {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
   font-size: 9.9cqw;
   color: var(--gold);
   font-weight: 900;
   text-shadow: 0 0 6px var(--gold-deep);
   box-shadow: inset 0 0 6px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,215,0,0.15);
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
-.home-digit.comma { width: 3.3cqw; background: transparent; border: none; box-shadow: none; color: var(--gold); font-size: 9.9cqw; }
+.home-digit.comma { width: 3.3cqw; background: transparent; border: none; box-shadow: none; color: var(--gold); font-family: 'Share Tech Mono', monospace; font-size: 9.9cqw; }
+/* Cuadro oculto: ceros a la izquierda que aun no se muestran */
+.home-digit.home-digit-hidden { display: none; }
 
 /* SPRITE giratorio en MAJOR/GRAND */
 .home-pot-vehicle-box {
@@ -2271,7 +2287,7 @@ body.production-mode .reel-strip {
 /* TITULO superior - letrero estilo marquee de casino, con saliente abajo */
 .home-marquee-title {
   position: absolute;
-  top: 12.5vh;
+  top: 16vh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -2492,17 +2508,17 @@ body.production-mode .reel-strip {
     <line x1="40" y1="5" x2="40" y2="75" stroke="#00ff66" stroke-width="0.5" opacity="0.4"/>
   </svg>
 
-  <!-- MINI odometro mejorado -->
-  <div class="promo-mini-odo">
+  <!-- MINOR odometro mejorado -->
+  <div class="promo-mini-odo minor">
     <div class="promo-mini-corner tl"></div>
     <div class="promo-mini-corner tr"></div>
     <div class="promo-mini-corner bl"></div>
     <div class="promo-mini-corner br"></div>
     <div class="promo-mini-label">
       <span class="dot-pulse"></span>
-      MINI JACKPOT
+      MINOR JACKPOT
     </div>
-    <div class="promo-mini-reels" id="promoMiniReels">S/. 0,000.00</div>
+    <div class="promo-mini-reels" id="promoMinorReels">S/. 0.00</div>
     <div class="promo-mini-glow-line"></div>
   </div>
 
@@ -2534,17 +2550,17 @@ body.production-mode .reel-strip {
     </g>
   </svg>
 
-  <!-- MINOR odometro mejorado -->
-  <div class="promo-mini-odo minor">
+  <!-- MINI odometro mejorado -->
+  <div class="promo-mini-odo">
     <div class="promo-mini-corner tl"></div>
     <div class="promo-mini-corner tr"></div>
     <div class="promo-mini-corner bl"></div>
     <div class="promo-mini-corner br"></div>
     <div class="promo-mini-label">
       <span class="dot-pulse"></span>
-      MINOR JACKPOT
+      MINI JACKPOT
     </div>
-    <div class="promo-mini-reels" id="promoMinorReels">S/. 0,000.00</div>
+    <div class="promo-mini-reels" id="promoMiniReels">S/. 0.00</div>
     <div class="promo-mini-glow-line"></div>
   </div>
 
@@ -3381,22 +3397,25 @@ function buildSheet(data) {
 
   // Reels SIEMPRE empiezan en 0 - JS los pone en su lugar
   // Cada strip tiene 11 spans con dígitos 0-9-0 para poder mostrar cualquier dígito
-  const reels = [0,0,0,0,0,0,0].map((_, idx) => {
+  // 8 reels: 6 enteros + 2 decimales (tope 999,999.99)
+  const reels = [0,0,0,0,0,0,0,0].map((_, idx) => {
     const digits = [];
     for (let d = 0; d < 11; d++) {
       digits.push(`<span>${d % 10}</span>`);
     }
-    return `<div class="reel-digit"><div class="reel-strip" data-digit="0">${digits.join('')}</div></div>`;
+    // Inicio en 0: solo se ve la unidad (idx 5) y los decimales (6,7). El resto oculto.
+    const hidden = (idx <= 4) ? ' reel-hidden' : '';
+    return `<div class="reel-digit${hidden}"><div class="reel-strip" data-digit="0">${digits.join('')}</div></div>`;
   });
 
-  // Insertar separadores: , entre indice 1 y 2, . entre 4 y 5
+  // Layout: [0][1][2] , [3][4][5] . [6][7]  (la coma arranca oculta)
   const reelHTML = `
     <span class="reel-prefix">S/.</span>
-    ${reels[0]}${reels[1]}
-    <span class="reel-sep">,</span>
-    ${reels[2]}${reels[3]}${reels[4]}
-    <span class="reel-sep">.</span>
-    ${reels[5]}${reels[6]}
+    ${reels[0]}${reels[1]}${reels[2]}
+    <span class="reel-sep comma reel-hidden">,</span>
+    ${reels[3]}${reels[4]}${reels[5]}
+    <span class="reel-sep dot">.</span>
+    ${reels[6]}${reels[7]}
   `;
 
   sheet.innerHTML = `
@@ -3531,11 +3550,12 @@ function buildHomeSheet(data, sheet) {
     </div>
     <div class="home-odometer">
       <div class="home-odometer-prefix">S/.</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit comma">,</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit comma home-digit-hidden">,</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit">0</div>
       <div class="home-digit comma">.</div>
       <div class="home-digit">0</div>
@@ -3558,11 +3578,12 @@ function buildHomeSheet(data, sheet) {
     </div>
     <div class="home-odometer">
       <div class="home-odometer-prefix">S/.</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit comma">,</div>
-      <div class="home-digit">0</div>
-      <div class="home-digit">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit comma home-digit-hidden">,</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit">0</div>
       <div class="home-digit comma">.</div>
       <div class="home-digit">0</div>
@@ -3577,51 +3598,9 @@ function buildHomeSheet(data, sheet) {
     </div>
     <div class="home-pot-right-stack">
       <div class="home-pot-vehicle-row">
-        <svg class="home-pot-stat-panel home-pot-stat-left" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <text x="40" y="20" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">SPEED</text>
-            <text x="40" y="42" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">320</text>
-            <text x="40" y="54" fill="#cc9900" font-family="Orbitron" font-size="8">KM/H</text>
-            <line x1="80" y1="42" x2="138" y2="42" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="42" r="3" fill="#ffcc00"/>
-          </g>
-          <g>
-            <text x="20" y="84" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">POWER</text>
-            <text x="20" y="106" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">85%</text>
-            <line x1="80" y1="106" x2="138" y2="106" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="106" r="3" fill="#ffcc00"/>
-          </g>
-          <g>
-            <text x="40" y="148" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">GRIP</text>
-            <text x="40" y="170" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">8.0</text>
-            <line x1="80" y1="170" x2="138" y2="170" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="170" r="3" fill="#ffcc00"/>
-          </g>
-        </svg>
         <div class="home-pot-vehicle-box">
           <div class="home-pot-sprite home-moto"></div>
         </div>
-        <svg class="home-pot-stat-panel home-pot-stat-right" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <text x="100" y="20" text-anchor="end" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">LEVEL</text>
-            <text x="100" y="42" text-anchor="end" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">99</text>
-            <text x="100" y="54" text-anchor="end" fill="#cc9900" font-family="Orbitron" font-size="8">MAX</text>
-            <line x1="2" y1="42" x2="60" y2="42" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="42" r="3" fill="#ffcc00"/>
-          </g>
-          <g>
-            <text x="120" y="84" text-anchor="end" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">FUEL</text>
-            <text x="120" y="106" text-anchor="end" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">73%</text>
-            <line x1="2" y1="106" x2="60" y2="106" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="106" r="3" fill="#ffcc00"/>
-          </g>
-          <g>
-            <text x="100" y="148" text-anchor="end" fill="#cc9900" font-family="Orbitron" font-size="11" letter-spacing="2">RANK</text>
-            <text x="100" y="170" text-anchor="end" fill="#ffcc00" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #ffcc00">S+</text>
-            <line x1="2" y1="170" x2="60" y2="170" stroke="#ffcc00" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="170" r="3" fill="#ffcc00"/>
-          </g>
-        </svg>
       </div>
       <div class="home-pot-status-row">
         <span class="home-pot-tag">POZO ACTIVO</span>
@@ -3637,51 +3616,9 @@ function buildHomeSheet(data, sheet) {
     </div>
     <div class="home-pot-right-stack">
       <div class="home-pot-vehicle-row">
-        <svg class="home-pot-stat-panel home-pot-stat-left" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <text x="40" y="20" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">SPEED</text>
-            <text x="40" y="42" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">380</text>
-            <text x="40" y="54" fill="#00b3aa" font-family="Orbitron" font-size="8">KM/H</text>
-            <line x1="80" y1="42" x2="138" y2="42" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="42" r="3" fill="#00e5d4"/>
-          </g>
-          <g>
-            <text x="20" y="84" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">POWER</text>
-            <text x="20" y="106" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">95%</text>
-            <line x1="80" y1="106" x2="138" y2="106" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="106" r="3" fill="#00e5d4"/>
-          </g>
-          <g>
-            <text x="40" y="148" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">GRIP</text>
-            <text x="40" y="170" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">9.5</text>
-            <line x1="80" y1="170" x2="138" y2="170" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="138" cy="170" r="3" fill="#00e5d4"/>
-          </g>
-        </svg>
         <div class="home-pot-vehicle-box">
           <div class="home-pot-sprite home-car"></div>
         </div>
-        <svg class="home-pot-stat-panel home-pot-stat-right" viewBox="0 0 140 200" xmlns="http://www.w3.org/2000/svg">
-          <g>
-            <text x="100" y="20" text-anchor="end" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">LEVEL</text>
-            <text x="100" y="42" text-anchor="end" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">99</text>
-            <text x="100" y="54" text-anchor="end" fill="#00b3aa" font-family="Orbitron" font-size="8">MAX</text>
-            <line x1="2" y1="42" x2="60" y2="42" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="42" r="3" fill="#00e5d4"/>
-          </g>
-          <g>
-            <text x="120" y="84" text-anchor="end" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">NOS</text>
-            <text x="120" y="106" text-anchor="end" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">90%</text>
-            <line x1="2" y1="106" x2="60" y2="106" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="106" r="3" fill="#00e5d4"/>
-          </g>
-          <g>
-            <text x="100" y="148" text-anchor="end" fill="#00b3aa" font-family="Orbitron" font-size="11" letter-spacing="2">RANK</text>
-            <text x="100" y="170" text-anchor="end" fill="#00e5d4" font-family="Orbitron" font-size="22" font-weight="900" style="text-shadow:0 0 6px #00e5d4">S+</text>
-            <line x1="2" y1="170" x2="60" y2="170" stroke="#00e5d4" stroke-width="1.2" opacity="0.75"/>
-            <circle cx="2" cy="170" r="3" fill="#00e5d4"/>
-          </g>
-        </svg>
       </div>
       <div class="home-pot-status-row">
         <span class="home-pot-tag">POZO ACTIVO</span>
@@ -3690,29 +3627,6 @@ function buildHomeSheet(data, sheet) {
     </div>
   </div>
 
-  <!-- BANNER PROMOCIONAL (bajo MINI/MINOR) -->
-  <div class="home-promo-banner" id="homePromoBanner">
-    <div class="home-promo-row">
-      <svg class="home-promo-star left" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="starGrad" cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stop-color="#fff8c0"/>
-            <stop offset="40%" stop-color="#ffd700"/>
-            <stop offset="80%" stop-color="#ff8800"/>
-            <stop offset="100%" stop-color="#cc4400"/>
-          </radialGradient>
-        </defs>
-        <polygon points="25,2 31,18 48,18 34,29 39,46 25,36 11,46 16,29 2,18 19,18" 
-                 fill="url(#starGrad)" stroke="#ffaa00" stroke-width="1"/>
-      </svg>
-      <div class="home-promo-main">¡JUEGA YA!</div>
-      <svg class="home-promo-star home-right" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="25,2 31,18 48,18 34,29 39,46 25,36 11,46 16,29 2,18 19,18" 
-                 fill="url(#starGrad)" stroke="#ffaa00" stroke-width="1"/>
-      </svg>
-    </div>
-    <div class="home-promo-sub">PREMIOS CRECEN CADA SEGUNDO</div>
-  </div>
 `;
   
   // Despues de que el DOM este insertado, construir el escudo y la pista del HOME
@@ -4436,34 +4350,45 @@ function globalAnimate(now) {
   // Asi los 3 odometros (sheet, home, modal) muestran SIEMPRE el mismo numero.
   if (!window.syncHomeAndModalOdometer) {
     window.syncHomeAndModalOdometer = function(sId, cents) {
-      // Convertir centavos a "XX,XXX.XX"
+      // Convertir centavos a "XXX,XXX.XX" (tope 999,999.99 = 6 digitos enteros)
       const intPart = Math.floor(cents / 100);
       const centPart = cents % 100;
-      const intStr = String(intPart).padStart(5, '0');
+      const intStr = String(intPart).padStart(6, '0');
       const centStr = String(centPart).padStart(2, '0');
-      // 9 caracteres visuales: [0][1],[2][3][4].[5][6]
+      // 10 posiciones visuales: [0][1][2] , [4][5][6] . [8][9]
       const digitChars = [
-        intStr[0], intStr[1], ',', intStr[2], intStr[3], intStr[4], '.', centStr[0], centStr[1]
+        intStr[0], intStr[1], intStr[2], ',', intStr[3], intStr[4], intStr[5], '.', centStr[0], centStr[1]
       ];
+
+      // Cuantos cuadros enteros mostrar (sin ceros a la izquierda, minimo 1).
+      // La coma de miles solo aparece a partir de 4 digitos enteros (>= 1000).
+      const nInt = String(intPart).length;              // 1=unidades ... 6=centenas de mil
+      const intSlots = [6, 5, 4, 2, 1, 0];               // posiciones enteras, de menor a mayor
+      const visibles = new Set(intSlots.slice(0, nInt)); // cuadros enteros que se ven
+      visibles.add(7); visibles.add(8); visibles.add(9); // punto y 2 decimales: siempre
+      if (nInt >= 4) visibles.add(3);                    // coma de miles
 
       // 1) HOME
       const homePot = document.getElementById('home-pot-' + sId);
       if (homePot) {
         const homeDigits = homePot.querySelectorAll('.home-digit');
-        if (homeDigits.length === 9) {
-          for (let i = 0; i < 9; i++) {
+        if (homeDigits.length === 10) {
+          for (let i = 0; i < 10; i++) {
             const ch = digitChars[i];
             if (homeDigits[i].textContent !== ch) homeDigits[i].textContent = ch;
+            homeDigits[i].classList.toggle('home-digit-hidden', !visibles.has(i));
           }
         }
       }
 
-      // 2) Modal (si esta visible y es del mismo sheet)
+      // 2) Modal: mostrar SIEMPRE el monto GANADO (congelado), nunca el valor
+      // vivo del estado. Asi un reinicio/update durante el modal no lo cambia.
       const modal = document.getElementById('winnerModal');
       if (modal && modal.classList.contains('showing') && modal.dataset.sheet === sId) {
         const txt = document.getElementById('winnerAmountText');
         if (txt) {
-          const amountStr = 'S/ ' + (cents / 100).toLocaleString('en-US', {
+          const wonCents = parseInt(modal.dataset.wonCents || '0', 10);
+          const amountStr = 'S/ ' + (wonCents / 100).toLocaleString('en-US', {
             minimumFractionDigits: 2, maximumFractionDigits: 2
           });
           if (txt.textContent !== amountStr) txt.textContent = amountStr;
@@ -4518,7 +4443,7 @@ function globalAnimate(now) {
       // Calcular numero a mostrar (centavos del estado animado)
       const displayNum = state.miniMinorOdo[sId];
       
-      const numStr = displayNum.toString().padStart(7, '0');
+      const numStr = displayNum.toString().padStart(8, '0');  // 6 enteros + 2 decimales
       
       // Aplicar transform a cada reel
       reels.forEach((reel, idx) => {
@@ -4526,9 +4451,20 @@ function globalAnimate(now) {
         // Solo actualizar si cambio (optimizacion)
         if (reel.dataset.digit !== String(digit)) {
           reel.dataset.digit = digit;
-          reel.style.transform = 'translateY(' + (-digit * 11) + 'cqh)';
+          reel.style.transform = 'translateY(' + (-digit * 14) + 'cqh)';
         }
       });
+
+      // Ocultar ceros a la izquierda y la coma cuando no se usan.
+      // reels[0..5] = enteros (10^5..10^0); reels[6..7] = decimales (siempre).
+      // La coma aparece a partir de 4 digitos enteros (>= 1000).
+      const nIntR = String(Math.floor(displayNum / 100)).length;  // 1..6
+      for (let k = 0; k < 6; k++) {
+        const box = reels[k].parentElement;          // el .reel-digit
+        if (box) box.classList.toggle('reel-hidden', k < (6 - nIntR));
+      }
+      const commaSep = targetSheet.querySelector('.reel-sep.comma');
+      if (commaSep) commaSep.classList.toggle('reel-hidden', nIntR < 4);
 
       // Sincronizar tambien el HOME y el modal con el MISMO valor (en centavos)
       // displayNum esta en centavos. Lo convertimos a "S/. XX,XXX.XX"
@@ -5284,9 +5220,13 @@ function homePositionPots() {
   const BANNER_H = H * 0.13;
   const BANNER_RESERVE = BANNER_H + H * 0.04;
 
+  // Como ya no hay banner abajo, bajamos un poco todo el bloque de pozos
+  // (mismo tamano, solo desplazado hacia abajo) para aprovechar ese espacio.
+  const HOME_SHIFT = H * 0.08;
+
   // Las dos filas de pozos llenan el espacio entre el letrero y el banner
-  const ROWS_TOP = T + TOP_LETRERO;
-  const ROWS_BOTTOM = B - BANNER_RESERVE;
+  const ROWS_TOP = T + TOP_LETRERO + HOME_SHIFT;
+  const ROWS_BOTTOM = B - BANNER_RESERVE + HOME_SHIFT;
   const totalRowsH = ROWS_BOTTOM - ROWS_TOP - ROW_GAP;
   const bigH = totalRowsH * 0.46;
   const smallH = totalRowsH * 0.50;
@@ -6722,15 +6662,13 @@ function homeStopRunnerLoop() {
       // Marcar el modal con el sheet para que el loop globalAnimate
       // escriba el monto SINCRONIZADO con el sheet y el home.
       modal.dataset.sheet = sheetId;
+      // Monto CONGELADO = lo que se gano. NO debe cambiar aunque lleguen
+      // reinicios o updates mientras el modal esta visible.
+      const wonCents = Math.round((amount || 0) * 100);
+      modal.dataset.wonCents = wonCents;
       const amountText = document.getElementById('winnerAmountText');
       if (amountText) {
-        // Texto inicial = valor ACTUAL del odometro (no salta).
-        // El loop seguira escribiendolo cuadro a cuadro hasta llegar al target.
-        const state = (typeof globalAnimate !== 'undefined' && globalAnimate.state) ? globalAnimate.state : null;
-        const cents = (state && state.miniMinorOdo && state.miniMinorOdo[sheetId] !== undefined)
-          ? state.miniMinorOdo[sheetId]
-          : Math.round((amount || 0) * 100);
-        amountText.textContent = 'S/ ' + (cents / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        amountText.textContent = 'S/ ' + (wonCents / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       }
       amountEl.style.display = 'inline-block';
     } else {
@@ -7240,23 +7178,13 @@ function homeStopRunnerLoop() {
   
   if (!hud || !miniReels || !minorReels) return;
   
-  // Leer valor EXACTO de los reels del DOM (lo que ve el usuario)
+  // Leer el valor REAL en centavos (el mismo que muestra el HOME) y formatearlo
+  // sin ceros a la izquierda, con coma de miles y 2 decimales (tope 999,999.99).
   function getOdometerValue(sheetId) {
-    const sheet = document.querySelector('.sheet[data-id="' + sheetId + '"]');
-    if (!sheet) return null;
-    const reels = sheet.querySelectorAll('.reel-strip');
-    if (reels.length !== 7) return null;
-    
-    let digits = '';
-    for (let i = 0; i < 7; i++) {
-      digits += (reels[i].dataset.digit || '0');
-    }
-    if (digits.length === 7) {
-      const enteros = digits.substring(0, 2) + ',' + digits.substring(2, 5);
-      const decimales = digits.substring(5);
-      return 'S/. ' + enteros + '.' + decimales;
-    }
-    return 'S/. 0,000.00';
+    const st = (typeof globalAnimate !== 'undefined' && globalAnimate.state) ? globalAnimate.state : null;
+    if (!st || !st.miniMinorOdo || typeof st.miniMinorOdo[sheetId] !== 'number') return null;
+    const soles = st.miniMinorOdo[sheetId] / 100;
+    return 'S/. ' + soles.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   
   const cornerLeft = document.querySelector('.promo-corner-left');
