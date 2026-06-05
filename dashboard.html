@@ -2,6 +2,9 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Progressive Jackpot — MINI / MINOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
 <style>
   /* Fuentes locales (offline) */
   @font-face {
@@ -396,6 +399,23 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .bottom-row .thermo-tube  { width: 0.85cqw; min-width: 5px; }
 .bottom-row .stat-label   { font-size: 0.72cqw; }
 .bottom-row .stat-value   { font-size: 1.15cqw; }
+/* GRAND/MAJOR: termometro y KPIs (izq y der) mas compactos: mas angostos y pequenos */
+.sheet[data-id="grand"] .thermometer,
+.sheet[data-id="major"] .thermometer { width: 5.2cqw; flex: 0 0 auto; margin: 0 auto; min-height: 14cqh; padding: 0.6cqh 0.3cqw 0.8cqh; }
+.sheet[data-id="grand"] .thermo-label,
+.sheet[data-id="major"] .thermo-label { font-size: 0.66cqw; margin-bottom: 0.25cqh; }
+.sheet[data-id="grand"] .thermo-value,
+.sheet[data-id="major"] .thermo-value { font-size: 0.98cqw; margin-top: 0.25cqh; }
+.sheet[data-id="grand"] .thermo-bulb,
+.sheet[data-id="major"] .thermo-bulb { width: 1.4cqw; height: 1.4cqw; min-width: 8px; min-height: 8px; }
+.sheet[data-id="grand"] .thermo-tube,
+.sheet[data-id="major"] .thermo-tube { width: 0.7cqw; min-width: 5px; }
+.sheet[data-id="grand"] .stat-card,
+.sheet[data-id="major"] .stat-card { padding: 0.45cqh 0.3cqw; }
+.sheet[data-id="grand"] .stat-label,
+.sheet[data-id="major"] .stat-label { font-size: 0.66cqw; letter-spacing: 0.1cqw; }
+.sheet[data-id="grand"] .stat-value,
+.sheet[data-id="major"] .stat-value { font-size: 1.0cqw; }
 /* el contenedor de la cadena (no el termometro) centra su contenido verticalmente */
 .bottom-row > div:not(.thermometer) { justify-content: center; align-items: center; }
 
@@ -442,7 +462,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* empuja al fondo */
-
 
 
 /* ============================================================
@@ -750,7 +769,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   .sheet[data-id="major"] .vehicle-layout,
   .sheet[data-id="grand"] .vehicle-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 3.4fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 0.65fr) minmax(0, 4.2fr) minmax(0, 0.65fr);
     grid-template-rows: 1fr auto;
     gap: 1cqw 1cqw;
     align-items: stretch;
@@ -1714,7 +1733,7 @@ body.production-mode .reel-strip {
   align-items: center;
   gap: 6px;
   color: #00ff66;
-  font-size: clamp(11px, 1.05vw, 19px);
+  font-size: clamp(16px, 1.7vw, 32px);
   font-weight: bold;
   letter-spacing: 2px;
   margin-bottom: 3px;
@@ -2252,7 +2271,7 @@ body.production-mode .reel-strip {
   transform: translate(-10%, -15%);
 }
 .home-pot.home-major .home-pot-sprite {
-  transform: translateY(-8%) scale(0.85);
+  transform: translateY(-8%) scale(0.75);
 }
 .home-pot-vehicle-box::before {
   content: '';
@@ -5923,18 +5942,18 @@ function homeStopRunnerLoop() {
   max-width: 1000px;
   padding: 80px 60px;
   background: 
-    radial-gradient(ellipse at top, rgba(255,170,0,0.25) 0%, rgba(0,0,0,0.95) 60%),
-    linear-gradient(135deg, #1a0a00 0%, #3d1500 30%, #1a0a00 70%, #0a0a0a 100%);
+    radial-gradient(ellipse at top, rgba(60,90,160,0.30) 0%, rgba(8,16,40,0.96) 60%),
+    linear-gradient(160deg, #0e1c3e 0%, #16264e 35%, #0c1730 70%, #0a1228 100%);
   border: 5px solid transparent;
-  border-radius: 24px;
+  border-radius: 28px;
   background-clip: padding-box;
   text-align: center;
   z-index: 3;
   box-shadow: 
-    0 0 80px var(--winner-accent, rgba(255,215,0,0.9)),
-    0 0 200px rgba(255,100,0,0.5),
-    inset 0 0 60px rgba(255,215,0,0.15),
-    inset 0 0 0 2px rgba(255,215,0,0.4);
+    0 0 70px rgba(0,0,0,0.7),
+    0 20px 60px rgba(0,0,0,0.6),
+    inset 0 0 0 2px rgba(212,175,55,0.55),
+    inset 0 0 70px rgba(20,40,90,0.5);
 }
 
 /* Marco exterior FIJO (no rotativo) - solo glow estatico.
@@ -5945,10 +5964,11 @@ function homeStopRunnerLoop() {
   position: absolute;
   inset: -8px;
   border-radius: 28px;
-  background: linear-gradient(135deg, var(--winner-accent, #ffd700), #ff6600, var(--winner-accent, #ffd700), #ff8800);
+  background: none;
+  display: none;
   z-index: -1;
-  opacity: 0.85;
-  filter: blur(3px);
+  opacity: 0.55;
+  filter: blur(4px);
 }
 
 /* Esquinas decorativas tipo marco antiguo */
@@ -5980,18 +6000,18 @@ function homeStopRunnerLoop() {
 /* Trofeo SVG decorativo arriba */
 .winner-trophy {
   position: absolute;
-  top: -30px;                  /* mas abajo - era -90px */
+  top: 3px;                     /* tocando el borde superior, sin pasarlo */
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
+  width: clamp(120px, 15vh, 162px);   /* un poco mas grande */
+  height: auto;
   z-index: 4;
-  filter: drop-shadow(0 0 25px #ffd700) drop-shadow(0 0 50px #ff6600);
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5));
   animation: trophyBounce 2s ease-in-out infinite;
 }
 @keyframes trophyBounce {
-  0%, 100% { transform: translateX(-50%) translateY(0) rotate(-3deg); }
-  50% { transform: translateX(-50%) translateY(-10px) rotate(3deg); }
+  0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+  50% { transform: translateX(-50%) translateY(-3px) rotate(2deg); }
 }
 
 /* ============================================================
@@ -6054,11 +6074,14 @@ function homeStopRunnerLoop() {
   gap: 30px;
   position: relative;
   z-index: 2;
+  width: 100%;
+  align-self: stretch;
 }
 .winner-title-text {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 /* Rayos de luz radiales desde el centro */
@@ -6152,7 +6175,7 @@ function homeStopRunnerLoop() {
   margin: 35px 0;
   padding: 25px 80px;
   letter-spacing: 6px;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Montserrat', 'Arial Black', sans-serif;
   /* Sin background ni borders - los pone el SVG decorativo */
   background: transparent;
   border: none;
@@ -6265,6 +6288,7 @@ function homeStopRunnerLoop() {
 
 /* Confeti SVG */
 .winner-confetti {
+  display: none !important;   /* confeti animado de atras desactivado */
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -6293,6 +6317,284 @@ function homeStopRunnerLoop() {
   0% { transform: translate(0,0) scale(0); opacity: 1; }
   50% { opacity: 1; }
   100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+}
+
+/* ============================================================
+   MODAL GANADOR — re-skin PREMIUM: azul marino + dorado + placa metalica
+   (sobrescribe el tema naranja/F1)
+   ============================================================ */
+.winner-modal {
+  background: radial-gradient(ellipse at center, rgba(8,16,40,0.96) 0%, rgba(2,5,15,0.98) 72%) !important;
+}
+.winner-frame {
+  background:
+    radial-gradient(ellipse at top, rgba(60,90,160,0.30) 0%, rgba(8,16,40,0.96) 60%),
+    linear-gradient(160deg, #0e1c3e 0%, #16264e 35%, #0c1730 70%, #0a1228 100%) !important;
+  border-radius: 28px !important;
+  box-shadow:
+    0 0 60px rgba(212,175,55,0.30),
+    0 20px 60px rgba(0,0,0,0.6),
+    inset 0 0 0 2px rgba(212,175,55,0.55),
+    inset 0 0 70px rgba(20,40,90,0.5) !important;
+}
+/* El ::before era un relleno DORADO que tapaba el navy (tema F1). Se apaga. */
+.winner-frame::before {
+  display: none !important;
+}
+/* El ::after dibujaba un SEGUNDO borde redondeado. Se apaga: la caja externa
+   debe tener UN solo borde y esquinas rectas. */
+.winner-frame::after {
+  display: none !important;
+}
+/* Ornamento sutil tipo mandala (reutiliza el fondo a cuadros) */
+.winner-checkered-bg {
+  background-image:
+    repeating-radial-gradient(circle at 50% 42%, rgba(212,175,55,0.10) 0 1px, transparent 1px 22px),
+    repeating-conic-gradient(from 0deg at 50% 42%, rgba(212,175,55,0.07) 0 1.2deg, transparent 1.2deg 7.5deg),
+    radial-gradient(circle at 50% 42%, rgba(212,175,55,0.12) 0%, transparent 48%) !important;
+  background-size: auto !important;
+  opacity: 0.6 !important;
+  border-radius: 18px !important;
+}
+/* Titulo: diseño METALICO DORADO (CSS provisto por el usuario) + glow detras. */
+.winner-title {
+  position: relative !important;
+  z-index: 2 !important;
+  font-weight: 900 !important;
+  background-image: linear-gradient(to bottom,
+    #fff9cf 0%,
+    #ffe98a 12%,
+    #ffc940 25%,
+    #c9780d 42%,
+    #ffef9d 55%,
+    #d98d12 68%,
+    #8a4800 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  -webkit-text-stroke: 2px #9a5a08 !important;
+  text-shadow: none !important;
+}
+.winner-title::before {
+  display: none !important;
+}
+/* El titulo ahora es un SVG: centrarlo y dimensionarlo responsive */
+.winner-title {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  align-self: stretch !important;
+  overflow: visible !important;
+  animation: none !important;   /* sin pulso / brillo parpadeante */
+  filter: none !important;      /* sin drop-shadow naranja */
+  transform: none !important;
+}
+.winner-title-svg {
+  display: block;
+  width: 100%;
+  max-width: 580px;             /* tamaño razonable: prominente pero deja ver la maquina */
+  height: auto;
+  overflow: visible;
+}
+/* Subtitulo: SOLO color, menos grosor */
+.winner-message {
+  color: #eaf0ff !important;
+  font-weight: 600 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7), 0 0 14px rgba(212,175,55,0.35) !important;
+}
+/* MONTO: la forma biselada + diamantes la da el SVG (reactivado y plateado).
+   Quito la caja CSS para que se vea esa forma; solo dejo color de texto. */
+.winner-amount-deco { display: block !important; }
+.winner-amount {
+  color: #f4d169 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: 0 2px 3px rgba(0,0,0,0.5), 0 0 16px rgba(212,175,55,0.6) !important;
+  -webkit-text-stroke: 1.5px #6a4e12 !important;
+}
+/* MAQUINA: la forma hexagonal la da el SVG (reactivado y navy/plateado). */
+.winner-machine-deco { display: block !important; }
+.winner-machine {
+  color: #dfe6f2 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6) !important;
+  -webkit-text-stroke: 0 !important;
+}
+/* Contador esquina inferior: navy + aro dorado (mas chico, sin pulso) */
+.winner-countdown {
+  width: 46px !important;
+  height: 46px !important;
+  bottom: 16px !important;
+  right: 18px !important;
+  font-family: 'Montserrat', 'Arial Black', sans-serif !important;
+  font-size: 21px !important;
+  font-weight: 900 !important;
+  background: radial-gradient(circle, rgba(14,28,58,0.95) 0%, rgba(20,35,70,0.85) 100%) !important;
+  border: 2.5px solid #d4af37 !important;
+  color: #f4d169 !important;
+  text-shadow: none !important;
+  box-shadow: 0 0 12px rgba(212,175,55,0.4), inset 0 0 8px rgba(212,175,55,0.2) !important;
+  animation: none !important;
+}
+/* Ocultar elementos del tema F1 que chocan con el azul */
+.winner-speed-lines, .winner-rays { display: none !important; }
+
+/* ===== 2 CAJAS =====
+   EXTERNA (.winner-frame): alto completo + patron de ondas + borde dorado.
+   INTERNA (.winner-inner): fondo navy SOLIDO, contiene el contenido. */
+.winner-frame {
+  width: 74vw !important;
+  max-width: 74vw !important;
+  height: 95vh !important;
+  max-height: 95vh !important;
+  padding: 0 clamp(20px, 3vw, 48px) !important;          /* sin padding arriba/abajo: ocupa completo */
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+  background:
+    radial-gradient(ellipse at top, rgba(60,90,160,0.22) 0%, rgba(8,16,40,0.96) 60%),
+    linear-gradient(160deg, #0e1c3e 0%, #14224a 40%, #0b1530 100%) !important;
+  border-radius: 0 !important;                          /* SIN esquinas redondeadas */
+  border: none !important;
+  border-left: 2px solid #b8893f !important;            /* borde solo en los laterales */
+  border-right: 2px solid #b8893f !important;
+  box-shadow: 0 22px 60px rgba(0,0,0,0.6) !important;    /* solo profundidad, no es borde */
+  overflow: hidden !important;
+}
+/* Caja EXTERNA de atras: muestra el SVG (patron del usuario) que la llena */
+.winner-checkered-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  z-index: 0 !important;
+  opacity: 1 !important;
+  background: none !important;
+}
+.winner-checkered-bg svg { display: block; width: 100%; height: 100%; }
+/* Caja interna: fondo SOLIDO, contiene el contenido */
+.winner-inner {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: min(800px, 98%);
+  background: linear-gradient(160deg, #142a55 0%, #0e1f44 55%, #0a1733 100%);
+  border: 1.6px solid #c9a24a;                 /* borde EXTERNO */
+  border-radius: 22px;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.4),
+    0 0 30px rgba(150,180,235,0.20),
+    0 0 60px rgba(212,175,55,0.14);            /* sombra un poco luminosa */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(130px, 14vh, 175px) clamp(2px, 0.5vw, 6px) clamp(22px, 3.5vh, 46px);
+  box-sizing: border-box;
+}
+.winner-inner::before {                        /* borde INTERNO (2do borde) */
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1.4px solid rgba(201,162,74,0.6);
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Confeti: en el cuadro EXTERNO, a los lados (entre ambos cuadros), detras del interno */
+.capa-confeti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;             /* sobre el patron del fondo, debajo de la caja interna (z-index 1) */
+}
+/* movimiento suave y liviano (solo 3 grupos, transform = barato para el render) */
+.capa-confeti .conf-a { animation: confFloatA 5s ease-in-out infinite; }
+.capa-confeti .conf-b { animation: confFloatB 6.4s ease-in-out infinite; }
+.capa-confeti .conf-c { animation: confFloatC 5.7s ease-in-out infinite; }
+@keyframes confFloatA { 0%,100% { transform: translateY(0); }   50% { transform: translateY(-7px); } }
+@keyframes confFloatB { 0%,100% { transform: translateY(0); }   50% { transform: translateY(6px); } }
+@keyframes confFloatC { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(5px); } }
+/* MONTO: imagen de fondo responsiva (escala con el ancho) + SVG dorado encima */
+.winner-amount {
+  position: relative !important;
+  width: min(94%, 600px) !important;     /* responsivo segun ancho */
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+  filter: none !important;
+}
+.winner-amount-bg {
+  display: block;
+  width: 100%;
+  height: auto;            /* mantiene la proporcion de tu imagen */
+}
+.winner-amount-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* MAQUINA: placa responsiva, el texto NUNCA en 2 lineas */
+.winner-machine {
+  position: relative !important;
+  display: block !important;
+  width: min(74%, 470px) !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  container-type: inline-size !important;
+  animation: none !important;          /* sin pulso azul */
+  filter: none !important;
+}
+#winnerMachineText {
+  position: relative;
+  display: block;
+  text-align: center;
+  white-space: nowrap !important;      /* jamas 2 lineas */
+  font-family: 'Orbitron', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 6cqw !important;          /* escala con el ancho del contenedor */
+  letter-spacing: 2px !important;
+  line-height: 1 !important;
+  color: #eaf0ff !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6) !important;
+  -webkit-text-stroke: 0 !important;
+  padding: clamp(11px, 3cqw, 22px) 12px !important;
+}
+.winner-title {
+  font-size: clamp(34px, 8.2vmin, 104px) !important;
+  margin: 0 !important;
+  line-height: 1.04 !important;
+}
+.winner-message {
+  font-size: clamp(15px, 3vmin, 38px) !important;
+  margin: 0 !important;
+}
+.winner-amount {
+  font-size: clamp(34px, 8vmin, 96px) !important;
+  margin: 0 !important;
+}
+.winner-machine {
+  font-size: clamp(15px, 2.8vmin, 44px) !important;
+  margin: 0 !important;
 }
 </style>
 
@@ -6467,41 +6769,113 @@ function homeStopRunnerLoop() {
   <!-- Marco principal con texto -->
   <div class="winner-frame">
     <!-- Fondo a cuadros (tipo F1) -->
-    <div class="winner-checkered-bg"></div>
+    <div class="winner-checkered-bg">
+      <svg viewBox="0 0 700 520" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <rect width="700" height="520" fill="#0b1832"/>
+        <g fill="none" stroke="#c08a47" stroke-width="1.2" opacity="0.35">
+          <circle cx="80" cy="260" r="60"/>
+          <circle cx="80" cy="260" r="90"/>
+          <circle cx="80" cy="260" r="120"/>
+          <path d="M0 120 C120 40, 120 480, 250 260 C120 40, 120 480, 0 400"/>
+          <path d="M20 80 C160 120, 160 420, 260 260 C160 120, 160 420, 20 440"/>
+          <circle cx="620" cy="260" r="60"/>
+          <circle cx="620" cy="260" r="90"/>
+          <circle cx="620" cy="260" r="120"/>
+          <path d="M700 120 C580 40, 580 480, 450 260 C580 40, 580 480, 700 400"/>
+          <path d="M680 80 C540 120, 540 420, 440 260 C540 120, 540 420, 680 440"/>
+        </g>
+      </svg>
+    </div>
     
-    <!-- TROFEO SVG arriba (decorativo) -->
-    <svg class="winner-trophy" viewBox="0 0 120 120">
+    <!-- CONFETI a los lados (entre ambos cuadros), con movimiento suave -->
+    <svg class="capa-confeti" viewBox="0 0 1200 600" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
-        <linearGradient id="trophyGold" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#fff7c0"/>
-          <stop offset="30%" stop-color="#ffd700"/>
-          <stop offset="70%" stop-color="#ff8800"/>
-          <stop offset="100%" stop-color="#aa5500"/>
+        <linearGradient id="oro-metalico" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="20%" stop-color="#ffe673"/>
+          <stop offset="45%" stop-color="#f5b82e"/>
+          <stop offset="48%" stop-color="#ffffff"/>
+          <stop offset="55%" stop-color="#d19417"/>
+          <stop offset="85%" stop-color="#7a4700"/>
+          <stop offset="100%" stop-color="#422200"/>
         </linearGradient>
-        <radialGradient id="trophyShine" cx="40%" cy="35%" r="50%">
-          <stop offset="0%" stop-color="#fff" stop-opacity="0.9"/>
-          <stop offset="60%" stop-color="#fff" stop-opacity="0"/>
-        </radialGradient>
+        <linearGradient id="cobre-metalico" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f3a175"/>
+          <stop offset="30%" stop-color="#d47443"/>
+          <stop offset="50%" stop-color="#ffffff"/>
+          <stop offset="70%" stop-color="#a64d22"/>
+          <stop offset="100%" stop-color="#542007"/>
+        </linearGradient>
+        <filter id="sombra-confeti" x="-20%" y="-20%" width="150%" height="150%">
+          <feDropShadow dx="2" dy="5" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+        </filter>
       </defs>
-      <!-- Base del trofeo -->
-      <rect x="35" y="95" width="50" height="8" fill="url(#trophyGold)" rx="2"/>
-      <rect x="40" y="103" width="40" height="6" fill="url(#trophyGold)" rx="2"/>
-      <!-- Pie -->
-      <path d="M 50 80 L 70 80 L 75 95 L 45 95 Z" fill="url(#trophyGold)"/>
-      <!-- Copa principal -->
-      <path d="M 30 25 L 90 25 L 85 55 Q 60 80 60 80 Q 60 80 35 55 Z" fill="url(#trophyGold)" stroke="#aa5500" stroke-width="1.5"/>
-      <!-- Asas laterales -->
-      <path d="M 30 30 Q 15 30 15 45 Q 15 55 25 55 L 32 50" fill="none" stroke="url(#trophyGold)" stroke-width="4"/>
-      <path d="M 90 30 Q 105 30 105 45 Q 105 55 95 55 L 88 50" fill="none" stroke="url(#trophyGold)" stroke-width="4"/>
-      <!-- Estrella central -->
-      <polygon points="60,35 64,45 75,45 66,52 70,63 60,57 50,63 54,52 45,45 56,45" 
-               fill="#fff" stroke="#aa5500" stroke-width="0.5"
-               filter="drop-shadow(0 0 4px #fff)"/>
-      <!-- Brillo -->
-      <ellipse cx="48" cy="42" rx="10" ry="15" fill="url(#trophyShine)"/>
-      <!-- Numero 1 -->
-      <text x="60" y="78" text-anchor="middle" font-family="Orbitron" font-size="14" font-weight="bold" fill="#aa5500">#1</text>
+      <g class="conf-a">
+        <polygon points="51,22 59,33 51,44 43,33" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(24 51 33)"/>
+        <polygon points="1133,32 1143,44 1133,56 1123,44" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(49 1133 44)"/>
+        <polygon points="113,71 120,86 113,101 106,86" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-13 113 86)"/>
+        <polygon points="1159,104 1169,119 1159,134 1149,119" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 1159 119)"/>
+        <polygon points="116,144 126,156 116,168 106,156" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(33 116 156)"/>
+        <polygon points="1124,161 1134,171 1124,181 1114,171" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(26 1124 171)"/>
+        <polygon points="125,202 136,214 125,226 114,214" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-31 125 214)"/>
+        <polygon points="1112,233 1123,248 1112,263 1101,248" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(55 1112 248)"/>
+        <polygon points="45,272 54,286 45,300 36,286" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-55 45 286)"/>
+        <polygon points="1099,296 1106,311 1099,326 1092,311" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-73 1099 311)"/>
+        <polygon points="113,338 123,348 113,358 103,348" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 113 348)"/>
+        <polygon points="1106,363 1117,374 1106,385 1095,374" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-47 1106 374)"/>
+        <polygon points="114,417 121,427 114,437 107,427" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(52 114 427)"/>
+        <polygon points="1121,440 1130,450 1121,460 1112,450" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(11 1121 450)"/>
+        <polygon points="76,467 87,478 76,489 65,478" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-43 76 478)"/>
+        <polygon points="1080,503 1088,516 1080,529 1072,516" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(64 1080 516)"/>
+        <polygon points="30,543 37,553 30,563 23,553" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-37 30 553)"/>
+        <polygon points="1116,568 1127,578 1116,588 1105,578" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(51 1116 578)"/>
+      </g>
+      <g class="conf-b">
+        <polygon points="1152,19 1162,33 1152,47 1142,33" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(46 1152 33)"/>
+        <polygon points="98,69 105,79 98,89 91,79" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 98 79)"/>
+        <polygon points="1150,72 1157,86 1150,100 1143,86" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(38 1150 86)"/>
+        <polygon points="91,126 98,141 91,156 84,141" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 91 141)"/>
+        <polygon points="1153,143 1164,156 1153,169 1142,156" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-9 1153 156)"/>
+        <polygon points="96,188 105,200 96,212 87,200" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-33 96 200)"/>
+        <polygon points="1149,201 1158,214 1149,227 1140,214" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(36 1149 214)"/>
+        <polygon points="127,259 134,274 127,289 120,274" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-72 127 274)"/>
+        <polygon points="1079,276 1090,286 1079,296 1068,286" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-25 1079 286)"/>
+        <polygon points="125,312 136,325 125,338 114,325" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(60 125 325)"/>
+        <polygon points="1113,335 1121,348 1113,361 1105,348" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-65 1113 348)"/>
+        <polygon points="30,387 39,399 30,411 21,399" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 30 399)"/>
+        <polygon points="1110,413 1119,427 1110,441 1101,427" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(9 1110 427)"/>
+        <polygon points="117,447 127,460 117,473 107,460" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(40 117 460)"/>
+        <polygon points="1152,468 1161,478 1152,488 1143,478" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-31 1152 478)"/>
+        <polygon points="41,512 51,525 41,538 31,525" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(7 41 525)"/>
+        <polygon points="1079,542 1088,553 1079,564 1070,553" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(17 1079 553)"/>
+      </g>
+      <g class="conf-c">
+        <polygon points="65,30 74,44 65,58 56,44" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(62 65 44)"/>
+        <polygon points="1139,66 1149,79 1139,92 1129,79" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(17 1139 79)"/>
+        <polygon points="71,104 80,119 71,134 62,119" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-34 71 119)"/>
+        <polygon points="1128,126 1139,141 1128,156 1117,141" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-3 1128 141)"/>
+        <polygon points="68,157 78,171 68,185 58,171" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 68 171)"/>
+        <polygon points="1135,189 1142,200 1135,211 1128,200" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(6 1135 200)"/>
+        <polygon points="65,233 74,248 65,263 56,248" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(19 65 248)"/>
+        <polygon points="1159,261 1167,274 1159,287 1151,274" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-52 1159 274)"/>
+        <polygon points="66,300 74,311 66,322 58,311" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-57 66 311)"/>
+        <polygon points="1118,315 1127,325 1118,335 1109,325" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-36 1118 325)"/>
+        <polygon points="95,360 102,374 95,388 88,374" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-22 95 374)"/>
+        <polygon points="1117,387 1127,399 1117,411 1107,399" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-68 1117 399)"/>
+        <polygon points="80,436 89,450 80,464 71,450" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-43 80 450)"/>
+        <polygon points="1086,449 1095,460 1086,471 1077,460" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-54 1086 460)"/>
+        <polygon points="45,502 55,516 45,530 35,516" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-42 45 516)"/>
+        <polygon points="1087,515 1095,525 1087,535 1079,525" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-70 1087 525)"/>
+        <polygon points="65,567 74,578 65,589 56,578" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(3 65 578)"/>
+      </g>
     </svg>
+    <!-- CAJA INTERNA: fondo navy SOLIDO, contiene todo el contenido -->
+    <div class="winner-inner">
+
+
+    <!-- TROFEO (imagen PNG generada, fondo transparente) -->
+    <img class="winner-trophy" src="copa.png" alt="">
+
     
     <!-- Fila con sprite + texto del titulo.
          El sprite arranca display:none y JS lo activa para grand/major. -->
@@ -6510,7 +6884,34 @@ function homeStopRunnerLoop() {
         <div class="winner-sprite" id="winnerSpriteLeft"></div>
       </div>
       <div class="winner-title-text">
-        <div class="winner-title" id="winnerTitle">¡FELICIDADES!</div>
+        <div class="winner-title" id="winnerTitle">
+          <svg class="winner-title-svg" viewBox="0 0 860 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="winGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fff8c2"/>
+                <stop offset="18%" stop-color="#ffd24f"/>
+                <stop offset="35%" stop-color="#b96b10"/>
+                <stop offset="48%" stop-color="#fff3a3"/>
+                <stop offset="58%" stop-color="#ffce45"/>
+                <stop offset="76%" stop-color="#8f4a08"/>
+                <stop offset="100%" stop-color="#ffd76a"/>
+              </linearGradient>
+              <filter id="winGoldFx" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur"/>
+                <feOffset in="blur" dx="0" dy="2" result="offset"/>
+                <feFlood flood-color="#3b1600" flood-opacity=".45"/>
+                <feComposite operator="in" in2="offset"/>
+                <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <text id="winnerTitleName" x="430" y="138" text-anchor="middle"
+                  font-family="'Montserrat','Arial Black',sans-serif" font-weight="900" font-size="172" letter-spacing="1"
+                  fill="url(#winGold)" stroke="#6f3700" stroke-width="2.5" paint-order="stroke fill">¡MINI</text>
+            <text x="430" y="292" text-anchor="middle"
+                  font-family="'Montserrat','Arial Black',sans-serif" font-weight="900" font-size="172" letter-spacing="1"
+                  fill="url(#winGold)" stroke="#6f3700" stroke-width="2.5" paint-order="stroke fill">JACKPOT!</text>
+          </svg>
+        </div>
         <div class="winner-message" id="winnerMessage">Te ganaste el premio</div>
       </div>
       <div class="winner-vehicle-box" id="winnerVehicleBoxRight">
@@ -6520,34 +6921,24 @@ function homeStopRunnerLoop() {
 
     <!-- MONTO con SVG decorativo de fondo -->
     <div class="winner-amount" id="winnerAmount" style="display:none;">
-      <svg class="winner-amount-deco" viewBox="0 0 600 160" preserveAspectRatio="none">
+      <img class="winner-amount-bg" src="monto.png" alt="">
+      <svg class="winner-amount-svg" viewBox="0 0 620 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="amountBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#3d1500" stop-opacity="0.95"/>
-            <stop offset="50%" stop-color="#1a0a00" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#3d1500" stop-opacity="0.95"/>
-          </linearGradient>
-          <linearGradient id="amountBorderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#ff8800"/>
-            <stop offset="50%" stop-color="#fff8a0"/>
-            <stop offset="100%" stop-color="#ff8800"/>
+          <linearGradient id="amountGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fff6b0"/>
+            <stop offset="18%" stop-color="#ffe04d"/>
+            <stop offset="35%" stop-color="#f7c020"/>
+            <stop offset="48%" stop-color="#fff3a0"/>
+            <stop offset="58%" stop-color="#ffd23a"/>
+            <stop offset="76%" stop-color="#e8a512"/>
+            <stop offset="100%" stop-color="#ffe070"/>
           </linearGradient>
         </defs>
-        <!-- Fondo principal con forma de placa biselada -->
-        <path d="M 30 10 L 570 10 L 590 80 L 570 150 L 30 150 L 10 80 Z"
-              fill="url(#amountBgGrad)"
-              stroke="url(#amountBorderGrad)" stroke-width="3"/>
-        <!-- Borde interior delgado -->
-        <path d="M 38 20 L 562 20 L 578 80 L 562 140 L 38 140 L 22 80 Z"
-              fill="none"
-              stroke="#ffd700" stroke-width="1" opacity="0.6"/>
-        <!-- Diamantes decorativos en los extremos -->
-        <polygon points="20,80 30,70 40,80 30,90" fill="#ffd700"/>
-        <polygon points="560,80 570,70 580,80 570,90" fill="#ffd700"/>
-        <!-- Brillo arriba -->
-        <ellipse cx="300" cy="20" rx="200" ry="8" fill="#fff8a0" opacity="0.4"/>
+        <text id="winnerAmountText" x="310" y="158" text-anchor="middle"
+              textLength="400" lengthAdjust="spacingAndGlyphs"
+              font-family="'Montserrat','Arial Black',sans-serif" font-weight="900" font-size="96" letter-spacing="0"
+              fill="url(#amountGold)" stroke="#6f3700" stroke-width="1.4" paint-order="stroke fill"></text>
       </svg>
-      <span id="winnerAmountText"></span>
     </div>
 
     <!-- MAQUINA con SVG decorativo de fondo (placa F1) -->
@@ -6555,36 +6946,37 @@ function homeStopRunnerLoop() {
       <svg class="winner-machine-deco" viewBox="0 0 400 100" preserveAspectRatio="none">
         <defs>
           <linearGradient id="machineBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="#ffd700" stop-opacity="0.25"/>
-            <stop offset="50%" stop-color="#aa5500" stop-opacity="0.2"/>
-            <stop offset="100%" stop-color="#ffd700" stop-opacity="0.25"/>
+            <stop offset="0%" stop-color="#28386e" stop-opacity="0.55"/>
+            <stop offset="50%" stop-color="#0f1c3c" stop-opacity="0.65"/>
+            <stop offset="100%" stop-color="#28386e" stop-opacity="0.55"/>
           </linearGradient>
           <pattern id="machineCheckered" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect x="0" y="0" width="10" height="10" fill="#ffd700" opacity="0.15"/>
-            <rect x="10" y="10" width="10" height="10" fill="#ffd700" opacity="0.15"/>
+            <rect x="0" y="0" width="10" height="10" fill="#ffd700" opacity="0"/>
+            <rect x="10" y="10" width="10" height="10" fill="#ffd700" opacity="0"/>
           </pattern>
         </defs>
-        <!-- Forma de placa F1 hexagonal estilizada -->
+        <!-- Forma de placa hexagonal -->
         <path d="M 20 10 L 380 10 L 395 50 L 380 90 L 20 90 L 5 50 Z"
               fill="url(#machineBgGrad)"
-              stroke="#ffd700" stroke-width="3"/>
-        <!-- Patron a cuadros (F1) -->
+              stroke="#cfd6e0" stroke-width="3"/>
+        <!-- (cuadriculado F1 quitado) -->
         <path d="M 20 10 L 380 10 L 395 50 L 380 90 L 20 90 L 5 50 Z"
               fill="url(#machineCheckered)"/>
         <!-- Borde interior brillante -->
         <path d="M 26 17 L 374 17 L 387 50 L 374 83 L 26 83 L 13 50 Z"
-              fill="none" stroke="#fff8a0" stroke-width="1" opacity="0.7"/>
-        <!-- Tornillos decorativos en las esquinas -->
-        <circle cx="25" cy="20" r="2.5" fill="#aa5500" stroke="#ffd700" stroke-width="0.5"/>
-        <circle cx="375" cy="20" r="2.5" fill="#aa5500" stroke="#ffd700" stroke-width="0.5"/>
-        <circle cx="25" cy="80" r="2.5" fill="#aa5500" stroke="#ffd700" stroke-width="0.5"/>
-        <circle cx="375" cy="80" r="2.5" fill="#aa5500" stroke="#ffd700" stroke-width="0.5"/>
+              fill="none" stroke="#eaf0ff" stroke-width="1" opacity="0.6"/>
+        <!-- Tornillos decorativos (plateados, sutiles) -->
+        <circle cx="25" cy="20" r="2.5" fill="#3a4a6e" stroke="#cfd6e0" stroke-width="0.5"/>
+        <circle cx="375" cy="20" r="2.5" fill="#3a4a6e" stroke="#cfd6e0" stroke-width="0.5"/>
+        <circle cx="25" cy="80" r="2.5" fill="#3a4a6e" stroke="#cfd6e0" stroke-width="0.5"/>
+        <circle cx="375" cy="80" r="2.5" fill="#3a4a6e" stroke="#cfd6e0" stroke-width="0.5"/>
       </svg>
       <span id="winnerMachineText">Máquina #000</span>
     </div>
 
     <!-- Contador en reversa - esquina inferior derecha -->
     <div class="winner-countdown" id="winnerCountdown">12</div>
+    </div><!-- /winner-inner -->
   </div>
 </div>
 
@@ -6600,6 +6992,7 @@ function homeStopRunnerLoop() {
   let confettiCtx, confettiParticles = [], confettiActive = false, confettiAnimId;
   
   function startConfetti() {
+    return;  /* confeti animado de atras desactivado: usamos solo el SVG de adelante */
     if (!confettiCanvas) return;
     confettiCanvas.width = window.innerWidth;
     confettiCanvas.height = window.innerHeight;
@@ -6616,7 +7009,7 @@ function homeStopRunnerLoop() {
         size: 4 + Math.random() * 6,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.2,
-        color: ['#ffd700', '#ff6600', '#ff3300', '#00ff88', '#ffffff', '#ffaa00'][Math.floor(Math.random()*6)]
+        color: ['#ffd700', '#f4c945', '#ffe89a', '#d4982a', '#fff3c0', '#c8902e'][Math.floor(Math.random()*6)]
       });
     }
     
@@ -6696,12 +7089,12 @@ function homeStopRunnerLoop() {
     // si postergar o aplicar directo).
     window.__activeWinnerSheet = sheetId;
     
-    // Configurar titulo segun la hoja
+    // Configurar titulo segun la hoja (solo el nombre; "JACKPOT!" es fijo en el SVG)
     const titles = {
-      mini: 'MINI JACKPOT',
-      minor: 'MINOR JACKPOT', 
-      major: 'MAJOR JACKPOT',
-      grand: 'GRAND JACKPOT'
+      mini: 'MINI',
+      minor: 'MINOR',
+      major: 'MAJOR',
+      grand: 'GRAND'
     };
     const messages = {
       mini: '¡FELICIDADES POR GANAR!',
@@ -6710,7 +7103,8 @@ function homeStopRunnerLoop() {
       grand: '¡FELICIDADES TE GANASTE EL AUTO!'
     };
     
-    titleEl.textContent = '¡' + titles[sheetId] + '!';
+    const nameEl = document.getElementById('winnerTitleName');
+    if (nameEl) nameEl.textContent = '¡' + (titles[sheetId] || 'MINI');
     msgEl.textContent = messages[sheetId];
 
     // ============================================================
