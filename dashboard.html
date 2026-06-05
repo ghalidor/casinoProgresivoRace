@@ -464,6 +464,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 /* empuja al fondo */
 
 
+
 /* ============================================================
    TEMA AMARILLO (MAJOR) - subtitle
    ============================================================ */
@@ -1733,10 +1734,11 @@ body.production-mode .reel-strip {
   align-items: center;
   gap: 6px;
   color: #00ff66;
-  font-size: clamp(16px, 1.7vw, 32px);
+  font-size: clamp(20px, 2.3vw, 44px);
   font-weight: bold;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   margin-bottom: 3px;
+  white-space: nowrap;        /* nunca en 2 lineas */
 }
 .promo-mini-odo.minor .promo-mini-label { color: #ff0033; }
 
@@ -6394,7 +6396,7 @@ function homeStopRunnerLoop() {
 .winner-title-svg {
   display: block;
   width: 100%;
-  max-width: 580px;             /* tamaño razonable: prominente pero deja ver la maquina */
+  max-width: 520px;             /* un poco mas chico */
   height: auto;
   overflow: visible;
 }
