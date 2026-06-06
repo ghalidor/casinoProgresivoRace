@@ -401,21 +401,21 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .bottom-row .stat-value   { font-size: 1.15cqw; }
 /* GRAND/MAJOR: termometro y KPIs (izq y der) mas compactos: mas angostos y pequenos */
 .sheet[data-id="grand"] .thermometer,
-.sheet[data-id="major"] .thermometer { width: 5.2cqw; flex: 0 0 auto; margin: 0 auto; min-height: 14cqh; padding: 0.6cqh 0.3cqw 0.8cqh; }
+.sheet[data-id="major"] .thermometer { width: 3.5cqw; flex: 0 0 auto; margin: 0 auto; min-height: 11cqh; padding: 0.4cqh 0.2cqw 0.6cqh; }
 .sheet[data-id="grand"] .thermo-label,
-.sheet[data-id="major"] .thermo-label { font-size: 0.66cqw; margin-bottom: 0.25cqh; }
+.sheet[data-id="major"] .thermo-label { font-size: 0.46cqw; margin-bottom: 0.15cqh; }
 .sheet[data-id="grand"] .thermo-value,
-.sheet[data-id="major"] .thermo-value { font-size: 0.98cqw; margin-top: 0.25cqh; }
+.sheet[data-id="major"] .thermo-value { font-size: 0.68cqw; margin-top: 0.15cqh; }
 .sheet[data-id="grand"] .thermo-bulb,
-.sheet[data-id="major"] .thermo-bulb { width: 1.4cqw; height: 1.4cqw; min-width: 8px; min-height: 8px; }
+.sheet[data-id="major"] .thermo-bulb { width: 0.95cqw; height: 0.95cqw; min-width: 6px; min-height: 6px; }
 .sheet[data-id="grand"] .thermo-tube,
-.sheet[data-id="major"] .thermo-tube { width: 0.7cqw; min-width: 5px; }
+.sheet[data-id="major"] .thermo-tube { width: 0.46cqw; min-width: 3px; }
 .sheet[data-id="grand"] .stat-card,
-.sheet[data-id="major"] .stat-card { padding: 0.45cqh 0.3cqw; }
+.sheet[data-id="major"] .stat-card { padding: 0.3cqh 0.2cqw; }
 .sheet[data-id="grand"] .stat-label,
-.sheet[data-id="major"] .stat-label { font-size: 0.66cqw; letter-spacing: 0.1cqw; }
+.sheet[data-id="major"] .stat-label { font-size: 0.46cqw; letter-spacing: 0.06cqw; }
 .sheet[data-id="grand"] .stat-value,
-.sheet[data-id="major"] .stat-value { font-size: 1.0cqw; }
+.sheet[data-id="major"] .stat-value { font-size: 0.68cqw; }
 /* el contenedor de la cadena (no el termometro) centra su contenido verticalmente */
 .bottom-row > div:not(.thermometer) { justify-content: center; align-items: center; }
 
@@ -770,7 +770,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   .sheet[data-id="major"] .vehicle-layout,
   .sheet[data-id="grand"] .vehicle-layout {
     display: grid;
-    grid-template-columns: minmax(0, 0.65fr) minmax(0, 4.2fr) minmax(0, 0.65fr);
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 4.6fr) minmax(0, 0.5fr);
     grid-template-rows: 1fr auto;
     gap: 1cqw 1cqw;
     align-items: stretch;
@@ -1059,6 +1059,11 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   max-width: 8.5cqw;
   margin: 0 auto;
 }
+/* Diagonal: el 1er gauge queda donde esta y el 2do baja un poco -> mas estetico */
+.sheet[data-id="major"] .cluster-grid .cluster-gauges .moto-gauge:nth-child(2),
+.sheet[data-id="grand"] .cluster-grid .cluster-gauges .moto-gauge:nth-child(2) {
+  transform: translateY(30%) !important;
+}
 .sheet[data-id="major"] .cluster-grid .moto-gauge-value,
 .sheet[data-id="grand"] .cluster-grid .moto-gauge-value {
   font-size: clamp(9px, 1.2cqw, 17px);
@@ -1089,7 +1094,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 }
 /* Achicar SOLO el sprite de la moto (el pedestal/disco no se toca) */
 .sheet[data-id="major"] .sprite-wrapper.moto-wrapper .moto-sprite {
-  transform: translateY(-12%) scale(0.78) !important;
+  transform: translateY(-12%) scale(0.64) !important;
   transform-origin: center center !important;
 }
 
@@ -1118,6 +1123,16 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   box-shadow: 0 0 16px rgba(0,229,212,0.30), inset 0 0 26px rgba(0,0,0,0.5);
   border-radius: 8px 22px 8px 22px;
 }
+/* Quitar el rectangulo/panel que contiene gauges+KPIs (por clase: aplica tambien
+   en la vista destacada). Solo afecta grand/major. */
+.cluster-car .cluster-bg,
+.cluster-moto .cluster-bg { display: none !important; }
+.cluster-car,
+.cluster-moto {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 /* KPIs: filas sleek con barra de acento lateral (en vez de cajitas cuadradas) */
 .sheet[data-id="major"] .cluster-kpi,
 .sheet[data-id="grand"] .cluster-kpi {
@@ -1138,6 +1153,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .sheet[data-id="major"] .cluster-kpi .cluster-kpi-value,
 .sheet[data-id="grand"] .cluster-kpi .cluster-kpi-value {
   margin-top: 0;
+  font-size: clamp(10px, 1.1cqw, 15px) !important;  /* mas chico: no se sale del panel */
+  white-space: nowrap;
 }
 .cluster-progress {
   position: relative;
@@ -1701,7 +1718,7 @@ body.production-mode .reel-strip {
     0 0 16px rgba(0,255,102,0.7),
     0 0 30px rgba(0,255,102,0.3),
     inset 0 0 12px rgba(0,255,102,0.15);
-  width: clamp(280px, 24vw, 460px);       /* mas ancho para que quepa cualquier numero */
+  width: clamp(330px, 28vw, 560px);       /* mas ancho: aprovecha el espacio hacia el centro */
   flex-shrink: 0;
 }
 .promo-mini-odo.minor {
@@ -1734,7 +1751,7 @@ body.production-mode .reel-strip {
   align-items: center;
   gap: 6px;
   color: #00ff66;
-  font-size: clamp(20px, 2.3vw, 44px);
+  font-size: clamp(18px, 2vw, 38px);
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 3px;
@@ -2264,6 +2281,12 @@ body.production-mode .reel-strip {
   width: 75%;
   height: 17%;
 }
+/* MAJOR: bajar la intensidad del halo del piso (era un brillo dorado fuerte) */
+.home-pot.home-major .home-pot-vehicle-box::after {
+  opacity: 0.32;
+  filter: blur(6px);
+}
+.home-pot.home-major .home-pot-vehicle-box::before { opacity: 0.4; }
 /* AUTO un poco mas grande que la moto */
 .home-pot.home-grand .home-pot-vehicle-box {
   --sprite-size: clamp(260px, 24vw, 360px);
@@ -2274,6 +2297,7 @@ body.production-mode .reel-strip {
 }
 .home-pot.home-major .home-pot-sprite {
   transform: translateY(-8%) scale(0.75);
+  filter: none;            /* sin brillo en el sprite (igual que el auto de GRAND) */
 }
 .home-pot-vehicle-box::before {
   content: '';
@@ -6513,6 +6537,28 @@ function homeStopRunnerLoop() {
   pointer-events: none;
   z-index: 0;
 }
+/* GRAND/MAJOR: se gana un vehiculo. UN solo sprite centrado, en la misma
+   posicion donde mini/minor muestran el monto. El titulo y subtitulo dorados
+   quedan igual que en todas las hojas (centrados, sin desplazarse). */
+.winner-vehicle-center {
+  --winner-sprite-size: clamp(240px, 38vmin, 400px);   /* tamaño del sprite */
+  --box-h: 1;                                          /* factor de alto de la caja */
+  width: var(--winner-sprite-size);
+  height: calc(var(--winner-sprite-size) * var(--box-h));
+  margin: 0 auto;
+  position: relative;
+  display: none;                 /* oculto por defecto; JS lo muestra en grand/major */
+  align-items: center;
+  justify-content: center;
+  overflow: visible;             /* el sprite puede sobresalir sin empujar la placa */
+  z-index: 2;
+}
+.winner-vehicle-center .winner-sprite { flex: 0 0 auto; }
+/* Auto (GRAND): mas grande, caja mas baja (es ancho/bajo). Moto (MAJOR): mas chica. */
+.winner-vehicle-center:has(.winner-car)  { --winner-sprite-size: clamp(340px, 54vmin, 560px); --box-h: 0.56; }
+.winner-vehicle-center:has(.winner-moto) { --winner-sprite-size: clamp(190px, 30vmin, 320px); --box-h: 0.92; }
+.winner-vehicle-center.show { display: flex; }
+.winner-vehicle-center::after { display: none; }   /* sin pedestal de luz (sin glow) */
 /* Confeti: en el cuadro EXTERNO, a los lados (entre ambos cuadros), detras del interno */
 .capa-confeti {
   position: absolute;
@@ -6522,13 +6568,42 @@ function homeStopRunnerLoop() {
   pointer-events: none;
   z-index: 0;             /* sobre el patron del fondo, debajo de la caja interna (z-index 1) */
 }
-/* movimiento suave y liviano (solo 3 grupos, transform = barato para el render) */
-.capa-confeti .conf-a { animation: confFloatA 5s ease-in-out infinite; }
-.capa-confeti .conf-b { animation: confFloatB 6.4s ease-in-out infinite; }
-.capa-confeti .conf-c { animation: confFloatC 5.7s ease-in-out infinite; }
-@keyframes confFloatA { 0%,100% { transform: translateY(0); }   50% { transform: translateY(-7px); } }
-@keyframes confFloatB { 0%,100% { transform: translateY(0); }   50% { transform: translateY(6px); } }
-@keyframes confFloatC { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(5px); } }
+/* CONFETI: cada pieza CAE como confeti real (lluvia), con vaiven, giro/volteo y
+   fundido en los extremos. Velocidad y fase propias (estilo inline). */
+.capa-confeti rect { will-change: transform, opacity; }
+@keyframes fall1 {
+  0%   { transform: translateY(-40px) translateX(0)    rotate(var(--rot)) scaleX(1);   opacity: 0; }
+  8%   { opacity: 1; }
+  25%  { transform: translateY(150px) translateX(7px)  rotate(calc(var(--rot) + 45deg))  scaleX(0.5); }
+  50%  { transform: translateY(330px) translateX(-6px) rotate(calc(var(--rot) + 90deg))  scaleX(1); }
+  75%  { transform: translateY(500px) translateX(7px)  rotate(calc(var(--rot) + 140deg)) scaleX(0.55); }
+  92%  { opacity: 1; }
+  100% { transform: translateY(660px) translateX(0)    rotate(calc(var(--rot) + 180deg)) scaleX(1);   opacity: 0; }
+}
+@keyframes fall2 {
+  0%   { transform: translateY(-40px) translateX(0)     rotate(var(--rot)) scaleX(1);   opacity: 0; }
+  8%   { opacity: 1; }
+  30%  { transform: translateY(190px) translateX(-8px)  rotate(calc(var(--rot) - 50deg))  scaleX(0.55); }
+  60%  { transform: translateY(380px) translateX(6px)   rotate(calc(var(--rot) - 110deg)) scaleX(0.9); }
+  92%  { opacity: 1; }
+  100% { transform: translateY(660px) translateX(-3px)  rotate(calc(var(--rot) - 200deg)) scaleX(1);   opacity: 0; }
+}
+@keyframes fall3 {
+  0%   { transform: translateY(-40px) translateX(0)     rotate(var(--rot)) scaleX(1);   opacity: 0; }
+  10%  { opacity: 1; }
+  35%  { transform: translateY(230px) translateX(9px)   rotate(calc(var(--rot) + 60deg))  scaleX(0.45); }
+  65%  { transform: translateY(430px) translateX(-7px)  rotate(calc(var(--rot) + 130deg)) scaleX(0.85); }
+  90%  { opacity: 1; }
+  100% { transform: translateY(660px) translateX(4px)   rotate(calc(var(--rot) + 210deg)) scaleX(1);   opacity: 0; }
+}
+@keyframes fall4 {
+  0%   { transform: translateY(-40px) translateX(0)     rotate(var(--rot)) scaleX(1);   opacity: 0; }
+  8%   { opacity: 1; }
+  40%  { transform: translateY(260px) translateX(-9px)  rotate(calc(var(--rot) - 70deg))  scaleX(0.6); }
+  70%  { transform: translateY(450px) translateX(8px)   rotate(calc(var(--rot) + 30deg))  scaleX(0.5); }
+  92%  { opacity: 1; }
+  100% { transform: translateY(660px) translateX(0)     rotate(calc(var(--rot) + 160deg)) scaleX(1);   opacity: 0; }
+}
 /* MONTO: imagen de fondo responsiva (escala con el ancho) + SVG dorado encima */
 .winner-amount {
   position: relative !important;
@@ -6553,16 +6628,17 @@ function homeStopRunnerLoop() {
   height: 100%;
   overflow: visible;
 }
-/* MAQUINA: placa responsiva, el texto NUNCA en 2 lineas */
+/* MAQUINA: la placa CRECE segun el largo del texto (fit-content), nunca 2 lineas */
 .winner-machine {
   position: relative !important;
   display: block !important;
-  width: min(74%, 470px) !important;
+  width: fit-content !important;
+  min-width: min(56%, 330px) !important;
+  max-width: min(92%, 660px) !important;
   margin: 0 auto !important;
   padding: 0 !important;
   background: none !important;
   border: none !important;
-  container-type: inline-size !important;
   animation: none !important;          /* sin pulso azul */
   filter: none !important;
 }
@@ -6573,13 +6649,13 @@ function homeStopRunnerLoop() {
   white-space: nowrap !important;      /* jamas 2 lineas */
   font-family: 'Orbitron', sans-serif !important;
   font-weight: 500 !important;
-  font-size: 6cqw !important;          /* escala con el ancho del contenedor */
+  font-size: clamp(18px, 2.7vmin, 40px) !important;
   letter-spacing: 2px !important;
   line-height: 1 !important;
   color: #eaf0ff !important;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6) !important;
   -webkit-text-stroke: 0 !important;
-  padding: clamp(11px, 3cqw, 22px) 12px !important;
+  padding: clamp(12px, 1.7vmin, 20px) clamp(26px, 3.6vmin, 50px) !important;
 }
 .winner-title {
   font-size: clamp(34px, 8.2vmin, 104px) !important;
@@ -6813,62 +6889,70 @@ function homeStopRunnerLoop() {
         </filter>
       </defs>
       <g class="conf-a">
-        <polygon points="51,22 59,33 51,44 43,33" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(24 51 33)"/>
-        <polygon points="1133,32 1143,44 1133,56 1123,44" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(49 1133 44)"/>
-        <polygon points="113,71 120,86 113,101 106,86" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-13 113 86)"/>
-        <polygon points="1159,104 1169,119 1159,134 1149,119" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 1159 119)"/>
-        <polygon points="116,144 126,156 116,168 106,156" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(33 116 156)"/>
-        <polygon points="1124,161 1134,171 1124,181 1114,171" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(26 1124 171)"/>
-        <polygon points="125,202 136,214 125,226 114,214" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-31 125 214)"/>
-        <polygon points="1112,233 1123,248 1112,263 1101,248" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(55 1112 248)"/>
-        <polygon points="45,272 54,286 45,300 36,286" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-55 45 286)"/>
-        <polygon points="1099,296 1106,311 1099,326 1092,311" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-73 1099 311)"/>
-        <polygon points="113,338 123,348 113,358 103,348" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 113 348)"/>
-        <polygon points="1106,363 1117,374 1106,385 1095,374" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-47 1106 374)"/>
-        <polygon points="114,417 121,427 114,437 107,427" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(52 114 427)"/>
-        <polygon points="1121,440 1130,450 1121,460 1112,450" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(11 1121 450)"/>
-        <polygon points="76,467 87,478 76,489 65,478" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-43 76 478)"/>
-        <polygon points="1080,503 1088,516 1080,529 1072,516" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(64 1080 516)"/>
-        <polygon points="30,543 37,553 30,563 23,553" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-37 30 553)"/>
-        <polygon points="1116,568 1127,578 1116,588 1105,578" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(51 1116 578)"/>
+        <rect x="1084" y="-8" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:15deg;animation:fall1 5.0s linear infinite;animation-delay:-0.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1162" y="-6" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:8deg;animation:fall2 8.1s linear infinite;animation-delay:-2.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="154" y="-11" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:53deg;animation:fall3 8.0s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1020" y="-9" width="11" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-35deg;animation:fall4 6.4s linear infinite;animation-delay:1.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-10" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:17deg;animation:fall1 7.4s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1015" y="-5" width="10" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:48deg;animation:fall2 7.4s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1060" y="-2" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:4deg;animation:fall3 8.4s linear infinite;animation-delay:8.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="167" y="-11" width="8" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:49deg;animation:fall4 7.7s linear infinite;animation-delay:-2.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="78" y="-10" width="11" height="16" rx="1.5" fill="url(#oro-metalico)" style="--rot:-50deg;animation:fall1 7.9s linear infinite;animation-delay:-2.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1054" y="-16" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:32deg;animation:fall2 6.3s linear infinite;animation-delay:0.6s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-4" width="11" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:37deg;animation:fall3 6.4s linear infinite;animation-delay:-6.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="24" y="2" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-39deg;animation:fall4 4.8s linear infinite;animation-delay:2.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1104" y="-5" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:-43deg;animation:fall1 5.8s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="146" y="-10" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:27deg;animation:fall2 5.1s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="128" y="-5" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:53deg;animation:fall3 7.9s linear infinite;animation-delay:3.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-8" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-50deg;animation:fall4 6.5s linear infinite;animation-delay:5.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1137" y="-9" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-25deg;animation:fall1 5.4s linear infinite;animation-delay:0.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1024" y="-10" width="11" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:3deg;animation:fall2 7.4s linear infinite;animation-delay:2.1s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="107" y="0" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:-23deg;animation:fall3 7.9s linear infinite;animation-delay:0.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="30" y="-2" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:48deg;animation:fall4 6.0s linear infinite;animation-delay:4.1s;transform-box:fill-box;transform-origin:center;"/>
       </g>
       <g class="conf-b">
-        <polygon points="1152,19 1162,33 1152,47 1142,33" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(46 1152 33)"/>
-        <polygon points="98,69 105,79 98,89 91,79" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 98 79)"/>
-        <polygon points="1150,72 1157,86 1150,100 1143,86" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(38 1150 86)"/>
-        <polygon points="91,126 98,141 91,156 84,141" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 91 141)"/>
-        <polygon points="1153,143 1164,156 1153,169 1142,156" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-9 1153 156)"/>
-        <polygon points="96,188 105,200 96,212 87,200" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-33 96 200)"/>
-        <polygon points="1149,201 1158,214 1149,227 1140,214" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(36 1149 214)"/>
-        <polygon points="127,259 134,274 127,289 120,274" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-72 127 274)"/>
-        <polygon points="1079,276 1090,286 1079,296 1068,286" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-25 1079 286)"/>
-        <polygon points="125,312 136,325 125,338 114,325" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(60 125 325)"/>
-        <polygon points="1113,335 1121,348 1113,361 1105,348" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-65 1113 348)"/>
-        <polygon points="30,387 39,399 30,411 21,399" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-53 30 399)"/>
-        <polygon points="1110,413 1119,427 1110,441 1101,427" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(9 1110 427)"/>
-        <polygon points="117,447 127,460 117,473 107,460" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(40 117 460)"/>
-        <polygon points="1152,468 1161,478 1152,488 1143,478" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-31 1152 478)"/>
-        <polygon points="41,512 51,525 41,538 31,525" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(7 41 525)"/>
-        <polygon points="1079,542 1088,553 1079,564 1070,553" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(17 1079 553)"/>
+        <rect x="1030" y="-1" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:56deg;animation:fall1 5.3s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1098" y="-8" width="10" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall2 6.6s linear infinite;animation-delay:1.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="44" y="-10" width="12" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:13deg;animation:fall3 6.6s linear infinite;animation-delay:0.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1024" y="-16" width="12" height="19" rx="1.5" fill="url(#cobre-metalico)" style="--rot:2deg;animation:fall4 4.6s linear infinite;animation-delay:4.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-5" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:8deg;animation:fall1 6.1s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="135" y="-8" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-52deg;animation:fall2 6.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1147" y="-12" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:55deg;animation:fall3 6.7s linear infinite;animation-delay:-1.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="164" y="-10" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-3deg;animation:fall4 8.2s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="116" y="1" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:38deg;animation:fall1 5.0s linear infinite;animation-delay:-0.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1100" y="3" width="9" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-22deg;animation:fall2 8.1s linear infinite;animation-delay:-0.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="137" y="-1" width="10" height="16" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 5.3s linear infinite;animation-delay:1.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-12" width="12" height="19" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-57deg;animation:fall4 5.0s linear infinite;animation-delay:2.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="35" y="2" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:22deg;animation:fall1 5.3s linear infinite;animation-delay:-2.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="128" y="-4" width="10" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:14deg;animation:fall2 5.8s linear infinite;animation-delay:-1.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1104" y="-10" width="11" height="17" rx="1.5" fill="url(#oro-metalico)" style="--rot:-45deg;animation:fall3 4.9s linear infinite;animation-delay:2.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="4" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall4 6.5s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1083" y="-10" width="10" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:-15deg;animation:fall1 6.6s linear infinite;animation-delay:-0.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1021" y="-16" width="8" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-41deg;animation:fall2 6.2s linear infinite;animation-delay:0.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1054" y="1" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:17deg;animation:fall3 5.3s linear infinite;animation-delay:1.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="84" y="2" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:13deg;animation:fall4 6.6s linear infinite;animation-delay:4.6s;transform-box:fill-box;transform-origin:center;"/>
       </g>
       <g class="conf-c">
-        <polygon points="65,30 74,44 65,58 56,44" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(62 65 44)"/>
-        <polygon points="1139,66 1149,79 1139,92 1129,79" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(17 1139 79)"/>
-        <polygon points="71,104 80,119 71,134 62,119" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-34 71 119)"/>
-        <polygon points="1128,126 1139,141 1128,156 1117,141" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-3 1128 141)"/>
-        <polygon points="68,157 78,171 68,185 58,171" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(48 68 171)"/>
-        <polygon points="1135,189 1142,200 1135,211 1128,200" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(6 1135 200)"/>
-        <polygon points="65,233 74,248 65,263 56,248" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(19 65 248)"/>
-        <polygon points="1159,261 1167,274 1159,287 1151,274" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-52 1159 274)"/>
-        <polygon points="66,300 74,311 66,322 58,311" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-57 66 311)"/>
-        <polygon points="1118,315 1127,325 1118,335 1109,325" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-36 1118 325)"/>
-        <polygon points="95,360 102,374 95,388 88,374" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-22 95 374)"/>
-        <polygon points="1117,387 1127,399 1117,411 1107,399" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-68 1117 399)"/>
-        <polygon points="80,436 89,450 80,464 71,450" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-43 80 450)"/>
-        <polygon points="1086,449 1095,460 1086,471 1077,460" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-54 1086 460)"/>
-        <polygon points="45,502 55,516 45,530 35,516" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(-42 45 516)"/>
-        <polygon points="1087,515 1095,525 1087,535 1079,525" fill="url(#cobre-metalico)" filter="url(#sombra-confeti)" transform="rotate(-70 1087 525)"/>
-        <polygon points="65,567 74,578 65,589 56,578" fill="url(#oro-metalico)" filter="url(#sombra-confeti)" transform="rotate(3 65 578)"/>
+        <rect x="1072" y="0" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:29deg;animation:fall1 7.9s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1016" y="2" width="9" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-22deg;animation:fall2 7.7s linear infinite;animation-delay:6.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="46" y="0" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:-34deg;animation:fall3 5.8s linear infinite;animation-delay:4.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="78" y="-9" width="9" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-44deg;animation:fall4 8.5s linear infinite;animation-delay:6.6s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="166" y="-2" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-29deg;animation:fall1 5.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="168" y="-16" width="10" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-9deg;animation:fall2 4.9s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1016" y="-7" width="12" height="20" rx="1.5" fill="url(#oro-metalico)" style="--rot:-12deg;animation:fall3 7.7s linear infinite;animation-delay:-5.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1030" y="-17" width="9" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall4 7.2s linear infinite;animation-delay:-6.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1054" y="-10" width="9" height="13" rx="1.5" fill="url(#oro-metalico)" style="--rot:56deg;animation:fall1 7.2s linear infinite;animation-delay:5.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1024" y="-2" width="8" height="11" rx="1.5" fill="url(#cobre-metalico)" style="--rot:31deg;animation:fall2 5.0s linear infinite;animation-delay:0.1s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="172" y="-1" width="11" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-37deg;animation:fall3 6.5s linear infinite;animation-delay:2.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1054" y="0" width="8" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-56deg;animation:fall4 4.8s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="52" y="-4" width="10" height="13" rx="1.5" fill="url(#oro-metalico)" style="--rot:8deg;animation:fall1 6.7s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1048" y="-2" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall2 5.1s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1016" y="-8" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 7.9s linear infinite;animation-delay:7.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1074" y="-14" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:54deg;animation:fall4 4.9s linear infinite;animation-delay:-4.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1040" y="-6" width="12" height="20" rx="1.5" fill="url(#oro-metalico)" style="--rot:-21deg;animation:fall1 6.3s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="72" y="-14" width="10" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-8deg;animation:fall2 6.4s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="28" y="0" width="11" height="17" rx="1.5" fill="url(#oro-metalico)" style="--rot:24deg;animation:fall3 6.9s linear infinite;animation-delay:-6.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1099" y="3" width="8" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-6deg;animation:fall4 7.9s linear infinite;animation-delay:-5.0s;transform-box:fill-box;transform-origin:center;"/>
       </g>
     </svg>
     <!-- CAJA INTERNA: fondo navy SOLIDO, contiene todo el contenido -->
@@ -6882,9 +6966,6 @@ function homeStopRunnerLoop() {
     <!-- Fila con sprite + texto del titulo.
          El sprite arranca display:none y JS lo activa para grand/major. -->
     <div class="winner-title-row">
-      <div class="winner-vehicle-box" id="winnerVehicleBoxLeft">
-        <div class="winner-sprite" id="winnerSpriteLeft"></div>
-      </div>
       <div class="winner-title-text">
         <div class="winner-title" id="winnerTitle">
           <svg class="winner-title-svg" viewBox="0 0 860 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
@@ -6916,9 +6997,6 @@ function homeStopRunnerLoop() {
         </div>
         <div class="winner-message" id="winnerMessage">Te ganaste el premio</div>
       </div>
-      <div class="winner-vehicle-box" id="winnerVehicleBoxRight">
-        <div class="winner-sprite" id="winnerSpriteRight"></div>
-      </div>
     </div>
 
     <!-- MONTO con SVG decorativo de fondo -->
@@ -6941,6 +7019,11 @@ function homeStopRunnerLoop() {
               font-family="'Montserrat','Arial Black',sans-serif" font-weight="900" font-size="96" letter-spacing="0"
               fill="url(#amountGold)" stroke="#6f3700" stroke-width="1.4" paint-order="stroke fill"></text>
       </svg>
+    </div>
+
+    <!-- VEHICULO UNICO centrado (solo grand/major), en el lugar del monto -->
+    <div class="winner-vehicle-center" id="winnerVehicleCenter">
+      <div class="winner-sprite" id="winnerSpriteCenter"></div>
     </div>
 
     <!-- MAQUINA con SVG decorativo de fondo (placa F1) -->
@@ -7057,13 +7140,22 @@ function homeStopRunnerLoop() {
   function spawnFireworks() {
     const modal = document.getElementById('winnerModal');
     if (!modal) return;
-    
+
+    // Si hay vehiculo (grand/major), los fuegos salen a SU misma altura.
+    let yCenter = 50, ySpread = 56;
+    const veh = document.getElementById('winnerVehicleCenter');
+    if (veh && veh.classList.contains('show')) {
+      const r = veh.getBoundingClientRect();
+      yCenter = ((r.top + r.bottom) / 2) / window.innerHeight * 100;
+      ySpread = 22;
+    }
+
     for (let i = 0; i < 25; i++) {
       setTimeout(() => {
         const fw = document.createElement('div');
         fw.className = 'firework';
         const x = 20 + Math.random() * 60; // 20%-80% pantalla
-        const y = 20 + Math.random() * 60;
+        const y = yCenter + (Math.random() - 0.5) * ySpread;
         fw.style.left = x + '%';
         fw.style.top = y + '%';
         fw.style.background = ['#ffd700', '#ff6600', '#00ff88', '#ffffff'][Math.floor(Math.random()*4)];
@@ -7123,31 +7215,22 @@ function homeStopRunnerLoop() {
     modal.style.setProperty('--winner-accent', accents[sheetId] || '#ffd700');
 
     // ============================================================
-    // SPRITE giratorio (auto/moto) al lado del titulo en grand/major.
-    // Mini/minor: ocultos (no son vehiculo, son efectivo).
+    // SPRITE giratorio (auto/moto): UN solo vehiculo centrado, en el lugar
+    // del monto. Solo grand/major. Mini/minor: oculto (son efectivo).
     // ============================================================
-    const boxL = document.getElementById('winnerVehicleBoxLeft');
-    const boxR = document.getElementById('winnerVehicleBoxRight');
-    const sprL = document.getElementById('winnerSpriteLeft');
-    const sprR = document.getElementById('winnerSpriteRight');
-    if (boxL && boxR && sprL && sprR) {
-      // Resetear clases de sprite
-      sprL.className = 'winner-sprite';
-      sprR.className = 'winner-sprite';
-      boxL.classList.remove('show');
-      boxR.classList.remove('show');
+    const boxC = document.getElementById('winnerVehicleCenter');
+    const sprC = document.getElementById('winnerSpriteCenter');
+    if (boxC && sprC) {
+      sprC.className = 'winner-sprite';   // resetear
+      boxC.classList.remove('show');
       if (sheetId === 'grand') {
-        sprL.classList.add('winner-car');
-        sprR.classList.add('winner-car');
-        boxL.classList.add('show');
-        boxR.classList.add('show');
+        sprC.classList.add('winner-car');
+        boxC.classList.add('show');
       } else if (sheetId === 'major') {
-        sprL.classList.add('winner-moto');
-        sprR.classList.add('winner-moto');
-        boxL.classList.add('show');
-        boxR.classList.add('show');
+        sprC.classList.add('winner-moto');
+        boxC.classList.add('show');
       }
-      // En mini/minor ambos quedan ocultos (no .show)
+      // En mini/minor queda oculto (no .show)
     }
 
     // ============================================================
