@@ -156,7 +156,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 @keyframes spark {0%,100%{opacity:0;transform:scale(.5);}50%{opacity:1;transform:scale(1.3);}}
 @keyframes heatPulse {0%,100%{box-shadow:0 0 12px var(--theme-accent),inset 0 0 8px var(--theme-accent);}50%{box-shadow:0 0 24px #ffd600,inset 0 0 14px #ffd600;}}
 @keyframes heatBubble {0%{transform:translateY(0) scale(1);opacity:.9;}100%{transform:translateY(-180px) scale(.3);opacity:0;}}
-@keyframes minorPulse {0%,100%{filter:drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 18px #ff8800) drop-shadow(0 0 30px #ff4400);}50%{filter:drop-shadow(0 0 14px #ffd700) drop-shadow(0 0 30px #ff8800) drop-shadow(0 0 50px #ff4400);}}
+@keyframes minorPulse {0%,100%{filter:drop-shadow(0 0 8px #ffd700) drop-shadow(0 0 18px #ff8800) drop-shadow(0 0 30px #ff4400) drop-shadow(0 2px 0 rgba(0,0,0,0.55)) drop-shadow(0 3px 3px rgba(0,0,0,0.45));}50%{filter:drop-shadow(0 0 14px #ffd700) drop-shadow(0 0 30px #ff8800) drop-shadow(0 0 50px #ff4400) drop-shadow(0 2px 0 rgba(0,0,0,0.55)) drop-shadow(0 3px 3px rgba(0,0,0,0.45));}}
 /* @keyframes odoStep eliminado - JS controla los reels */
 
 /* TITULO */
@@ -1092,9 +1092,16 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   top: 66% !important;
   transform: translate(-50%, -50%) !important;
 }
+/* Chispas del auto a la altura del pedestal (subido) */
+.sheet[data-id="grand"] .auto-sparks { top: 68% !important; }
 /* Achicar SOLO el sprite de la moto (el pedestal/disco no se toca) */
 .sheet[data-id="major"] .sprite-wrapper.moto-wrapper .moto-sprite {
   transform: translateY(-12%) scale(0.64) !important;
+  transform-origin: center center !important;
+}
+/* Achicar el sprite del auto en GRAND (estaba muy grande) */
+.sheet[data-id="grand"] .sprite-wrapper.auto-wrapper .auto-sprite {
+  transform: translateY(-6%) scale(0.7) !important;
   transform-origin: center center !important;
 }
 
@@ -1433,13 +1440,15 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   align-items: center;
   z-index: 50;
   pointer-events: none;
-  padding: 0 20px 2px 20px;
+  padding: 0 20px 0 20px;
   box-sizing: border-box;
   font-family: 'Courier New', monospace;
 }
 .next-promo-bar-track {
   flex: 1;
   height: 6px;
+  align-self: flex-end;       /* solo la barra pegada al bottom */
+  margin-bottom: 0;
   background: rgba(255,255,255,0.1);
   border-radius: 3px;
   overflow: hidden;
@@ -1571,6 +1580,11 @@ body.production-mode .reel-strip {
   z-index: 1;
   pointer-events: none;
   background: transparent;
+}
+/* Hoja GRAND: pedestal bajado para alinear con el auto */
+.sheet[data-id="grand"] .sprite-wrapper.auto-wrapper .pedestal-3d {
+  transform: translateY(2%) scale(0.85) !important;
+  transform-origin: center center !important;
 }
 
 /* Sprite ENCIMA del pedestal - base de posicion (sin transform) */
@@ -1707,6 +1721,7 @@ body.production-mode .reel-strip {
 /* Odometro mini estilizado */
 .promo-mini-odo {
   position: relative;
+  transform: translateY(12px);   /* bajar los contenedores un poco */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2274,17 +2289,20 @@ body.production-mode .reel-strip {
   z-index: 0;
   pointer-events: none;
 }
-/* Pedestal del auto un poco mas arriba y mas chico */
+/* Pedestal del auto al bottom del vehiculo (bajo las ruedas) */
 .home-pot.home-grand .home-pot-vehicle-box::after {
-  bottom: 47%;
+  bottom: 35%;
   left: 40%;
   width: 75%;
   height: 17%;
+  opacity: 0.32;        /* mas suave, como el de la moto */
+  filter: blur(6px);
 }
-/* MAJOR: bajar la intensidad del halo del piso (era un brillo dorado fuerte) */
+/* MAJOR: bajar la intensidad del halo del piso y ubicarlo bajo las ruedas */
 .home-pot.home-major .home-pot-vehicle-box::after {
   opacity: 0.32;
   filter: blur(6px);
+  bottom: 12%;
 }
 .home-pot.home-major .home-pot-vehicle-box::before { opacity: 0.4; }
 /* AUTO un poco mas grande que la moto */
@@ -2293,10 +2311,10 @@ body.production-mode .reel-strip {
 }
 .home-pot.home-grand .home-pot-sprite {
   filter: none;
-  transform: translate(-10%, -15%);
+  transform: translate(-10%, -15%) scale(1.009);
 }
 .home-pot.home-major .home-pot-sprite {
-  transform: translateY(-8%) scale(0.75);
+  transform: translateY(-1px) scale(1.08);
   filter: none;            /* sin brillo en el sprite (igual que el auto de GRAND) */
 }
 .home-pot-vehicle-box::before {
@@ -2461,7 +2479,7 @@ body.production-mode .reel-strip {
 /* TITULO superior - letrero estilo marquee de casino, con saliente abajo */
 .home-marquee-title {
   position: absolute;
-  top: 16vh;
+  top: 15vh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -2498,16 +2516,20 @@ body.production-mode .reel-strip {
 .home-marquee-title h1 {
   font-family: 'Orbitron', sans-serif;
   font-weight: 900;
-  font-size: clamp(24px, 2.8vw, 44px);
+  font-size: clamp(28px, 3.3vw, 52px);
   letter-spacing: 7px;
   white-space: nowrap;
   margin: 0;
-  color: #ffd700;
-  -webkit-text-stroke: 1px #000;
-  text-shadow:
-    0 0 2px #fff,
-    0 2px 0 #000,
-    0 0 8px rgba(255,170,0,0.6);
+  /* mismo dorado metalizado del titulo del modal (winGold) */
+  background: linear-gradient(180deg,
+    #fff8c2 0%, #ffd24f 18%, #b96b10 35%, #fff3a3 48%,
+    #ffce45 58%, #8f4a08 76%, #ffd76a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px #6f3700;
+  /* relieve 3D igual que el modal */
+  filter: drop-shadow(0 3px 0 rgba(85,45,0,0.9)) drop-shadow(0 4px 4px rgba(0,0,0,0.45));
 }
 
 /* TERMOMETRO inferior - pegado abajo del viewport */
@@ -3407,9 +3429,17 @@ function buildShield(sheetData) {
   let svgContent = `
     <defs>
       <linearGradient id="redLine" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ff5577"/>
-        <stop offset="50%" stop-color="#cc0022"/>
-        <stop offset="100%" stop-color="#7a0014"/>
+        <stop offset="0%" stop-color="#c43a4e"/>
+        <stop offset="25%" stop-color="#9e1f2f"/>
+        <stop offset="50%" stop-color="#7a0016"/>
+        <stop offset="75%" stop-color="#56000e"/>
+        <stop offset="100%" stop-color="#380007"/>
+      </linearGradient>
+      <linearGradient id="redSheen" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+        <stop offset="22%" stop-color="#ffd6de" stop-opacity="0.55"/>
+        <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="goldStroke" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#ffd600"/>
@@ -3437,7 +3467,7 @@ function buildShield(sheetData) {
 
     <path d="${mainPath}" fill="rgba(0,0,0,0.55)"/>
     <path d="${mainPath}" fill="url(#gridInner)" opacity="0.7"/>
-    <path d="${mainPath}" fill="none" stroke="url(#redLine)" stroke-width="13" stroke-linejoin="round" filter="drop-shadow(0 0 12px rgba(255,0,51,0.7))"/>
+    <path d="${mainPath}" fill="none" stroke="url(#redLine)" stroke-width="13" stroke-linejoin="round" filter="drop-shadow(0 2px 0 rgba(120,20,35,0.9)) drop-shadow(0 4px 0 rgba(60,0,12,0.95)) drop-shadow(0 7px 7px rgba(0,0,0,0.6))"/>
     <path d="${goldPath}" fill="none" stroke="url(#goldStroke)" stroke-width="2"/>
     <path d="${innerPath}" fill="none" stroke="${innerLineColor}" stroke-width="1"/>
 
@@ -5232,9 +5262,17 @@ function homeBuildShield() {
   svg.innerHTML = `
     <defs>
       <linearGradient id="redLine" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ff5577"/>
-        <stop offset="50%" stop-color="#cc0022"/>
-        <stop offset="100%" stop-color="#7a0014"/>
+        <stop offset="0%" stop-color="#c43a4e"/>
+        <stop offset="25%" stop-color="#9e1f2f"/>
+        <stop offset="50%" stop-color="#7a0016"/>
+        <stop offset="75%" stop-color="#56000e"/>
+        <stop offset="100%" stop-color="#380007"/>
+      </linearGradient>
+      <linearGradient id="redSheen" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+        <stop offset="22%" stop-color="#ffd6de" stop-opacity="0.55"/>
+        <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="goldStroke" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#ffd600"/>
@@ -5256,7 +5294,7 @@ function homeBuildShield() {
       </radialGradient>
       <filter id="bigGlow"><feGaussianBlur stdDeviation="6"/></filter>
     </defs>
-    <path d="${mainPath}" fill="none" stroke="url(#redLine)" stroke-width="13" stroke-linejoin="round" filter="drop-shadow(0 0 12px rgba(255,0,51,0.7))"/>
+    <path d="${mainPath}" fill="none" stroke="url(#redLine)" stroke-width="13" stroke-linejoin="round" filter="drop-shadow(0 2px 0 rgba(120,20,35,0.9)) drop-shadow(0 4px 0 rgba(60,0,12,0.95)) drop-shadow(0 7px 7px rgba(0,0,0,0.6))"/>
     <path d="${goldPath}" fill="none" stroke="url(#goldStroke)" stroke-width="2"/>
     <path id="shieldInner" d="${innerPath}" fill="none" stroke="rgba(255,0,51,0.7)" stroke-width="1"/>
     ${bulbsHtml}
@@ -6026,14 +6064,22 @@ function homeStopRunnerLoop() {
 /* Trofeo SVG decorativo arriba */
 .winner-trophy {
   position: absolute;
-  top: 3px;                     /* tocando el borde superior, sin pasarlo */
+  top: clamp(20px, 4vh, 50px);   /* mismo que mini/minor */
   left: 50%;
   transform: translateX(-50%);
-  width: clamp(120px, 15vh, 162px);   /* un poco mas grande */
+  width: clamp(150px, 19vh, 205px);   /* mismo tamano que mini/minor */
   height: auto;
   z-index: 4;
   filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5));
   animation: trophyBounce 2s ease-in-out infinite;
+}
+/* MONTO (mini/minor): copa mas grande y mas abajo, y el texto baja cerca del monto */
+.winner-inner:not(:has(.winner-vehicle-center.show)) .winner-trophy {
+  width: clamp(150px, 19vh, 205px) !important;
+  top: clamp(20px, 4vh, 50px) !important;
+}
+.winner-inner:not(:has(.winner-vehicle-center.show)) .winner-title-row {
+  transform: translateY(9vh) !important;
 }
 @keyframes trophyBounce {
   0%, 100% { transform: translateX(-50%) translateY(0) rotate(-2deg); }
@@ -6314,11 +6360,11 @@ function homeStopRunnerLoop() {
 
 /* Confeti SVG */
 .winner-confetti {
-  display: none !important;   /* confeti animado de atras desactivado */
+  display: block;   /* confeti festivo activado */
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 5;
 }
 
 /* Estrellas SVG laterales */
@@ -6423,6 +6469,8 @@ function homeStopRunnerLoop() {
   max-width: 520px;             /* un poco mas chico */
   height: auto;
   overflow: visible;
+  /* relieve 3D con profundidad (sutil) */
+  filter: drop-shadow(0 3px 0 rgba(85,45,0,0.9)) drop-shadow(0 5px 4px rgba(0,0,0,0.45));
 }
 /* Subtitulo: SOLO color, menos grosor */
 .winner-message {
@@ -6556,8 +6604,16 @@ function homeStopRunnerLoop() {
 .winner-vehicle-center .winner-sprite { flex: 0 0 auto; }
 /* Auto (GRAND): mas grande, caja mas baja (es ancho/bajo). Moto (MAJOR): mas chica. */
 .winner-vehicle-center:has(.winner-car)  { --winner-sprite-size: clamp(340px, 54vmin, 560px); --box-h: 0.56; }
-.winner-vehicle-center:has(.winner-moto) { --winner-sprite-size: clamp(190px, 30vmin, 320px); --box-h: 0.92; }
+.winner-vehicle-center:has(.winner-moto) { --winner-sprite-size: clamp(280px, 44vmin, 460px); --box-h: 0.92; }
 .winner-vehicle-center.show { display: flex; }
+/* Cuando hay vehiculo (grand/major) la placa sube, pero MENOS que en mini/minor */
+.winner-inner:has(.winner-vehicle-center.show) .winner-machine {
+  transform: translateY(-4.5vh) !important;
+}
+/* Y el titulo+subtitulo a la MISMA altura que mini/minor */
+.winner-inner:has(.winner-vehicle-center.show) .winner-title-row {
+  transform: translateY(9vh) !important;
+}
 .winner-vehicle-center::after { display: none; }   /* sin pedestal de luz (sin glow) */
 /* Confeti: en el cuadro EXTERNO, a los lados (entre ambos cuadros), detras del interno */
 .capa-confeti {
@@ -6636,6 +6692,7 @@ function homeStopRunnerLoop() {
   min-width: min(56%, 330px) !important;
   max-width: min(92%, 660px) !important;
   margin: 0 auto !important;
+  transform: translateY(-9vh) !important;   /* mini/minor: placa bien arriba */
   padding: 0 !important;
   background: none !important;
   border: none !important;
@@ -6665,6 +6722,10 @@ function homeStopRunnerLoop() {
 .winner-message {
   font-size: clamp(15px, 3vmin, 38px) !important;
   margin: 0 !important;
+  white-space: nowrap !important;     /* una sola linea (igual que mini/minor) */
+  letter-spacing: 2px !important;
+  /* relieve 3D sutil */
+  text-shadow: 0 1px 0 rgba(35,18,0,0.85), 0 2px 0 rgba(25,12,0,0.7), 0 3px 5px rgba(0,0,0,0.5) !important;
 }
 .winner-amount {
   font-size: clamp(34px, 8vmin, 96px) !important;
@@ -6882,77 +6943,89 @@ function homeStopRunnerLoop() {
           <stop offset="30%" stop-color="#d47443"/>
           <stop offset="50%" stop-color="#ffffff"/>
           <stop offset="70%" stop-color="#a64d22"/>
-          <stop offset="100%" stop-color="#542007"/>
+  <stop offset="100%" stop-color="#542007"/>
+        </linearGradient>
+        <linearGradient id="rojo-festivo" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ff8a8a"/><stop offset="50%" stop-color="#ff2d2d"/><stop offset="100%" stop-color="#8a0010"/>
+        </linearGradient>
+        <linearGradient id="blanco-festivo" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffffff"/><stop offset="50%" stop-color="#e8eefc"/><stop offset="100%" stop-color="#9fb0d0"/>
+        </linearGradient>
+        <linearGradient id="turquesa-festivo" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#9bfff4"/><stop offset="50%" stop-color="#00e5d4"/><stop offset="100%" stop-color="#007a72"/>
+        </linearGradient>
+        <linearGradient id="rosa-festivo" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffc1e0"/><stop offset="50%" stop-color="#ff4da6"/><stop offset="100%" stop-color="#a8005f"/>
         </linearGradient>
         <filter id="sombra-confeti" x="-20%" y="-20%" width="150%" height="150%">
           <feDropShadow dx="2" dy="5" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
         </filter>
       </defs>
       <g class="conf-a">
-        <rect x="1084" y="-8" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:15deg;animation:fall1 5.0s linear infinite;animation-delay:-0.5s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1162" y="-6" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:8deg;animation:fall2 8.1s linear infinite;animation-delay:-2.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="154" y="-11" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:53deg;animation:fall3 8.0s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1020" y="-9" width="11" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-35deg;animation:fall4 6.4s linear infinite;animation-delay:1.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-10" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:17deg;animation:fall1 7.4s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1015" y="-5" width="10" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:48deg;animation:fall2 7.4s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1060" y="-2" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:4deg;animation:fall3 8.4s linear infinite;animation-delay:8.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="167" y="-11" width="8" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:49deg;animation:fall4 7.7s linear infinite;animation-delay:-2.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="78" y="-10" width="11" height="16" rx="1.5" fill="url(#oro-metalico)" style="--rot:-50deg;animation:fall1 7.9s linear infinite;animation-delay:-2.4s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1054" y="-16" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:32deg;animation:fall2 6.3s linear infinite;animation-delay:0.6s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-4" width="11" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:37deg;animation:fall3 6.4s linear infinite;animation-delay:-6.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="24" y="2" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-39deg;animation:fall4 4.8s linear infinite;animation-delay:2.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1104" y="-5" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:-43deg;animation:fall1 5.8s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="146" y="-10" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:27deg;animation:fall2 5.1s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="128" y="-5" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:53deg;animation:fall3 7.9s linear infinite;animation-delay:3.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-8" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-50deg;animation:fall4 6.5s linear infinite;animation-delay:5.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1137" y="-9" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-25deg;animation:fall1 5.4s linear infinite;animation-delay:0.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1024" y="-10" width="11" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:3deg;animation:fall2 7.4s linear infinite;animation-delay:2.1s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="107" y="0" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:-23deg;animation:fall3 7.9s linear infinite;animation-delay:0.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="30" y="-2" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:48deg;animation:fall4 6.0s linear infinite;animation-delay:4.1s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="954" y="-8" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:15deg;animation:fall1 5.0s linear infinite;animation-delay:-0.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1032" y="-6" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:8deg;animation:fall2 8.1s linear infinite;animation-delay:-2.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="284" y="-11" width="9" height="12" rx="1.5" fill="url(#rojo-festivo)" style="--rot:53deg;animation:fall3 8.0s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="890" y="-9" width="11" height="18" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-35deg;animation:fall4 6.4s linear infinite;animation-delay:1.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-10" width="8" height="11" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:17deg;animation:fall1 7.4s linear infinite;animation-delay:4.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="885" y="-5" width="10" height="14" rx="1.5" fill="url(#rosa-festivo)" style="--rot:48deg;animation:fall2 7.4s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="930" y="-2" width="9" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:4deg;animation:fall3 8.4s linear infinite;animation-delay:8.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="297" y="-11" width="8" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:49deg;animation:fall4 7.7s linear infinite;animation-delay:-2.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="208" y="-10" width="11" height="16" rx="1.5" fill="url(#rojo-festivo)" style="--rot:-50deg;animation:fall1 7.9s linear infinite;animation-delay:-2.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="924" y="-16" width="9" height="13" rx="1.5" fill="url(#blanco-festivo)" style="--rot:32deg;animation:fall2 6.3s linear infinite;animation-delay:0.6s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-4" width="11" height="15" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:37deg;animation:fall3 6.4s linear infinite;animation-delay:-6.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="154" y="2" width="11" height="17" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-39deg;animation:fall4 4.8s linear infinite;animation-delay:2.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="974" y="-5" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:-43deg;animation:fall1 5.8s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="276" y="-10" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:27deg;animation:fall2 5.1s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="258" y="-5" width="9" height="14" rx="1.5" fill="url(#rojo-festivo)" style="--rot:53deg;animation:fall3 7.9s linear infinite;animation-delay:3.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-8" width="9" height="13" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-50deg;animation:fall4 6.5s linear infinite;animation-delay:5.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1007" y="-9" width="10" height="14" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:-25deg;animation:fall1 5.4s linear infinite;animation-delay:0.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="894" y="-10" width="11" height="18" rx="1.5" fill="url(#rosa-festivo)" style="--rot:3deg;animation:fall2 7.4s linear infinite;animation-delay:2.1s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="237" y="0" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:-23deg;animation:fall3 7.9s linear infinite;animation-delay:0.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="160" y="-2" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:48deg;animation:fall4 6.0s linear infinite;animation-delay:4.1s;transform-box:fill-box;transform-origin:center;"/>
       </g>
       <g class="conf-b">
-        <rect x="1030" y="-1" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:56deg;animation:fall1 5.3s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1098" y="-8" width="10" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall2 6.6s linear infinite;animation-delay:1.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="44" y="-10" width="12" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:13deg;animation:fall3 6.6s linear infinite;animation-delay:0.0s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1024" y="-16" width="12" height="19" rx="1.5" fill="url(#cobre-metalico)" style="--rot:2deg;animation:fall4 4.6s linear infinite;animation-delay:4.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-5" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:8deg;animation:fall1 6.1s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="135" y="-8" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-52deg;animation:fall2 6.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1147" y="-12" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:55deg;animation:fall3 6.7s linear infinite;animation-delay:-1.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="164" y="-10" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-3deg;animation:fall4 8.2s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="116" y="1" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:38deg;animation:fall1 5.0s linear infinite;animation-delay:-0.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1100" y="3" width="9" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-22deg;animation:fall2 8.1s linear infinite;animation-delay:-0.4s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="137" y="-1" width="10" height="16" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 5.3s linear infinite;animation-delay:1.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-12" width="12" height="19" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-57deg;animation:fall4 5.0s linear infinite;animation-delay:2.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="35" y="2" width="8" height="11" rx="1.5" fill="url(#oro-metalico)" style="--rot:22deg;animation:fall1 5.3s linear infinite;animation-delay:-2.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="128" y="-4" width="10" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:14deg;animation:fall2 5.8s linear infinite;animation-delay:-1.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1104" y="-10" width="11" height="17" rx="1.5" fill="url(#oro-metalico)" style="--rot:-45deg;animation:fall3 4.9s linear infinite;animation-delay:2.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="4" width="9" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall4 6.5s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1083" y="-10" width="10" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:-15deg;animation:fall1 6.6s linear infinite;animation-delay:-0.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1021" y="-16" width="8" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-41deg;animation:fall2 6.2s linear infinite;animation-delay:0.4s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1054" y="1" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:17deg;animation:fall3 5.3s linear infinite;animation-delay:1.4s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="84" y="2" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:13deg;animation:fall4 6.6s linear infinite;animation-delay:4.6s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="900" y="-1" width="10" height="14" rx="1.5" fill="url(#rojo-festivo)" style="--rot:56deg;animation:fall1 5.3s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="968" y="-8" width="10" height="17" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-36deg;animation:fall2 6.6s linear infinite;animation-delay:1.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="174" y="-10" width="12" height="18" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:13deg;animation:fall3 6.6s linear infinite;animation-delay:0.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="894" y="-16" width="12" height="19" rx="1.5" fill="url(#rosa-festivo)" style="--rot:2deg;animation:fall4 4.6s linear infinite;animation-delay:4.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-5" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:8deg;animation:fall1 6.1s linear infinite;animation-delay:3.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="265" y="-8" width="12" height="18" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-52deg;animation:fall2 6.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="1017" y="-12" width="8" height="11" rx="1.5" fill="url(#rojo-festivo)" style="--rot:55deg;animation:fall3 6.7s linear infinite;animation-delay:-1.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="294" y="-10" width="11" height="17" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-3deg;animation:fall4 8.2s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="246" y="1" width="9" height="12" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:38deg;animation:fall1 5.0s linear infinite;animation-delay:-0.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="970" y="3" width="9" height="12" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-22deg;animation:fall2 8.1s linear infinite;animation-delay:-0.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="267" y="-1" width="10" height="16" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 5.3s linear infinite;animation-delay:1.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-12" width="12" height="19" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-57deg;animation:fall4 5.0s linear infinite;animation-delay:2.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="165" y="2" width="8" height="11" rx="1.5" fill="url(#rojo-festivo)" style="--rot:22deg;animation:fall1 5.3s linear infinite;animation-delay:-2.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="258" y="-4" width="10" height="14" rx="1.5" fill="url(#blanco-festivo)" style="--rot:14deg;animation:fall2 5.8s linear infinite;animation-delay:-1.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="974" y="-10" width="11" height="17" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:-45deg;animation:fall3 4.9s linear infinite;animation-delay:2.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="4" width="9" height="13" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-36deg;animation:fall4 6.5s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="953" y="-10" width="10" height="15" rx="1.5" fill="url(#oro-metalico)" style="--rot:-15deg;animation:fall1 6.6s linear infinite;animation-delay:-0.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="891" y="-16" width="8" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-41deg;animation:fall2 6.2s linear infinite;animation-delay:0.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="924" y="1" width="9" height="14" rx="1.5" fill="url(#rojo-festivo)" style="--rot:17deg;animation:fall3 5.3s linear infinite;animation-delay:1.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="214" y="2" width="9" height="15" rx="1.5" fill="url(#blanco-festivo)" style="--rot:13deg;animation:fall4 6.6s linear infinite;animation-delay:4.6s;transform-box:fill-box;transform-origin:center;"/>
       </g>
       <g class="conf-c">
-        <rect x="1072" y="0" width="10" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:29deg;animation:fall1 7.9s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1016" y="2" width="9" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-22deg;animation:fall2 7.7s linear infinite;animation-delay:6.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="46" y="0" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:-34deg;animation:fall3 5.8s linear infinite;animation-delay:4.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="78" y="-9" width="9" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-44deg;animation:fall4 8.5s linear infinite;animation-delay:6.6s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="166" y="-2" width="9" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-29deg;animation:fall1 5.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="168" y="-16" width="10" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-9deg;animation:fall2 4.9s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1016" y="-7" width="12" height="20" rx="1.5" fill="url(#oro-metalico)" style="--rot:-12deg;animation:fall3 7.7s linear infinite;animation-delay:-5.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1030" y="-17" width="9" height="14" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall4 7.2s linear infinite;animation-delay:-6.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1054" y="-10" width="9" height="13" rx="1.5" fill="url(#oro-metalico)" style="--rot:56deg;animation:fall1 7.2s linear infinite;animation-delay:5.9s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1024" y="-2" width="8" height="11" rx="1.5" fill="url(#cobre-metalico)" style="--rot:31deg;animation:fall2 5.0s linear infinite;animation-delay:0.1s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="172" y="-1" width="11" height="14" rx="1.5" fill="url(#oro-metalico)" style="--rot:-37deg;animation:fall3 6.5s linear infinite;animation-delay:2.4s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1054" y="0" width="8" height="13" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-56deg;animation:fall4 4.8s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="52" y="-4" width="10" height="13" rx="1.5" fill="url(#oro-metalico)" style="--rot:8deg;animation:fall1 6.7s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1048" y="-2" width="11" height="17" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-36deg;animation:fall2 5.1s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1016" y="-8" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 7.9s linear infinite;animation-delay:7.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1074" y="-14" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:54deg;animation:fall4 4.9s linear infinite;animation-delay:-4.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1040" y="-6" width="12" height="20" rx="1.5" fill="url(#oro-metalico)" style="--rot:-21deg;animation:fall1 6.3s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="72" y="-14" width="10" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-8deg;animation:fall2 6.4s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="28" y="0" width="11" height="17" rx="1.5" fill="url(#oro-metalico)" style="--rot:24deg;animation:fall3 6.9s linear infinite;animation-delay:-6.7s;transform-box:fill-box;transform-origin:center;"/>
-        <rect x="1099" y="3" width="8" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-6deg;animation:fall4 7.9s linear infinite;animation-delay:-5.0s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="942" y="0" width="10" height="14" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:29deg;animation:fall1 7.9s linear infinite;animation-delay:-4.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="886" y="2" width="9" height="14" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-22deg;animation:fall2 7.7s linear infinite;animation-delay:6.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="176" y="0" width="9" height="12" rx="1.5" fill="url(#oro-metalico)" style="--rot:-34deg;animation:fall3 5.8s linear infinite;animation-delay:4.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="208" y="-9" width="9" height="12" rx="1.5" fill="url(#cobre-metalico)" style="--rot:-44deg;animation:fall4 8.5s linear infinite;animation-delay:6.6s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="296" y="-2" width="9" height="14" rx="1.5" fill="url(#rojo-festivo)" style="--rot:-29deg;animation:fall1 5.5s linear infinite;animation-delay:2.5s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="298" y="-16" width="10" height="13" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-9deg;animation:fall2 4.9s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="886" y="-7" width="12" height="20" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:-12deg;animation:fall3 7.7s linear infinite;animation-delay:-5.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="900" y="-17" width="9" height="14" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-36deg;animation:fall4 7.2s linear infinite;animation-delay:-6.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="924" y="-10" width="9" height="13" rx="1.5" fill="url(#oro-metalico)" style="--rot:56deg;animation:fall1 7.2s linear infinite;animation-delay:5.9s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="894" y="-2" width="8" height="11" rx="1.5" fill="url(#cobre-metalico)" style="--rot:31deg;animation:fall2 5.0s linear infinite;animation-delay:0.1s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="302" y="-1" width="11" height="14" rx="1.5" fill="url(#rojo-festivo)" style="--rot:-37deg;animation:fall3 6.5s linear infinite;animation-delay:2.4s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="924" y="0" width="8" height="13" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-56deg;animation:fall4 4.8s linear infinite;animation-delay:-3.8s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="182" y="-4" width="10" height="13" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:8deg;animation:fall1 6.7s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="918" y="-2" width="11" height="17" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-36deg;animation:fall2 5.1s linear infinite;animation-delay:-3.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="886" y="-8" width="11" height="18" rx="1.5" fill="url(#oro-metalico)" style="--rot:51deg;animation:fall3 7.9s linear infinite;animation-delay:7.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="944" y="-14" width="9" height="15" rx="1.5" fill="url(#cobre-metalico)" style="--rot:54deg;animation:fall4 4.9s linear infinite;animation-delay:-4.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="910" y="-6" width="12" height="20" rx="1.5" fill="url(#rojo-festivo)" style="--rot:-21deg;animation:fall1 6.3s linear infinite;animation-delay:3.3s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="202" y="-14" width="10" height="15" rx="1.5" fill="url(#blanco-festivo)" style="--rot:-8deg;animation:fall2 6.4s linear infinite;animation-delay:0.2s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="158" y="0" width="11" height="17" rx="1.5" fill="url(#turquesa-festivo)" style="--rot:24deg;animation:fall3 6.9s linear infinite;animation-delay:-6.7s;transform-box:fill-box;transform-origin:center;"/>
+        <rect x="969" y="3" width="8" height="12" rx="1.5" fill="url(#rosa-festivo)" style="--rot:-6deg;animation:fall4 7.9s linear infinite;animation-delay:-5.0s;transform-box:fill-box;transform-origin:center;"/>
       </g>
     </svg>
     <!-- CAJA INTERNA: fondo navy SOLIDO, contiene todo el contenido -->
@@ -7015,7 +7088,7 @@ function homeStopRunnerLoop() {
           </linearGradient>
         </defs>
         <text id="winnerAmountText" x="310" y="158" text-anchor="middle"
-              textLength="400" lengthAdjust="spacingAndGlyphs"
+              textLength="520" lengthAdjust="spacingAndGlyphs"
               font-family="'Montserrat','Arial Black',sans-serif" font-weight="900" font-size="96" letter-spacing="0"
               fill="url(#amountGold)" stroke="#6f3700" stroke-width="1.4" paint-order="stroke fill"></text>
       </svg>
@@ -7077,24 +7150,23 @@ function homeStopRunnerLoop() {
   let confettiCtx, confettiParticles = [], confettiActive = false, confettiAnimId;
   
   function startConfetti() {
-    return;  /* confeti animado de atras desactivado: usamos solo el SVG de adelante */
     if (!confettiCanvas) return;
     confettiCanvas.width = window.innerWidth;
     confettiCanvas.height = window.innerHeight;
     confettiCtx = confettiCanvas.getContext('2d');
     confettiParticles = [];
-    
-    // Generar 150 particulas
-    for (let i = 0; i < 150; i++) {
+    const COLORS = ['#ffd700','#ff3b3b','#ffffff','#ff8c00','#00e5d4','#ff4da6','#8cff5a','#ffe89a','#c8902e'];
+    // Generar 200 particulas festivas multicolor
+    for (let i = 0; i < 200; i++) {
       confettiParticles.push({
         x: Math.random() * confettiCanvas.width,
-        y: -20 - Math.random() * 200,
-        vx: (Math.random() - 0.5) * 4,
-        vy: 2 + Math.random() * 4,
-        size: 4 + Math.random() * 6,
+        y: -20 - Math.random() * confettiCanvas.height,
+        vx: (Math.random() - 0.5) * 5,
+        vy: 3 + Math.random() * 5,
+        size: 6 + Math.random() * 9,
         rot: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.2,
-        color: ['#ffd700', '#f4c945', '#ffe89a', '#d4982a', '#fff3c0', '#c8902e'][Math.floor(Math.random()*6)]
+        rotSpeed: (Math.random() - 0.5) * 0.3,
+        color: COLORS[Math.floor(Math.random()*COLORS.length)]
       });
     }
     
