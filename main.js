@@ -139,6 +139,41 @@ function cleanOldLogs() {
 }
 
 // ============================================================
+// Limpieza de la BD: borrar peticiones y eventos de mas de 90 dias
+// (retencion 3 meses). Solo borra registros ya procesados/enviados
+// para no perder datos pendientes.
+// ============================================================
+function cleanOldDbData() {
+  if (!db || !dbReady) return;
+  try {
+    // Fecha limite: hace 90 dias en formato ISO
+    const limit = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Borrar peticiones de mas de 90 dias YA PROCESADAS o YA ENVIADAS al IAS
+    // (no borramos las que aun estan pendientes para no perderlas)
+    const stmt1 = db.prepare(
+      "DELETE FROM peticiones WHERE fecha_registro < ? AND (procesado = 1 OR enviado_externo = 1 OR ganador = 0)"
+    );
+    stmt1.run([limit]);
+    const peticionesBorradas = db.getRowsModified();
+    stmt1.free();
+
+    // Borrar eventos de mas de 90 dias (todos)
+    const stmt2 = db.prepare('DELETE FROM eventos WHERE fecha_registro < ?');
+    stmt2.run([limit]);
+    const eventosBorrados = db.getRowsModified();
+    stmt2.free();
+
+    if (peticionesBorradas > 0 || eventosBorrados > 0) {
+      logInfo('Limpieza BD: ' + peticionesBorradas + ' peticiones, ' + eventosBorrados + ' eventos (> 90 dias)');
+      scheduleDbSave();
+    }
+  } catch (e) {
+    logError('Error en cleanOldDbData: ' + e.message);
+  }
+}
+
+// ============================================================
 // SQLITE: guardar todas las peticiones que entran
 // ============================================================
 let db = null;
@@ -206,7 +241,17 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_peticiones_sheet ON peticiones(sheet);
       CREATE INDEX IF NOT EXISTS idx_eventos_fecha ON eventos(fecha_registro);
       CREATE INDEX IF NOT EXISTS idx_peticiones_ias ON peticiones(ganador, enviado_externo);
+
+      CREATE TABLE IF NOT EXISTS sprite_config (
+        sheet TEXT PRIMARY KEY,
+        show_sprite INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL
+      );
     `);
+
+    // Defaults: mostrar sprite=true para grand y major (solo si no existen)
+    db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('grand', 1, datetime('now'));`);
+    db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('major', 1, datetime('now'));`);
     
     // Obtener el proximo ID de peticiones
     const res = db.exec('SELECT MAX(id) as maxId FROM peticiones');
@@ -483,6 +528,42 @@ function queryRows(sql, params = []) {
 }
 
 // ============================================================
+// SPRITE_CONFIG: mostrar/ocultar el sprite de grand y major
+// ============================================================
+function getSpriteConfig() {
+  // Default si DB no esta lista: ambos en true
+  const out = { grand: true, major: true };
+  if (!db || !dbReady) return out;
+  try {
+    const rows = queryRows('SELECT sheet, show_sprite FROM sprite_config');
+    rows.forEach(r => {
+      if (r.sheet === 'grand' || r.sheet === 'major') {
+        out[r.sheet] = !!r.show_sprite;
+      }
+    });
+  } catch (e) {
+    logError('getSpriteConfig: ' + e.message);
+  }
+  return out;
+}
+
+function setSpriteConfig(sheet, show) {
+  if (!['grand','major'].includes(sheet)) return false;
+  if (!db || !dbReady) return false;
+  try {
+    db.run(
+      'UPDATE sprite_config SET show_sprite = ?, updated_at = ? WHERE sheet = ?',
+      [show ? 1 : 0, fechaLocalISO(), sheet]
+    );
+    scheduleDbSave();
+    return true;
+  } catch (e) {
+    logError('setSpriteConfig: ' + e.message);
+    return false;
+  }
+}
+
+// ============================================================
 // PERSISTIR cola de pending al disco (sobrevive reload)
 // ============================================================
 function savePendingToDisk() {
@@ -670,10 +751,146 @@ function startHttpServer(config) {
       dbReady: dbReady
     });
   });
+
+  // ============================================================
+  // ENDPOINT /sprite-config
+  // Activa/desactiva el sprite (auto/moto) de grand y major.
+  // Cuando show=false: la hoja se renderiza estilo mini/minor
+  // (odometro, sin sprite ni KPIs, subtitulo "GANATE EFECTIVO").
+  // El valor se persiste en BD y se mantiene tras reinicios.
+  // ============================================================
+  httpApp.post('/sprite-config', (req, res) => {
+    const data = req.body;
+    if (!data || !['grand','major'].includes(data.sheet)) {
+      return res.status(400).json({ error: 'sheet debe ser: grand o major' });
+    }
+    if (typeof data.show !== 'boolean') {
+      return res.status(400).json({ error: 'show es requerido (boolean)' });
+    }
+    const ok = setSpriteConfig(data.sheet, data.show);
+    if (!ok) return res.status(500).json({ error: 'No se pudo guardar' });
+
+    // Auditoria: registrar el cambio en la tabla eventos
+    guardarEvento('sprite-config',
+      JSON.stringify({ sheet: data.sheet, show: data.show }));
+
+    // Avisar al dashboard para que ajuste el layout en vivo
+    sendUpdateToDashboard({
+      _endpoint: 'sprite-config',
+      sheet: data.sheet,
+      show: data.show
+    }, null);
+
+    res.json({ ok: true, sheet: data.sheet, show: data.show });
+  });
+
+  // GET /sprite-config -> estado actual
+  httpApp.get('/sprite-config', (req, res) => {
+    res.json(getSpriteConfig());
+  });
+
+  // ============================================================
+  // ENDPOINT /sprite-config-bulk
+  // Actualiza AMBOS flags (grand y major) en UN solo request.
+  // Body: {"grand": true|false, "major": true|false} (ambos obligatorios)
+  // El dashboard recibe UN solo mensaje con los dos cambios.
+  // ============================================================
+  httpApp.post('/sprite-config-bulk', (req, res) => {
+    const data = req.body;
+    if (!data || typeof data.grand !== 'boolean' || typeof data.major !== 'boolean') {
+      return res.status(400).json({ 
+        error: 'Se requieren ambos campos boolean: grand y major' 
+      });
+    }
+
+    const okG = setSpriteConfig('grand', data.grand);
+    const okM = setSpriteConfig('major', data.major);
+    if (!okG || !okM) {
+      return res.status(500).json({ error: 'No se pudo guardar en BD' });
+    }
+
+    // Auditoria: registrar el evento con el detalle del cambio
+    guardarEvento('sprite-config-bulk', 
+      JSON.stringify({ grand: data.grand, major: data.major }));
+
+    // Notificar al dashboard con un solo mensaje que trae ambos cambios.
+    // Pasa por sendUpdateToDashboard -> respeta encolar si hay modal activo.
+    sendUpdateToDashboard({
+      _endpoint: 'sprite-config-bulk',
+      grand: data.grand,
+      major: data.major
+    }, null);
+
+    res.json({ ok: true, grand: data.grand, major: data.major });
+  });
+
+  // ============================================================
+  // ENDPOINT /update-bulk
+  // Actualiza el monto de los 4 pozos en UN solo request.
+  // Body: {"mini":{...}, "minor":{...}, "major":{...}, "grand":{...}}
+  // Cada pozo requiere: amount, codSala, idRace (igual que /update).
+  // NO acepta ganador=true (para ganador usar /update).
+  // Internamente procesa cada pozo como un update normal: guarda en
+  // peticiones (endpoint='update-bulk'), envia al dashboard. Si hay
+  // modal activo, sendUpdateToDashboard ya encola correctamente.
+  // ============================================================
+  httpApp.post('/update-bulk', (req, res) => {
+    const body = req.body;
+    const ipOrigen = req.ip || req.connection.remoteAddress || 'unknown';
+
+    if (!body) {
+      return res.status(400).json({ error: 'body es requerido' });
+    }
+
+    const SHEETS = ['mini','minor','major','grand'];
+
+    // Validar que esten los 4 pozos
+    for (const s of SHEETS) {
+      if (!body[s] || typeof body[s] !== 'object') {
+        return res.status(400).json({ error: 'falta el pozo: ' + s });
+      }
+    }
+
+    // Validar cada pozo individualmente (mismas reglas que /update)
+    for (const s of SHEETS) {
+      const p = body[s];
+      if (p.ganador === true) {
+        return res.status(400).json({ 
+          error: 'update-bulk NO acepta ganador=true. Usar /update para ganadores.' 
+        });
+      }
+      if (p.amount === undefined || p.amount === null || typeof p.amount !== 'number') {
+        return res.status(400).json({ error: s + '.amount es requerido (numero decimal)' });
+      }
+      if (!p.codSala || typeof p.codSala !== 'string') {
+        return res.status(400).json({ error: s + '.codSala es requerido (string)' });
+      }
+      if (p.idRace === undefined || p.idRace === null || !Number.isInteger(p.idRace)) {
+        return res.status(400).json({ error: s + '.idRace es requerido (entero)' });
+      }
+    }
+
+    // Procesar cada pozo: guardar en peticiones + enviar al dashboard
+    const peticionIds = {};
+    for (const s of SHEETS) {
+      const data = Object.assign({}, body[s], { sheet: s, ganador: false });
+      const peticionId = guardarPeticion(data, ipOrigen, false, 'update-bulk');
+      peticionIds[s] = peticionId;
+      sendUpdateToDashboard(data, peticionId);
+    }
+
+    res.json({ 
+      ok: true,
+      peticionIds: peticionIds,
+      dashboardReady: dashboardReady,
+      queueSize: pendingUpdates.length
+    });
+  });
   
   httpApp.get('/status', (req, res) => {
     res.json({ 
       config: config,
+      spriteConfig: getSpriteConfig(),
       isWinnerActive: isWinnerActive,
       isPromoActive: isPromoActive,
       dashboardReady: dashboardReady,
@@ -688,6 +905,34 @@ function startHttpServer(config) {
       const limit = parseInt(req.query.limit) || 50;
       const rows = queryRows('SELECT * FROM peticiones ORDER BY id DESC LIMIT ?', [limit]);
       res.json({ count: rows.length, peticiones: rows });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ============================================================
+  // ENDPOINT /audit
+  // Lee la tabla 'eventos' (auditoria de cambios de configuracion:
+  // sprite-config, sprite-config-bulk, etc).
+  // Query params:
+  //   ?limit=50           cantidad de registros (default 50)
+  //   ?tipo=sprite-config filtrar por tipo de evento
+  // ============================================================
+  httpApp.get('/audit', (req, res) => {
+    if (!db || !dbReady) return res.json({ error: 'DB no disponible' });
+    try {
+      const limit = parseInt(req.query.limit) || 50;
+      const tipoFiltro = req.query.tipo;
+      let rows;
+      if (tipoFiltro) {
+        rows = queryRows(
+          'SELECT * FROM eventos WHERE tipo = ? ORDER BY id DESC LIMIT ?',
+          [tipoFiltro, limit]
+        );
+      } else {
+        rows = queryRows('SELECT * FROM eventos ORDER BY id DESC LIMIT ?', [limit]);
+      }
+      res.json({ count: rows.length, eventos: rows });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
@@ -732,10 +977,15 @@ function startHttpServer(config) {
   httpApp.listen(config.httpPort, '0.0.0.0', () => {
     logInfo('Servidor HTTP en puerto ' + config.httpPort);
     console.log('[HTTP] POST http://localhost:' + config.httpPort + '/update');
+    console.log('[HTTP] POST http://localhost:' + config.httpPort + '/update-bulk  body: {"mini":{amount,codSala,idRace},"minor":{...},"major":{...},"grand":{...}}');
     console.log('[HTTP] POST http://localhost:' + config.httpPort + '/reinicio');
+    console.log('[HTTP] POST http://localhost:' + config.httpPort + '/sprite-config  body: {"sheet":"grand|major","show":true|false}');
+    console.log('[HTTP] POST http://localhost:' + config.httpPort + '/sprite-config-bulk  body: {"grand":true|false,"major":true|false}');
+    console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/sprite-config');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/health');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/status');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/history?limit=50');
+    console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/audit?limit=50&tipo=sprite-config');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/stats');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ias-status');
   });
@@ -1163,6 +1413,11 @@ function startWatchdog(config) {
   
   // Limpieza de logs viejos cada 6 horas
   setInterval(cleanOldLogs, 6 * 60 * 60 * 1000);
+
+  // Limpieza de la BD (peticiones + eventos > 90 dias) cada 24 horas
+  setInterval(cleanOldDbData, 24 * 60 * 60 * 1000);
+  // Y una vez al iniciar (despues de 60s para que la DB este lista)
+  setTimeout(cleanOldDbData, 60 * 1000);
   
   logInfo('Watchdog iniciado - reload si memoria > ' + memoryThresholdMB + 'MB');
 }

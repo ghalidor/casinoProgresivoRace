@@ -82,23 +82,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   z-index: 1;
 }
 
-.bg-video {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  opacity: 0;  /* todos arrancan invisibles */
-  pointer-events: none;
-  transition: opacity 1s ease;
-}
-
-/* Solo el video con clase .video-active se ve */
-.bg-video.video-active {
-  opacity: 0.4;
-}
-
 /* CARRUSEL DE HOJAS */
 .sheets-wrapper {
   position: absolute;
@@ -123,6 +106,56 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   will-change: transform, opacity;
   min-width: 0;
   box-sizing: border-box;
+}
+
+/* ============================================================
+   .sprite-off : hoja grand/major sin sprite ni KPIs.
+   - Esconde el vehicle-layout (sprite + paneles)
+   - Muestra el amount-frame que agregamos al final del HTML
+   Por defecto el amount-frame esta oculto en grand/major
+   ============================================================ */
+.sheet[data-id="grand"] > .amount-frame,
+.sheet[data-id="major"] > .amount-frame,
+.sheet[data-id="grand"] > .bottom-row,
+.sheet[data-id="major"] > .bottom-row {
+  display: none;
+}
+.sheet.sprite-off > .vehicle-layout {
+  display: none !important;
+}
+.sheet.sprite-off > .amount-frame {
+  display: flex !important;
+}
+.sheet.sprite-off > .bottom-row {
+  display: flex !important;
+}
+
+/* HOME pots GRAND/MAJOR: por defecto el odometro alterno esta oculto */
+.home-pot.home-grand .home-pot-altprefix,
+.home-pot.home-major .home-pot-altprefix,
+.home-pot.home-grand .home-pot-altodo,
+.home-pot.home-major .home-pot-altodo {
+  display: none;
+}
+/* HOME pots con sprite-off: ocultar SOLO el sprite, mostrar odometro */
+.home-pot.sprite-off .home-pot-vehicle-row {
+  display: none;
+}
+.home-pot.sprite-off .home-pot-altprefix {
+  display: block;
+  position: absolute;
+  top: 14px;
+  right: 28px;
+  z-index: 4;
+}
+.home-pot.sprite-off .home-pot-altodo {
+  display: flex;
+  position: absolute;
+  bottom: 38px;
+  right: 28px;
+  left: 18px;
+  justify-content: flex-end;
+  z-index: 3;
 }
 
 /* Hoja activa: tamaño normal, opaca */
@@ -161,15 +194,30 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 
 /* TITULO */
 .sheet-title {
-  font-family: 'BudmoJiggler', sans-serif;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
   font-size: 10cqw;
   letter-spacing: 0.4cqw;
   line-height: 0.95;
-  color: #ffd700;
-  animation: minorPulse 1.8s infinite ease-in-out;
   margin: 0;
   text-align: center;
+  white-space: nowrap;
+  /* Gradiente metalico del color de la hoja (igual al home-pot-title) */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--pot-c, #ffd700) 70%, #fff) 0%,
+    var(--pot-c, #ffd700) 45%,
+    color-mix(in srgb, var(--pot-c, #ffd700) 70%, #000) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px var(--gold);
+  filter: drop-shadow(0 0 6px var(--pot-c, #ffd700));
 }
+/* Color base por hoja (usa las mismas variables que el HOME) */
+.sheet[data-id="mini"]  { --pot-c: var(--c-mini); }
+.sheet[data-id="minor"] { --pot-c: var(--c-minor); }
+.sheet[data-id="major"] { --pot-c: var(--c-major); }
+.sheet[data-id="grand"] { --pot-c: var(--c-grand); }
 
 .sheet-subtitle {
   font-family: 'Orbitron', sans-serif;
@@ -179,6 +227,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   color: #ffaa00;
   margin-top: 0.6cqh;
   animation: labelGlowRed 1.6s infinite ease-in-out;
+  -webkit-text-stroke: 1.5px #000;
+  paint-order: stroke fill;
 }
 
 /* sheet de MINI: subtitle verde */
@@ -228,8 +278,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 
 .reel-digit {
   display: inline-block;
-  width: 7.5cqw;
-  height: 14cqh;
+  width: 9cqw;
+  height: 16cqh;
   background: linear-gradient(180deg, #000 0%, #0a0000 50%, #000 100%);
   border: 1px solid rgba(255,180,0,.4);
   border-radius: 4px;
@@ -258,13 +308,16 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   flex-direction: column;
   font-family: 'Orbitron', sans-serif;
   font-weight: 900;
-  font-size: 5.7cqw;
-  line-height: 14cqh;
+  font-size: 7cqw;
+  line-height: 16cqh;
   text-align: center;
   color: #ffd700;
-  text-shadow: 0 0 4px #fff8a0, 0 0 10px #ffaa00, 0 0 18px #ff6600;
+  -webkit-text-stroke: 1px #000;
+  text-shadow:
+    0 0 6px #ffaa00,
+    0 0 12px #ff8800;
 }
-.reel-strip span { height: 14cqh; display: block; }
+.reel-strip span { height: 16cqh; display: block; }
 
 /* Animaciones de reel deshabilitadas - JS controla todo */
 .r-1, .r-2, .r-3, .r-4, .r-5, .r-6 { animation: none !important; }
@@ -401,7 +454,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .bottom-row .stat-value   { font-size: 1.15cqw; }
 /* GRAND/MAJOR: termometro y KPIs (izq y der) mas compactos: mas angostos y pequenos */
 .sheet[data-id="grand"] .thermometer,
-.sheet[data-id="major"] .thermometer { width: 3.5cqw; flex: 0 0 auto; margin: 0 auto; min-height: 11cqh; padding: 0.4cqh 0.2cqw 0.6cqh; }
+.sheet[data-id="major"] .thermometer { width: 3.5cqw; flex: 0 0 auto; min-height: 11cqh; padding: 0.4cqh 0.2cqw 0.6cqh; }
 .sheet[data-id="grand"] .thermo-label,
 .sheet[data-id="major"] .thermo-label { font-size: 0.46cqw; margin-bottom: 0.15cqh; }
 .sheet[data-id="grand"] .thermo-value,
@@ -416,6 +469,23 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
 .sheet[data-id="major"] .stat-label { font-size: 0.46cqw; letter-spacing: 0.06cqw; }
 .sheet[data-id="grand"] .stat-value,
 .sheet[data-id="major"] .stat-value { font-size: 0.68cqw; }
+
+/* Cuando grand/major estan en sprite-off, sus KPIs usan el mismo tamano que mini/minor */
+.sheet[data-id="grand"].sprite-off .thermometer,
+.sheet[data-id="major"].sprite-off .thermometer { width: 6cqw; min-height: 13cqh; padding: 0.6cqh 0.5cqw 0.8cqh; }
+.sheet[data-id="grand"].sprite-off .thermo-label,
+.sheet[data-id="major"].sprite-off .thermo-label { font-size: 0.72cqw; margin-bottom: 0.3cqh; }
+.sheet[data-id="grand"].sprite-off .thermo-value,
+.sheet[data-id="major"].sprite-off .thermo-value { font-size: 1.1cqw; margin-top: 0.3cqh; }
+.sheet[data-id="grand"].sprite-off .thermo-bulb,
+.sheet[data-id="major"].sprite-off .thermo-bulb { width: 1.6cqw; height: 1.6cqw; min-width: 9px; min-height: 9px; }
+.sheet[data-id="grand"].sprite-off .thermo-tube,
+.sheet[data-id="major"].sprite-off .thermo-tube { width: 0.85cqw; min-width: 5px; }
+.sheet[data-id="grand"].sprite-off .stat-label,
+.sheet[data-id="major"].sprite-off .stat-label { font-size: 0.72cqw; letter-spacing: normal; }
+.sheet[data-id="grand"].sprite-off .stat-value,
+.sheet[data-id="major"].sprite-off .stat-value { font-size: 1.15cqw; }
+
 /* el contenedor de la cadena (no el termometro) centra su contenido verticalmente */
 .bottom-row > div:not(.thermometer) { justify-content: center; align-items: center; }
 
@@ -798,7 +868,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
     display: flex;
     flex-direction: column;
   }
-  .sheet[data-id="grand"] .vehicle-side-right .auto-sparks,
   .sheet[data-id="grand"] .vehicle-side-right .auto-wrapper {
     flex: 0 0 auto;
   }
@@ -827,7 +896,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
     display: flex;
     flex-direction: column;
   }
-  .sheet[data-id="major"] .vehicle-side-right .moto-sparks,
   .sheet[data-id="major"] .vehicle-side-right .moto-wrapper {
     flex: 0 0 auto;
   }
@@ -859,13 +927,15 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   /* Termometro en wide: ocupa la mitad superior aprox */
   .sheet[data-id="major"] .vehicle-side-left .thermometer,
   .sheet[data-id="grand"] .vehicle-side-left .thermometer {
-    flex: 1.2;
-    min-height: 0;
+    flex: 0 0 28cqh;
+    min-height: 28cqh;
+    max-height: 28cqh;
   }
   .sheet[data-id="major"] .vehicle-side-left .moto-fuel,
   .sheet[data-id="grand"] .vehicle-side-left .moto-fuel {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 28cqh;
+    min-height: 28cqh;
+    max-height: 28cqh;
   }
 
   /* En wide: el spinner toma altura natural y el gear-big toma el resto */
@@ -884,7 +954,20 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   .sheet[data-id="grand"] {
     padding: 9% 11% 9%;
   }
+  /* Cuando sprite-off, grand/major adoptan el mismo padding que mini/minor
+     (espacio arriba para titulo+subtitulo absolutos, sin chocar con el odometro) */
+  .sheet[data-id="major"].sprite-off,
+  .sheet[data-id="grand"].sprite-off {
+    padding: 22% 8% 9%;
+  }
+  /* Padding-top extra en mini/minor: deja espacio para titulo + subtitulo absolutos */
+  .sheet[data-id="mini"],
+  .sheet[data-id="minor"] {
+    padding: 22% 8% 9%;
+  }
   /* WIDE: titulo y subtitle absolutos centrados, vehicle-layout ocupa todo el alto */
+  .sheet[data-id="mini"]  .sheet-title,
+  .sheet[data-id="minor"] .sheet-title,
   .sheet[data-id="major"] .sheet-title,
   .sheet[data-id="grand"] .sheet-title {
     position: absolute;
@@ -894,7 +977,10 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
     z-index: 5;
     margin-top: 0;
     pointer-events: none;
+    font-size: 10cqw;        /* mismo tamaño para todas */
   }
+  .sheet[data-id="mini"]  .sheet-subtitle,
+  .sheet[data-id="minor"] .sheet-subtitle,
   .sheet[data-id="major"] .sheet-subtitle,
   .sheet[data-id="grand"] .sheet-subtitle {
     position: absolute;
@@ -1084,16 +1170,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   top: 74% !important;
   transform: translate(-50%, -50%) !important;
 }
-/* CHISPAS (fuegos): acotarlas (antes 220%, quedaban enormes y caian muy abajo)
-   y centrarlas sobre el vehiculo */
-.sheet[data-id="grand"] .auto-sparks,
-.sheet[data-id="major"] .moto-sparks {
-  width: 120% !important;
-  top: 66% !important;
-  transform: translate(-50%, -50%) !important;
-}
-/* Chispas del auto a la altura del pedestal (subido) */
-.sheet[data-id="grand"] .auto-sparks { top: 68% !important; }
 /* Achicar SOLO el sprite de la moto (el pedestal/disco no se toca) */
 .sheet[data-id="major"] .sprite-wrapper.moto-wrapper .moto-sprite {
   transform: translateY(-12%) scale(0.64) !important;
@@ -1254,22 +1330,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   to   { background-position: -780px 0; }
 }
 
-/* Canvas de chispas/cohetones encima de la moto */
-.moto-sparks {
-  /* OVERLAY absoluto - alineado con el sprite-wrapper */
-  position: absolute !important;
-  top: 0 !important;
-  left: 50% !important;
-  width: 220% !important;
-  max-width: none !important;
-  aspect-ratio: 280 / 120 !important;
-  transform: translateX(-50%) !important;
-  margin: 0 !important;
-  display: block !important;
-  pointer-events: none;
-  z-index: 6;
-}
-
 /* Barra de progreso del preloader */
 .preloader-progress-bar {
   width: 300px;
@@ -1301,21 +1361,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a00
   transform-origin: center;
   position: relative;
   z-index: 5;
-}
-/* Chispas del F1 */
-.auto-sparks {
-  /* OVERLAY absoluto - alineado con el sprite-wrapper */
-  position: absolute !important;
-  top: 0 !important;
-  left: 50% !important;
-  width: 220% !important;
-  max-width: none !important;
-  aspect-ratio: 280 / 120 !important;
-  transform: translateX(-50%) !important;
-  margin: 0 !important;
-  display: block !important;
-  pointer-events: none;
-  z-index: 6;
 }
 
 /* ============================================================
@@ -1680,7 +1725,7 @@ body.production-mode .reel-strip {
   top: 0;
   left: 0;
   right: 0;
-  height: clamp(100px, 12vh, 175px);
+  height: clamp(130px, 16vh, 230px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -1698,11 +1743,11 @@ body.production-mode .reel-strip {
 }
 .promo-hud.showing {
   display: flex;
-  animation: hudSlideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: hudFadeIn 0.5s ease;
 }
-@keyframes hudSlideDown {
-  from { transform: translateY(-100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+@keyframes hudFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .promo-hud-side {
@@ -1710,7 +1755,15 @@ body.production-mode .reel-strip {
   height: clamp(75px, 6vw, 115px);
   flex-shrink: 0;
   filter: drop-shadow(0 0 8px currentColor);
+  /* Sacarlos del HUD: cada uno al medio vertical de su lado */
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9991;
+  pointer-events: none;
 }
+.promo-hud-side.left  { left: 4vw; }
+.promo-hud-side.right { right: 4vw; }
 
 .promo-hud-center {
   width: clamp(220px, 18vw, 340px);
@@ -1725,15 +1778,15 @@ body.production-mode .reel-strip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(10px, 1vh, 16px) clamp(18px, 1.6vw, 32px);
+  padding: clamp(14px, 1.4vh, 22px) clamp(24px, 2.2vw, 44px);
   border: 2px solid #00ff66;
-  border-radius: 10px;
+  border-radius: 12px;
   background: linear-gradient(135deg, rgba(0,30,15,0.9), rgba(0,0,0,0.85));
   box-shadow: 
     0 0 16px rgba(0,255,102,0.7),
     0 0 30px rgba(0,255,102,0.3),
     inset 0 0 12px rgba(0,255,102,0.15);
-  width: clamp(330px, 28vw, 560px);       /* mas ancho: aprovecha el espacio hacia el centro */
+  width: clamp(400px, 34vw, 660px);       /* mas ancho */
   flex-shrink: 0;
 }
 .promo-mini-odo.minor {
@@ -1766,7 +1819,7 @@ body.production-mode .reel-strip {
   align-items: center;
   gap: 6px;
   color: #00ff66;
-  font-size: clamp(18px, 2vw, 38px);
+  font-size: clamp(22px, 2.4vw, 46px);
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 3px;
@@ -1791,7 +1844,7 @@ body.production-mode .reel-strip {
 /* Valor del odometro - ancho FIJO para no moverse al cambiar valor */
 .promo-mini-reels {
   color: #fff;
-  font-size: clamp(22px, 2.4vw, 44px);  /* mas grande y responsivo */
+  font-size: clamp(36px, 3.8vw, 70px);  /* mas grande */
   font-weight: bold;
   font-family: 'Orbitron', 'Courier New', monospace;
   letter-spacing: 1px;
@@ -1799,7 +1852,7 @@ body.production-mode .reel-strip {
     0 0 10px #00ff66,
     0 0 20px rgba(0,255,102,0.5);
   font-variant-numeric: tabular-nums;
-  width: clamp(240px, 22vw, 420px);     /* ancho que acompaña al texto */
+  width: clamp(340px, 30vw, 580px);     /* ancho mayor */
   text-align: center;
   white-space: nowrap;
   font-feature-settings: "tnum";
@@ -1915,7 +1968,7 @@ body.production-mode .reel-strip {
 .promo-corner-top-left,
 .promo-corner-top-right {
   position: fixed;
-  top: 30px;
+  top: clamp(95px, 12vh, 175px);
   width: 280px;
   height: 200px;
   z-index: 9988;
@@ -2055,8 +2108,8 @@ body.production-mode .reel-strip {
   box-shadow: inset 0 0 24px rgba(0,0,0,0.7), 0 0 14px var(--pot-glow);
   z-index: 6;
 }
-.home-pot.home-mini   { border-color: var(--c-mini);  --pot-glow: rgba(0,255,102,0.35); --pot-c: var(--c-mini);  padding: 22px 28px; }
-.home-pot.home-minor  { border-color: var(--c-minor); --pot-glow: rgba(255,0,51,0.35); --pot-c: var(--c-minor); padding: 22px 28px; }
+.home-pot.home-mini   { border-color: var(--c-mini);  --pot-glow: rgba(0,255,102,0.35); --pot-c: var(--c-mini);  padding: 14px 18px; }
+.home-pot.home-minor  { border-color: var(--c-minor); --pot-glow: rgba(255,0,51,0.35); --pot-c: var(--c-minor); padding: 14px 18px; }
 .home-pot.home-major  { border-color: var(--c-major); --pot-glow: rgba(255,204,0,0.4); --pot-c: var(--c-major); }
 .home-pot.home-grand  { border-color: var(--c-grand); --pot-glow: rgba(0,229,212,0.4); --pot-c: var(--c-grand); }
 
@@ -2097,13 +2150,17 @@ body.production-mode .reel-strip {
 }
 .home-pot-mini-right {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-end;
 }
 .home-pot.home-mini .home-odometer,
 .home-pot.home-minor .home-odometer {
-  width: 100%;
+  position: absolute;
+  bottom: 38px;
+  right: 28px;
+  left: 18px;
+  width: auto;
   justify-content: flex-end;
-  flex: 1;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -2183,6 +2240,8 @@ body.production-mode .reel-strip {
 .home-pot.home-grand {
   position: absolute;
 }
+.home-pot.home-mini .home-pot-status-row,
+.home-pot.home-minor .home-pot-status-row,
 .home-pot.home-major .home-pot-status-row,
 .home-pot.home-grand .home-pot-status-row {
   position: absolute;
@@ -2235,6 +2294,17 @@ body.production-mode .reel-strip {
   font-weight: 900;
   text-shadow: 0 0 6px var(--gold-deep);
 }
+/* Variante: el S/. ahora vive arriba a la derecha del header en MINI/MINOR */
+.home-odometer-prefix-top {
+  margin-right: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(20px, 3.2vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--gold);
+  text-shadow: 0 0 6px var(--gold-deep), 0 0 12px rgba(255,170,0,0.4);
+}
 .home-digit {
   width: 13.5cqw;
   height: 14.9cqw;
@@ -2244,11 +2314,14 @@ body.production-mode .reel-strip {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Orbitron', sans-serif;
   font-size: 9.9cqw;
-  color: var(--gold);
+  color: #ffd700;
   font-weight: 900;
-  text-shadow: 0 0 6px var(--gold-deep);
+  -webkit-text-stroke: 1px #000;
+  text-shadow:
+    0 0 6px #ffaa00,
+    0 0 12px #ff8800;
   box-shadow: inset 0 0 6px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,215,0,0.15);
   flex-shrink: 1;
   min-width: 0;
@@ -2462,65 +2535,33 @@ body.production-mode .reel-strip {
   50%      { filter: drop-shadow(0 0 16px var(--gold)) drop-shadow(0 0 4px #fff); transform: scale(1.03); }
 }
 
-/* ============================================================
-   VIDEO DE FONDO REAL (igual a los sheets)
-   ============================================================ */
-.home-bg-video {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-/* TITULO superior - letrero estilo marquee de casino, con saliente abajo */
+/* TITULO superior PROGRESIVO RACE - solo texto dorado (sin marquesina ni focos) */
 .home-marquee-title {
   position: absolute;
-  top: 15vh;
+  top: 13vh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
   text-align: center;
-  padding: 14px 70px;
-  background: linear-gradient(180deg, #3a0010 0%, #1a0006 50%, #3a0010 100%);
-  border: 3px solid #ffd700;
-  border-radius: 12px;
-  box-shadow:
-    0 0 0 1px #ff8800 inset,
-    0 0 14px #ffd700 inset,
-    0 0 24px rgba(255, 170, 0, 0.85),
-    0 0 48px rgba(255, 100, 0, 0.55),
-    0 4px 12px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
+  padding: 12px 60px 14px 60px;
+  background: linear-gradient(180deg, #0a0500 0%, #1a0e02 50%, #0a0500 100%);
+  border: 3px solid #ffd24f;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 2px #6f3700 inset,
+    0 0 0 4px #ffd24f inset,
+    0 0 18px rgba(255,200,40,0.55),
+    0 0 38px rgba(255,170,0,0.35),
+    0 6px 18px rgba(0,0,0,0.6);
 }
-/* LEDs alrededor del letrero */
-.home-marquee-title::before,
-.home-marquee-title::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #ffd700 30%, #ff8800 70%, #cc4400 100%);
-  box-shadow: 0 0 12px #ffd700, 0 0 6px #fff, 0 0 20px #ff8800;
-  transform: translateY(-50%);
-  animation: blinkA 1.2s infinite;
-}
-.home-marquee-title::before { left: 14px; animation-delay: 0s; }
-.home-marquee-title::after  { right: 14px; animation-delay: 0.6s; }
-
 .home-marquee-title h1 {
   font-family: 'Orbitron', sans-serif;
   font-weight: 900;
-  font-size: clamp(28px, 3.3vw, 52px);
+  font-size: clamp(38px, 4.5vw, 72px);
   letter-spacing: 7px;
   white-space: nowrap;
   margin: 0;
-  /* mismo dorado metalizado del titulo del modal (winGold) */
   background: linear-gradient(180deg,
     #fff8c2 0%, #ffd24f 18%, #b96b10 35%, #fff3a3 48%,
     #ffce45 58%, #8f4a08 76%, #ffd76a 100%);
@@ -2528,7 +2569,6 @@ body.production-mode .reel-strip {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1.5px #6f3700;
-  /* relieve 3D igual que el modal */
   filter: drop-shadow(0 3px 0 rgba(85,45,0,0.9)) drop-shadow(0 4px 4px rgba(0,0,0,0.45));
 }
 
@@ -2577,13 +2617,11 @@ body.production-mode .reel-strip {
 // Contador global de carga
 (function() {
   let loadedItems = 0;
-  let totalItems = 4; // moto + auto F1 + 2 videos
+  let totalItems = 2; // moto + auto F1
   
   window.__updatePreloader = function() {
     const items = (window.__loadedMoto ? 1 : 0) +
-                  (window.__loadedAuto ? 1 : 0) +
-                  (window.__loadedVideo1 ? 1 : 0) +
-                  (window.__loadedVideo2 ? 1 : 0);
+                  (window.__loadedAuto ? 1 : 0);
     const pct = Math.min(100, Math.round((items / totalItems) * 100));
     
     const txt = document.getElementById('preloaderText');
@@ -2601,24 +2639,6 @@ body.production-mode .reel-strip {
       }, 300);
     }
   };
-  
-  // Listener para los videos
-  document.addEventListener('DOMContentLoaded', function() {
-    const videos = document.querySelectorAll('.bg-video');
-    videos.forEach(function(v, i) {
-      v.addEventListener('canplaythrough', function() {
-        window['__loadedVideo' + (i+1)] = true;
-        window.__updatePreloader();
-      }, { once: true });
-      // Fallback: si tarda mas de 5s, marcarlo como cargado
-      setTimeout(function() {
-        if (!window['__loadedVideo' + (i+1)]) {
-          window['__loadedVideo' + (i+1)] = true;
-          window.__updatePreloader();
-        }
-      }, 5000);
-    });
-  });
   
   // Fallback: si el modelo tarda mas de 15s
   setTimeout(function() {
@@ -3083,11 +3103,6 @@ body.production-mode .reel-strip {
 <div class="dashboard" id="dashboard">
   <div class="shield-box" id="shieldBox">
 
-    <!-- VIDEO DE FONDO UNICO: el de MINI corre permanentemente para todas las hojas -->
-    <video class="bg-video bg-video-mini video-active" data-sheet="all" autoplay muted loop playsinline preload="auto">
-      <source src="background-mini.mp4" type="video/mp4">
-    </video>
-    
     <!-- AUDIO DE FONDO permanente (se silencia durante ganador y promos) -->
     <audio id="bgMusic" loop preload="auto" style="display:none;">
       <source src="background-music.mp3" type="audio/mpeg">
@@ -3130,6 +3145,55 @@ window.casinoUpdate = function(data) {
     window.__casinoHandlers.onUpdate(data);
   }
 };
+
+// ============================================================
+// SPRITE_CONFIG: controla si la hoja grand/major muestra el sprite
+// (auto / moto) o se muestra como una hoja "cash" estilo mini/minor.
+// El valor se carga desde el backend (/status) y se actualiza en vivo
+// cuando llega un _endpoint === 'sprite-config'.
+// ============================================================
+window.SPRITE_CONFIG = { grand: true, major: true };
+
+// ============================================================
+// MARCADOR DE VERSION - si ves esto en consola, tienes la version NUEVA
+// ============================================================
+console.log('%c[DASHBOARD VERSION] v-sprite-config-2026-06-16 cargada', 'background:#0f0;color:#000;font-size:16px;padding:6px;font-weight:bold');
+
+function applySpriteConfig(sheetId) {
+  if (sheetId !== 'grand' && sheetId !== 'major') return;
+  const sheet = document.querySelector('.sheet[data-id="' + sheetId + '"]');
+  const homePot = document.getElementById('home-pot-' + sheetId);
+  if (!sheet && !homePot) {
+    // Aun no estan en el DOM: reintentar en 200ms
+    console.log('[SPRITE_CONFIG] DOM no listo para', sheetId, '- reintentando');
+    setTimeout(() => applySpriteConfig(sheetId), 200);
+    return;
+  }
+  const show = !!window.SPRITE_CONFIG[sheetId];
+  console.log('[SPRITE_CONFIG] Aplicando', sheetId, 'show=', show);
+
+  if (sheet) {
+    sheet.classList.toggle('sprite-off', !show);
+    const sub = sheet.querySelector('.sheet-subtitle');
+    if (sub) {
+      if (!show) sub.textContent = 'GANATE EFECTIVO';
+      else sub.textContent = (sheetId === 'grand') ? 'GANATE EL AUTO' : 'GANATE LA MOTO';
+    }
+  }
+  if (homePot) {
+    homePot.classList.toggle('sprite-off', !show);
+    const homeSub = homePot.querySelector('.home-pot-subtitle');
+    if (homeSub) {
+      if (!show) homeSub.textContent = 'GANATE EFECTIVO';
+      else homeSub.textContent = (sheetId === 'grand') ? 'GANATE EL AUTO' : 'GANATE LA MOTO';
+    }
+  }
+}
+
+function applyAllSpriteConfig() {
+  applySpriteConfig('grand');
+  applySpriteConfig('major');
+}
 
 // Aplicar clase production-mode al body si useTestData es false
 // (para pausar animaciones CSS de los reels)
@@ -3209,7 +3273,29 @@ fetch('http://localhost:3000/status')
       console.log('[HOME] Duracion cargada desde config:', HOME_DURATION, 'ms');
     }
   })
-  .catch(() => { /* usar default */ });
+  .catch((e) => { console.warn('[STATUS] fetch fallo:', e.message); });
+
+// Cargar SPRITE_CONFIG con reintento (independiente del fetch /status)
+function loadSpriteConfig(intentos) {
+  intentos = intentos || 0;
+  fetch('http://localhost:3000/sprite-config')
+    .then(r => r.json())
+    .then(cfg => {
+      if (cfg && typeof cfg.grand === 'boolean') window.SPRITE_CONFIG.grand = cfg.grand;
+      if (cfg && typeof cfg.major === 'boolean') window.SPRITE_CONFIG.major = cfg.major;
+      console.log('[SPRITE_CONFIG] Cargado del servidor:', window.SPRITE_CONFIG);
+      // Aplicar (con retry interno si DOM aun no tiene las hojas)
+      applyAllSpriteConfig();
+    })
+    .catch(e => {
+      console.warn('[SPRITE_CONFIG] fetch fallo (intento ' + intentos + '):', e.message);
+      // Reintentar hasta 5 veces, cada 2s (cubre arranques de Electron donde HTTP aun no esta listo)
+      if (intentos < 5) {
+        setTimeout(() => loadSpriteConfig(intentos + 1), 2000);
+      }
+    });
+}
+loadSpriteConfig();
 
 // Helper: devuelve la duracion correcta segun la hoja (HOME usa HOME_DURATION)
 function getDurationForSheet(idx) {
@@ -3248,10 +3334,10 @@ function buildShield(sheetData) {
   const CX = VBW / 2;
   const SH_HALF = 80;
   const SH_OUTER = 110;
-  const SH_TOP = 18;
-  const FLAT_TOP = 40;
-  const SX0 = 60;
-  const SX1 = VBW - 60;
+  const SH_TOP = 0;
+  const FLAT_TOP = 22;
+  const SX0 = 8;
+  const SX1 = VBW - 8;
   const ST = FLAT_TOP;
   const SY_TOP = SH_TOP;
   const TL_SH_END = CX - SH_HALF - SH_OUTER;
@@ -3264,9 +3350,9 @@ function buildShield(sheetData) {
   const BB_OUT_R = CX + 130;
 
   // PATHS
-  const mainPath = `M ${SX0},${ST} L ${TL_SH_END},${ST} L ${TL_SH_TOP_LEFT},${SY_TOP} L ${TL_SH_TOP_RIGHT},${SY_TOP} L ${TL_SH_END_RIGHT},${ST} L ${SX1},${ST} Q ${SX1+20},${ST} ${SX1+20},${ST+20} L ${SX1+20},${VBH-ST-20} Q ${SX1+20},${VBH-ST} ${SX1},${VBH-ST} L ${BB_OUT_R},${VBH-ST} L ${BB_IN_R},${VBH-20} L ${BB_IN_L},${VBH-20} L ${BB_OUT_L},${VBH-ST} L ${SX0},${VBH-ST} Q ${SX0-20},${VBH-ST} ${SX0-20},${VBH-ST-20} L ${SX0-20},${ST+20} Q ${SX0-20},${ST} ${SX0},${ST} Z`;
-  const goldPath = `M ${SX0+18},${ST+18} L ${TL_SH_END+10},${ST+18} L ${TL_SH_TOP_LEFT+10},${SY_TOP+18} L ${TL_SH_TOP_RIGHT-10},${SY_TOP+18} L ${TL_SH_END_RIGHT-10},${ST+18} L ${SX1-18},${ST+18} Q ${SX1+2},${ST+18} ${SX1+2},${ST+38} L ${SX1+2},${VBH-ST-38} Q ${SX1+2},${VBH-ST-18} ${SX1-18},${VBH-ST-18} L ${BB_OUT_R-12},${VBH-ST-18} L ${BB_IN_R-12},${VBH-38} L ${BB_IN_L+12},${VBH-38} L ${BB_OUT_L+12},${VBH-ST-18} L ${SX0+18},${VBH-ST-18} Q ${SX0-2},${VBH-ST-18} ${SX0-2},${VBH-ST-38} L ${SX0-2},${ST+38} Q ${SX0-2},${ST+18} ${SX0+18},${ST+18} Z`;
-  const innerPath = `M ${SX0+31},${ST+31} L ${TL_SH_END+14},${ST+31} L ${TL_SH_TOP_LEFT+14},${SY_TOP+31} L ${TL_SH_TOP_RIGHT-14},${SY_TOP+31} L ${TL_SH_END_RIGHT-14},${ST+31} L ${SX1-31},${ST+31} Q ${SX1-11},${ST+31} ${SX1-11},${ST+51} L ${SX1-11},${VBH-ST-51} Q ${SX1-11},${VBH-ST-31} ${SX1-31},${VBH-ST-31} L ${BB_OUT_R-26},${VBH-ST-31} L ${BB_IN_R-26},${VBH-51} L ${BB_IN_L+26},${VBH-51} L ${BB_OUT_L+26},${VBH-ST-31} L ${SX0+31},${VBH-ST-31} Q ${SX0+11},${VBH-ST-31} ${SX0+11},${VBH-ST-51} L ${SX0+11},${ST+51} Q ${SX0+11},${ST+31} ${SX0+31},${ST+31} Z`;
+  const mainPath = `M ${SX0},${ST} L ${TL_SH_END},${ST} L ${TL_SH_TOP_LEFT},${SY_TOP} L ${TL_SH_TOP_RIGHT},${SY_TOP} L ${TL_SH_END_RIGHT},${ST} L ${SX1},${ST} Q ${SX1+20},${ST} ${SX1+20},${ST+20} L ${SX1+20},${VBH-ST-20} Q ${SX1+20},${VBH-ST} ${SX1},${VBH-ST} L ${BB_OUT_R},${VBH-ST} L ${BB_IN_R},${VBH-2} L ${BB_IN_L},${VBH-2} L ${BB_OUT_L},${VBH-ST} L ${SX0},${VBH-ST} Q ${SX0-20},${VBH-ST} ${SX0-20},${VBH-ST-20} L ${SX0-20},${ST+20} Q ${SX0-20},${ST} ${SX0},${ST} Z`;
+  const goldPath = `M ${SX0+18},${ST+18} L ${TL_SH_END+10},${ST+18} L ${TL_SH_TOP_LEFT+10},${SY_TOP+18} L ${TL_SH_TOP_RIGHT-10},${SY_TOP+18} L ${TL_SH_END_RIGHT-10},${ST+18} L ${SX1-18},${ST+18} Q ${SX1+2},${ST+18} ${SX1+2},${ST+38} L ${SX1+2},${VBH-ST-38} Q ${SX1+2},${VBH-ST-18} ${SX1-18},${VBH-ST-18} L ${BB_OUT_R-12},${VBH-ST-18} L ${BB_IN_R-12},${VBH-20} L ${BB_IN_L+12},${VBH-20} L ${BB_OUT_L+12},${VBH-ST-18} L ${SX0+18},${VBH-ST-18} Q ${SX0-2},${VBH-ST-18} ${SX0-2},${VBH-ST-38} L ${SX0-2},${ST+38} Q ${SX0-2},${ST+18} ${SX0+18},${ST+18} Z`;
+  const innerPath = `M ${SX0+31},${ST+31} L ${TL_SH_END+14},${ST+31} L ${TL_SH_TOP_LEFT+14},${SY_TOP+31} L ${TL_SH_TOP_RIGHT-14},${SY_TOP+31} L ${TL_SH_END_RIGHT-14},${ST+31} L ${SX1-31},${ST+31} Q ${SX1-11},${ST+31} ${SX1-11},${ST+51} L ${SX1-11},${VBH-ST-51} Q ${SX1-11},${VBH-ST-31} ${SX1-31},${VBH-ST-31} L ${BB_OUT_R-26},${VBH-ST-31} L ${BB_IN_R-26},${VBH-33} L ${BB_IN_L+26},${VBH-33} L ${BB_OUT_L+26},${VBH-ST-31} L ${SX0+31},${VBH-ST-31} Q ${SX0+11},${VBH-ST-31} ${SX0+11},${VBH-ST-51} L ${SX0+11},${ST+51} Q ${SX0+11},${ST+31} ${SX0+31},${ST+31} Z`;
 
   // BARRA DE PROGRESO: sigue exactamente el promedio entre goldPath e innerPath
   // Empieza en el centro superior y recorre todo el perimetro (sentido horario)
@@ -3275,7 +3361,7 @@ function buildShield(sheetData) {
   // - Y top plana: ST + 24.5    (entre ST+18 y ST+31)
   // - Y top central: SY_TOP + 24.5   (entre SY_TOP+18 y SY_TOP+31)
   // - Y bottom plana: VBH - ST - 24.5
-  // - Y bottom central: VBH - 44.5
+  // - Y bottom central: VBH - 26.5
   // - X lateral derecho vertical: SX1 - 4.5  (entre SX1+2 y SX1-11)
   // - X lateral izquierdo vertical: SX0 + 4.5  (entre SX0-2 y SX0+11)
   // - Esquinas (curvas Q): se promedian tambien
@@ -3283,7 +3369,7 @@ function buildShield(sheetData) {
   const pT = ST + 24.5;            // y top parte plana
   const pTc = SY_TOP + 24.5;       // y top parte central elevada
   const pB = VBH - ST - 24.5;      // y bottom parte plana
-  const pBc = VBH - 44.5;          // y bottom parte central baja
+  const pBc = VBH - 26.5;          // y bottom parte central baja
   const pR = SX1 - 4.5;            // x lateral derecho vertical
   const pL = SX0 + 4.5;            // x lateral izquierdo vertical
   const pXR = SX1 - 24.5;          // x donde el top/bottom plano termina y empieza la curva derecha
@@ -3384,10 +3470,10 @@ function buildShield(sheetData) {
   for (let x = SX0 + 40; x < BB_OUT_L - 5; x += bulbSpacing) {
     bulbs.push({cx: x, cy: VBH - ST, delay: ((x % 100) * 0.013).toFixed(2)});
   }
-  bulbs.push({cx: (BB_OUT_L + BB_IN_L) / 2, cy: (VBH - ST + VBH - 20) / 2, delay: '0.4'});
-  bulbs.push({cx: (BB_IN_R + BB_OUT_R) / 2, cy: (VBH - ST + VBH - 20) / 2, delay: '0.5'});
+  bulbs.push({cx: (BB_OUT_L + BB_IN_L) / 2, cy: (VBH - ST + VBH - 2) / 2, delay: '0.4'});
+  bulbs.push({cx: (BB_IN_R + BB_OUT_R) / 2, cy: (VBH - ST + VBH - 2) / 2, delay: '0.5'});
   for (let x = BB_IN_L + 15; x < BB_IN_R - 10; x += bulbSpacing) {
-    bulbs.push({cx: x, cy: VBH - 20, delay: ((x % 100) * 0.014).toFixed(2)});
+    bulbs.push({cx: x, cy: VBH - 2, delay: ((x % 100) * 0.014).toFixed(2)});
   }
   for (let x = BB_OUT_R + 20; x < SX1 - 10; x += bulbSpacing) {
     bulbs.push({cx: x, cy: VBH - ST, delay: ((x % 100) * 0.015).toFixed(2)});
@@ -3465,11 +3551,11 @@ function buildShield(sheetData) {
       <filter id="bigGlow"><feGaussianBlur stdDeviation="6"/></filter>
     </defs>
 
+    <!-- FONDO: cuadricula que cubre toda la hoja (color sigue al tema) -->
+    <rect x="0" y="0" width="${VBW}" height="${VBH}" fill="url(#gridInner)" opacity="0.7"/>
+
     <path d="${mainPath}" fill="rgba(0,0,0,0.55)"/>
     <path d="${mainPath}" fill="url(#gridInner)" opacity="0.7"/>
-    <path d="${mainPath}" fill="none" stroke="url(#redLine)" stroke-width="13" stroke-linejoin="round" filter="drop-shadow(0 2px 0 rgba(120,20,35,0.9)) drop-shadow(0 4px 0 rgba(60,0,12,0.95)) drop-shadow(0 7px 7px rgba(0,0,0,0.6))"/>
-    <path d="${goldPath}" fill="none" stroke="url(#goldStroke)" stroke-width="2"/>
-    <path d="${innerPath}" fill="none" stroke="${innerLineColor}" stroke-width="1"/>
 
     <!-- BARRA DE PROGRESO: track (fondo tenue) -->
     <path d="${progressPath}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2.5" stroke-linecap="round"/>
@@ -3549,13 +3635,6 @@ function buildShield(sheetData) {
     });
   }
 
-  svgContent += '<g>';
-  bulbs.forEach((b, i) => {
-    const blinkType = i % 2 === 0 ? 'bulbBlink' : 'bulbBlinkAlt';
-    svgContent += `<circle cx="${b.cx}" cy="${b.cy}" r="14" fill="url(#bulbHalo)" filter="url(#bigGlow)" style="animation:${blinkType} 1.4s infinite;animation-delay:${b.delay}s;"/>`;
-    svgContent += `<circle cx="${b.cx}" cy="${b.cy}" r="6" fill="url(#bigBulb)" style="animation:${blinkType} 1.4s infinite;animation-delay:${b.delay}s;"/>`;
-  });
-  svgContent += '</g>';
 
   svg.innerHTML = svgContent;
   progressBarPath = document.getElementById('progressBar');
@@ -3578,82 +3657,9 @@ function buildShield(sheetData) {
   }
 }
 
-// =================================================================
-// CONSTRUIR UNA HOJA DEL CARRUSEL
-// =================================================================
-function buildSheet(data) {
-  const sheet = document.createElement('div');
-  sheet.className = 'sheet';
-  sheet.dataset.theme = data.theme;
-  sheet.dataset.id = data.id;
-  sheet.style.setProperty('--theme-accent', data.accent);
-
-  // Despachar segun tipo de hoja
-  if (data.type === 'home') {
-    return buildHomeSheet(data, sheet);
-  }
-  if (data.type === 'moto') {
-    return buildMotoSheet(data, sheet);
-  }
-  if (data.type === 'car') {
-    return buildCarSheet(data, sheet);
-  }
-
-  // Reels SIEMPRE empiezan en 0 - JS los pone en su lugar
-  // Cada strip tiene 11 spans con dígitos 0-9-0 para poder mostrar cualquier dígito
-  // 8 reels: 6 enteros + 2 decimales (tope 999,999.99)
-  const reels = [0,0,0,0,0,0,0,0].map((_, idx) => {
-    const digits = [];
-    for (let d = 0; d < 11; d++) {
-      digits.push(`<span>${d % 10}</span>`);
-    }
-    // Inicio en 0: solo se ve la unidad (idx 5) y los decimales (6,7). El resto oculto.
-    const hidden = (idx <= 4) ? ' reel-hidden' : '';
-    return `<div class="reel-digit${hidden}"><div class="reel-strip" data-digit="0">${digits.join('')}</div></div>`;
-  });
-
-  // Layout: [0][1][2] , [3][4][5] . [6][7]  (la coma arranca oculta)
-  const reelHTML = `
-    <span class="reel-prefix">S/.</span>
-    ${reels[0]}${reels[1]}${reels[2]}
-    <span class="reel-sep comma reel-hidden">,</span>
-    ${reels[3]}${reels[4]}${reels[5]}
-    <span class="reel-sep dot">.</span>
-    ${reels[6]}${reels[7]}
-  `;
-
-  sheet.innerHTML = `
-    <div class="scan-line"></div>
-    <div class="spark-dot" style="top:18%;left:18%;animation-delay:0s;"></div>
-    <div class="spark-dot" style="top:22%;right:18%;animation-delay:0.6s;"></div>
-    <div class="spark-dot" style="bottom:18%;left:18%;animation-delay:0.8s;"></div>
-    <div class="spark-dot" style="bottom:22%;right:18%;animation-delay:0.2s;"></div>
-
-    <div class="sheet-title">${data.title}</div>
-    <div class="sheet-subtitle">${data.subtitle}</div>
-
-    <div class="amount-frame">
-      <svg class="amount-frame-neon" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Capa 1: glow exterior dorado (escala con viewport) -->
-        <rect class="neon-pulse-glow"
-              x="0" y="0"
-              fill="none"
-              stroke="#ffaa00"
-              stroke-linecap="round"
-              rx="8" ry="8"
-              style="width:100%; height:100%;"/>
-        <!-- Capa 2: haz dorado principal (escala con viewport, mismo ancho que el borde dorado) -->
-        <rect class="neon-pulse"
-              x="0" y="0"
-              fill="none"
-              stroke="#ffd700"
-              stroke-linecap="round"
-              rx="8" ry="8"
-              style="width:100%; height:100%;"/>
-      </svg>
-      <div class="reel-row">${reelHTML}</div>
-    </div>
-
+// Helper: bottom-row con CALOR + GEAR/KM/H/TEMP/STATUS (mini/minor + grand/major sprite-off)
+function buildBottomRowHTML(data) {
+  return `
     <div class="bottom-row">
       <div class="thermometer">
         <div class="thermo-label">CALOR</div>
@@ -3678,22 +3684,15 @@ function buildSheet(data) {
                 <stop offset="100%" stop-color="${data.accent}66"/>
               </radialGradient>
             </defs>
-            <!-- Eslabon 1: empieza recto a la izq, termina con ojo derecho -->
             <path d="M 5 30 L 160 30 Q 200 30 200 60 Q 200 90 160 90 L 5 90 Z"
                   fill="#000" stroke="${data.accent}" stroke-width="3"/>
             <path d="M 15 35 L 160 35 Q 192 35 192 50" fill="none" stroke="${data.accent}" stroke-width="1.5" opacity="0.45"/>
-
-            <!-- Eslabon 2: ojos a izq y der -->
             <path d="M 180 10 Q 140 10 140 60 Q 140 110 180 110 L 360 110 Q 400 110 400 60 Q 400 10 360 10 Z"
                   fill="#000" stroke="${data.accent}" stroke-width="3"/>
             <path d="M 195 18 Q 152 18 152 50 M 360 18 Q 392 18 392 50" fill="none" stroke="${data.accent}" stroke-width="1.5" opacity="0.45"/>
-
-            <!-- Eslabon 3 -->
             <path d="M 380 30 Q 340 30 340 60 Q 340 90 380 90 L 560 90 Q 600 90 600 60 Q 600 30 560 30 Z"
                   fill="#000" stroke="${data.accent}" stroke-width="3"/>
             <path d="M 392 35 Q 352 35 352 50 M 560 35 Q 592 35 592 50" fill="none" stroke="${data.accent}" stroke-width="1.5" opacity="0.45"/>
-
-            <!-- Eslabon 4: ojo izq + termina recto -->
             <path d="M 580 10 Q 540 10 540 60 Q 540 110 580 110 L 795 110 L 795 10 Z"
                   fill="#000" stroke="${data.accent}" stroke-width="3"/>
             <path d="M 595 18 Q 552 18 552 50" fill="none" stroke="${data.accent}" stroke-width="1.5" opacity="0.45"/>
@@ -3720,6 +3719,76 @@ function buildSheet(data) {
       </div>
     </div>
   `;
+}
+
+// Helper: HTML del odometro con reels (mini/minor + grand/major cuando sprite-off)
+function buildAmountFrameHTML() {
+  const reels = [0,0,0,0,0,0,0,0].map((_, idx) => {
+    const digits = [];
+    for (let d = 0; d < 11; d++) digits.push(`<span>${d % 10}</span>`);
+    const hidden = (idx <= 4) ? ' reel-hidden' : '';
+    return `<div class="reel-digit${hidden}"><div class="reel-strip" data-digit="0">${digits.join('')}</div></div>`;
+  });
+  const reelHTML = `
+    <span class="reel-prefix">S/.</span>
+    ${reels[0]}${reels[1]}${reels[2]}
+    <span class="reel-sep comma reel-hidden">,</span>
+    ${reels[3]}${reels[4]}${reels[5]}
+    <span class="reel-sep dot">.</span>
+    ${reels[6]}${reels[7]}
+  `;
+  return `
+    <div class="amount-frame">
+      <svg class="amount-frame-neon" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <rect class="neon-pulse-glow" x="0" y="0" fill="none" stroke="#ffaa00"
+              stroke-linecap="round" rx="8" ry="8" style="width:100%; height:100%;"/>
+        <rect class="neon-pulse" x="0" y="0" fill="none" stroke="#ffd700"
+              stroke-linecap="round" rx="8" ry="8" style="width:100%; height:100%;"/>
+      </svg>
+      <div class="reel-row">${reelHTML}</div>
+    </div>
+  `;
+}
+
+// =================================================================
+// CONSTRUIR UNA HOJA DEL CARRUSEL
+// =================================================================
+function buildSheet(data) {
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet';
+  sheet.dataset.theme = data.theme;
+  sheet.dataset.id = data.id;
+  sheet.style.setProperty('--theme-accent', data.accent);
+
+  // Despachar segun tipo de hoja
+  if (data.type === 'home') {
+    return buildHomeSheet(data, sheet);
+  }
+  if (data.type === 'moto') {
+    return buildMotoSheet(data, sheet);
+  }
+  if (data.type === 'car') {
+    return buildCarSheet(data, sheet);
+  }
+
+  // Reels SIEMPRE empiezan en 0 - JS los pone en su lugar
+  // (helper compartido con buildMotoSheet / buildCarSheet)
+  const amountFrameHTML = buildAmountFrameHTML();
+
+  sheet.innerHTML = `
+    <div class="scan-line"></div>
+    <div class="spark-dot" style="top:18%;left:18%;animation-delay:0s;"></div>
+    <div class="spark-dot" style="top:22%;right:18%;animation-delay:0.6s;"></div>
+    <div class="spark-dot" style="bottom:18%;left:18%;animation-delay:0.8s;"></div>
+    <div class="spark-dot" style="bottom:22%;right:18%;animation-delay:0.2s;"></div>
+
+    <div class="sheet-title">${data.title}</div>
+    <div class="sheet-subtitle">${data.subtitle}</div>
+
+    ${amountFrameHTML}
+
+    ${buildBottomRowHTML(data)}
+  `;
 
   return sheet;
 }
@@ -3731,9 +3800,9 @@ function buildSheet(data) {
 function buildHomeSheet(data, sheet) {
   sheet.classList.add('home-sheet');
   sheet.innerHTML = `
-  <!-- NOTA: video, escudo, marquesina, barra de progreso ya las provee el dashboard -->
+  <!-- NOTA: video, escudo, barra de progreso ya las provee el dashboard -->
 
-  <!-- LETRERO MARQUEE: titulo superior estilo casino -->
+  <!-- TITULO superior (solo texto dorado, sin marquesina ni focos) -->
   <div class="home-marquee-title">
     <h1>PROGRESIVO RACE</h1>
   </div>
@@ -3746,14 +3815,10 @@ function buildHomeSheet(data, sheet) {
         <div class="home-pot-subtitle">GANATE EFECTIVO</div>
       </div>
       <div class="home-pot-mini-right">
-        <div class="home-pot-status-row">
-          <span class="home-pot-tag">POZO ACTIVO</span>
-          <span class="home-pot-status">EN JUEGO</span>
-        </div>
+        <div class="home-odometer-prefix home-odometer-prefix-top">S/.</div>
       </div>
     </div>
     <div class="home-odometer">
-      <div class="home-odometer-prefix">S/.</div>
       <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit home-digit-hidden">0</div>
@@ -3764,6 +3829,10 @@ function buildHomeSheet(data, sheet) {
       <div class="home-digit comma">.</div>
       <div class="home-digit">0</div>
       <div class="home-digit">0</div>
+    </div>
+    <div class="home-pot-status-row">
+      <span class="home-pot-tag">POZO ACTIVO</span>
+      <span class="home-pot-status">EN JUEGO</span>
     </div>
   </div>
 
@@ -3774,14 +3843,10 @@ function buildHomeSheet(data, sheet) {
         <div class="home-pot-subtitle">GANATE EFECTIVO</div>
       </div>
       <div class="home-pot-mini-right">
-        <div class="home-pot-status-row">
-          <span class="home-pot-tag">POZO ACTIVO</span>
-          <span class="home-pot-status">EN JUEGO</span>
-        </div>
+        <div class="home-odometer-prefix home-odometer-prefix-top">S/.</div>
       </div>
     </div>
     <div class="home-odometer">
-      <div class="home-odometer-prefix">S/.</div>
       <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit home-digit-hidden">0</div>
       <div class="home-digit home-digit-hidden">0</div>
@@ -3792,6 +3857,10 @@ function buildHomeSheet(data, sheet) {
       <div class="home-digit comma">.</div>
       <div class="home-digit">0</div>
       <div class="home-digit">0</div>
+    </div>
+    <div class="home-pot-status-row">
+      <span class="home-pot-tag">POZO ACTIVO</span>
+      <span class="home-pot-status">EN JUEGO</span>
     </div>
   </div>
 
@@ -3811,6 +3880,20 @@ function buildHomeSheet(data, sheet) {
         <span class="home-pot-status">EN JUEGO</span>
       </div>
     </div>
+    <!-- Odometro alterno (visible solo con .sprite-off) -->
+    <div class="home-odometer-prefix home-odometer-prefix-top home-pot-altprefix">S/.</div>
+    <div class="home-odometer home-pot-altodo">
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit comma home-digit-hidden">,</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit">0</div>
+      <div class="home-digit comma">.</div>
+      <div class="home-digit">0</div>
+      <div class="home-digit">0</div>
+    </div>
   </div>
 
   <div class="home-pot home-grand" id="home-pot-grand">
@@ -3828,6 +3911,20 @@ function buildHomeSheet(data, sheet) {
         <span class="home-pot-tag">POZO ACTIVO</span>
         <span class="home-pot-status">EN JUEGO</span>
       </div>
+    </div>
+    <!-- Odometro alterno (visible solo con .sprite-off) -->
+    <div class="home-odometer-prefix home-odometer-prefix-top home-pot-altprefix">S/.</div>
+    <div class="home-odometer home-pot-altodo">
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit comma home-digit-hidden">,</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit home-digit-hidden">0</div>
+      <div class="home-digit">0</div>
+      <div class="home-digit comma">.</div>
+      <div class="home-digit">0</div>
+      <div class="home-digit">0</div>
     </div>
   </div>
 
@@ -4000,9 +4097,8 @@ function buildMotoSheet(data, sheet) {
 
       </div>
 
-      <!-- DERECHA: chispas + moto giratoria arriba + marcha gigante abajo -->
+      <!-- DERECHA: moto giratoria arriba + marcha gigante abajo -->
       <div class="vehicle-side-right">
-        <canvas class="moto-sparks" id="motoSparksCanvas" width="280" height="120"></canvas>
         <div class="sprite-wrapper moto-wrapper">
           <canvas class="pedestal-3d" id="motoPedestal3D" width="320" height="320"></canvas>
           <div class="moto-sprite" id="motoSprite"></div>
@@ -4010,6 +4106,8 @@ function buildMotoSheet(data, sheet) {
       </div>
 
     </div>
+    ${buildAmountFrameHTML()}
+    ${buildBottomRowHTML(data)}
   `;
 
   return sheet;
@@ -4174,7 +4272,6 @@ function buildCarSheet(data, sheet) {
 
       <!-- DERECHA: bateria + odometro apilados -->
       <div class="vehicle-side-right">
-        <canvas class="auto-sparks" id="autoSparksCanvas" width="280" height="120"></canvas>
         <div class="sprite-wrapper auto-wrapper">
           <canvas class="pedestal-3d" id="autoPedestal3D" width="320" height="320"></canvas>
           <div class="auto-sprite" id="autoSprite"></div>
@@ -4182,6 +4279,8 @@ function buildCarSheet(data, sheet) {
       </div>
 
     </div>
+    ${buildAmountFrameHTML()}
+    ${buildBottomRowHTML(data)}
   `;
 
   return sheet;
@@ -4596,7 +4695,12 @@ function globalAnimate(now) {
     if (!state.miniMinorOdo) state.miniMinorOdo = { mini: 0, minor: 0 };
     if (!state.miniMinorTarget) state.miniMinorTarget = {};
     
-    ['mini', 'minor'].forEach(sId => {
+    // Lista dinamica: mini/minor siempre; grand/major solo si tienen sprite-off
+    const sIds = ['mini', 'minor'];
+    if (window.SPRITE_CONFIG && window.SPRITE_CONFIG.grand === false) sIds.push('grand');
+    if (window.SPRITE_CONFIG && window.SPRITE_CONFIG.major === false) sIds.push('major');
+
+    sIds.forEach(sId => {
       if (state.miniMinorOdo[sId] === undefined) state.miniMinorOdo[sId] = 0;
       
       // Siempre interpolar hacia target (en prueba o produccion).
@@ -4640,7 +4744,7 @@ function globalAnimate(now) {
         // Solo actualizar si cambio (optimizacion)
         if (reel.dataset.digit !== String(digit)) {
           reel.dataset.digit = digit;
-          reel.style.transform = 'translateY(' + (-digit * 14) + 'cqh)';
+          reel.style.transform = 'translateY(' + (-digit * 16) + 'cqh)';
         }
       });
 
@@ -4791,21 +4895,6 @@ function illuminateGaugeMarks() {
   requestAnimationFrame(illuminateGaugeMarks);
 }
 
-// Cambia que video se ve segun la hoja activa
-// IMPORTANTE: NO se pausa ningun video, solo cambia la visibilidad
-function updateActiveVideo(sheetId) {
-  // Ahora solo hay UN bg-video (MINI) que corre permanentemente
-  // Esta funcion solo asegura que siga reproduciendose
-  const bgVideo = document.querySelector('.bg-video');
-  if (bgVideo) {
-    bgVideo.muted = true;
-    bgVideo.volume = 0;
-    if (bgVideo.paused) {
-      bgVideo.play().catch(() => {});
-    }
-  }
-}
-
 function buildAllSheets() {
   const wrapper = document.getElementById('sheetsWrapper');
   wrapper.innerHTML = '';
@@ -4823,6 +4912,11 @@ function buildAllSheets() {
     }
     wrapper.appendChild(sheet);
   });
+
+  // Aplicar SPRITE_CONFIG ahora que las hojas existen en el DOM
+  if (typeof applyAllSpriteConfig === 'function') {
+    applyAllSpriteConfig();
+  }
 }
 
 function switchToSheet(newIdx) {
@@ -4873,7 +4967,6 @@ function switchToSheet(newIdx) {
   }, 400);
 
   // 4) Cambiar el video de fondo (cross-fade entre videos)
-  updateActiveVideo(SHEETS_DATA[newIdx].id);
 
   // 5) Resetear cache de valores numericos (para no llevar valores de la hoja anterior)
   if (simulateRace.shown) simulateRace.shown = { rpm: 800, speed: 0, fuel: 100, battery: 100 };
@@ -5057,14 +5150,14 @@ function updateProgressLoop(now) {
   const preloader = document.getElementById('preloader');
   const preloaderText = document.getElementById('preloaderText');
   const dashboard = document.getElementById('dashboard');
-  const video = document.getElementById('bgVideo');
 
   let videosReady = false;
   let fontsReady = false;
   let domReady = false;
 
-  // Obtener TODOS los videos
-  const allVideos = Array.from(document.querySelectorAll('.bg-video'));
+  // Ya no hay video de fondo: marcar como listo de inmediato
+  const allVideos = [];
+  videosReady = true;
 
   function checkAllReady() {
     if (videosReady && fontsReady && domReady) {
@@ -5086,8 +5179,6 @@ function updateProgressLoop(now) {
         requestAnimationFrame(simulateRace);          // arrancar simulacion
         requestAnimationFrame(globalAnimate);         // termo + kpis + odometro + tornillos
 
-        // Activar el video de la hoja inicial (updateActiveVideo se encarga de play/pause)
-        updateActiveVideo(SHEETS_DATA[currentSheetIdx].id);
 
         dashboard.classList.add('ready');
         preloader.classList.add('hide');
@@ -5161,15 +5252,6 @@ window.addEventListener('resize', () => {
     if (typeof homePositionPots === 'function') homePositionPots();
   }, 150);
 });
-
-// Watcher: si el video ACTIVO se pausa solo (por throttling del browser), lo reanuda
-setInterval(() => {
-  document.querySelectorAll('.bg-video.video-active').forEach(v => {
-    if (v.paused && v.readyState >= 3) {
-      v.play().catch(() => {});
-    }
-  });
-}, 5000);
 
 // ============================================================
 // JAVASCRIPT DE LA VISTA HOME
@@ -5393,8 +5475,9 @@ function homePositionPots() {
   const refPath = document.getElementById('progressPathDef');
   if (!refPath) return;
 
+  // Los cuadros van AMARRADOS al escudo: se miden contra su contorno.
   const bbox = refPath.getBoundingClientRect();
-  const SAFE = 40;
+  const SAFE = 14;
   const L = bbox.left + SAFE;
   const R = bbox.right - SAFE;
   const T = bbox.top + SAFE;
@@ -5408,27 +5491,27 @@ function homePositionPots() {
   // Fila 3: MINOR (izq) | MINI (der)
   // Fila 4: JUEGA YA (banner ancho)
 
-  const sideMargin = W * 0.03;
+  const sideMargin = W * 0.008;   // margen interno minimo
   const colGap = W * 0.02;
   const colW = (W - sideMargin * 2 - colGap) / 2;
 
-  const TOP_LETRERO = H * 0.18;
+  const TOP_LETRERO = H * 0.26;   // espacio para el titulo (mas aire entre titulo y cards)
   const ROW_GAP = H * 0.04;
   const BANNER_H = H * 0.13;
-  const BANNER_RESERVE = BANNER_H + H * 0.04;
+  const BANNER_RESERVE = H * 0.02;   // no hay banner: margen minimo abajo
 
   // Como ya no hay banner abajo, bajamos un poco todo el bloque de pozos
   // (mismo tamano, solo desplazado hacia abajo) para aprovechar ese espacio.
-  const HOME_SHIFT = H * 0.08;
+  const HOME_SHIFT = 0;        // antes 0.08: ya no hace falta empujar abajo
 
   // Las dos filas de pozos llenan el espacio entre el letrero y el banner
   const ROWS_TOP = T + TOP_LETRERO + HOME_SHIFT;
   const ROWS_BOTTOM = B - BANNER_RESERVE + HOME_SHIFT;
   const totalRowsH = ROWS_BOTTOM - ROWS_TOP - ROW_GAP;
-  const bigH = totalRowsH * 0.46;     // base fila de arriba (igual que antes)
-  const smallH = totalRowsH * 0.50;   // MINOR / MINI: igual que antes (no se tocan)
-  // GRAND / MAJOR crecen un poco HACIA ARRIBA, sin mover la fila de abajo.
-  const GRAND_EXTRA = totalRowsH * 0.10;
+  const bigH = totalRowsH * 0.46;     // GRAND/MAJOR (igual altura que MINOR/MINI)
+  const smallH = totalRowsH * 0.46;   // MINOR / MINI
+  // GRAND / MAJOR ya NO crecen hacia arriba: asi no tapan el letrero.
+  const GRAND_EXTRA = 0;
 
   // Fila 2 (GRAND | MAJOR)
   const grandX = L + sideMargin;
@@ -5466,7 +5549,7 @@ function homePositionPots() {
       odo.style.transform = '';
       odo.style.transformOrigin = 'center center';
       const potW = pot.clientWidth;
-      const usable = potW * 0.90;
+      const usable = potW * 0.98;
       const odoW = odo.scrollWidth;
       if (odoW > usable && usable > 0) {
         const s = usable / odoW;
@@ -5554,134 +5637,7 @@ function homeStopRunnerLoop() {
 <!-- Script Three.js moto eliminado -->
 
 
-<!-- ============================================================
-     CHISPAS / COHETONES animados encima de la moto
-     ============================================================ -->
-<script>
-(function() {
-  function initSparks() {
-    const canvas = document.getElementById('motoSparksCanvas');
-    if (!canvas) {
-      setTimeout(initSparks, 300);
-      return;
-    }
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
-    
-    // Pool de particulas
-    const particles = [];
-    
-    // Colores dorados/rojos para las chispas
-    const colors = ['#ffd700', '#ffaa00', '#ff6622', '#ff3300', '#ffeebb', '#ffffff'];
-    
-    let burstTimer = 0;  // ciclo de fuegos artificiales
-    
-    function spawnBurst() {
-      // 12 chispas equidistantes en arco amplio
-      const N = 12;
-      const startX = W / 2;
-      const startY = H * 0.95;
-      
-      // Arco de 200 grados (mas amplio, casi horizontal)
-      // De -190 grados hasta +10 grados
-      const startAngle = -Math.PI - 0.17;  // -190 deg
-      const endAngle = 0.17;                // +10 deg
-      const totalArc = endAngle - startAngle;
-      
-      for (let i = 0; i < N; i++) {
-        const angle = startAngle + (i / (N - 1)) * totalArc;
-        const speed = 2.5 + Math.random() * 1.5;
-        
-        particles.push({
-          x: startX,
-          y: startY,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          gravity: 0.06 + Math.random() * 0.04,
-          life: 1.0,
-          decay: 0.012 + Math.random() * 0.008,
-          size: 2 + Math.random() * 2,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          trail: []
-        });
-      }
-    }
-    
-    function update() {
-      const activeSheet = document.querySelector('.sheet.active');
-      const isActive = activeSheet && activeSheet.dataset.id === 'major';
-      
-      if (!isActive) {
-        setTimeout(update, 500);
-        return;
-      }
-      
-      // 30fps cuando activo
-      setTimeout(() => requestAnimationFrame(update), 33);
-      
-      // Cada cierto tiempo, lanzar un nuevo burst de 8 chispas en arco
-      burstTimer++;
-      if (burstTimer > 28) {  // ~470ms entre bursts
-        spawnBurst();
-        burstTimer = 0;
-      }
-      
-      // Limpiar canvas COMPLETAMENTE transparente (sin background)
-      ctx.clearRect(0, 0, W, H);
-      
-      // Actualizar y dibujar particulas
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        
-        // Guardar posicion para trail
-        p.trail.push({ x: p.x, y: p.y });
-        if (p.trail.length > 6) p.trail.shift();
-        
-        // Fisica
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += p.gravity;
-        p.life -= p.decay;
-        
-        // Eliminar si muere o sale del canvas
-        if (p.life <= 0 || p.y > H || p.x < -20 || p.x > W + 20) {
-          particles.splice(i, 1);
-          continue;
-        }
-        
-        // Dibujar trail (estela)
-        for (let t = 0; t < p.trail.length; t++) {
-          const tp = p.trail[t];
-          const trailAlpha = (t / p.trail.length) * p.life * 0.5;
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = trailAlpha;
-          ctx.beginPath();
-          ctx.arc(tp.x, tp.y, p.size * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        
-        // Dibujar chispa principal con glow
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
-    }
-    
-    update();
-    console.log('[CHISPAS] iniciadas');
-  }
-  
-  setTimeout(initSparks, 600);
-})();
-</script>
+
 
 <!-- ============================================================
      AUTO 3D (F1) giratorio en hoja GRAND
@@ -5689,115 +5645,7 @@ function homeStopRunnerLoop() {
 <!-- Script Three.js auto F1 eliminado -->
 
 
-<!-- Chispas para el F1 -->
-<script>
-(function() {
-  function initAutoSparks() {
-    const canvas = document.getElementById('autoSparksCanvas');
-    if (!canvas) {
-      setTimeout(initAutoSparks, 300);
-      return;
-    }
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width;
-    const H = canvas.height;
-    const particles = [];
-    // Colores turquesa para GRAND
-    const colors = ['#00e5d4', '#5cffee', '#aaffff', '#ffffff', '#88ddcc', '#00aabb'];
-    
-    let burstTimer = 0;
-    
-    function spawnBurst() {
-      const N = 12;
-      const startX = W / 2;
-      const startY = H * 0.95;
-      const startAngle = -Math.PI - 0.17;
-      const endAngle = 0.17;
-      const totalArc = endAngle - startAngle;
-      
-      for (let i = 0; i < N; i++) {
-        const angle = startAngle + (i / (N - 1)) * totalArc;
-        const speed = 2.5 + Math.random() * 1.5;
-        particles.push({
-          x: startX, y: startY,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          gravity: 0.06 + Math.random() * 0.04,
-          life: 1.0,
-          decay: 0.012 + Math.random() * 0.008,
-          size: 2 + Math.random() * 2,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          trail: []
-        });
-      }
-    }
-    
-    function update() {
-      const activeSheet = document.querySelector('.sheet.active');
-      const isActive = activeSheet && activeSheet.dataset.id === 'grand';
-      
-      if (!isActive) {
-        setTimeout(update, 500);
-        return;
-      }
-      
-      // 30fps cuando activo
-      setTimeout(() => requestAnimationFrame(update), 33);
-      
-      burstTimer++;
-      if (burstTimer > 28) {
-        spawnBurst();
-        burstTimer = 0;
-      }
-      
-      ctx.clearRect(0, 0, W, H);
-      
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.trail.push({ x: p.x, y: p.y });
-        if (p.trail.length > 6) p.trail.shift();
-        
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += p.gravity;
-        p.life -= p.decay;
-        
-        if (p.life <= 0 || p.y > H || p.x < -20 || p.x > W + 20) {
-          particles.splice(i, 1);
-          continue;
-        }
-        
-        for (let t = 0; t < p.trail.length; t++) {
-          const tp = p.trail[t];
-          const trailAlpha = (t / p.trail.length) * p.life * 0.5;
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = trailAlpha;
-          ctx.beginPath();
-          ctx.arc(tp.x, tp.y, p.size * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
-      
-    }
-    
-    update();
-    console.log('[F1 CHISPAS] iniciadas');
-  }
-  
-  setTimeout(initAutoSparks, 800);
-})();
-</script>
+
 
 <!-- ============================================================
      SISTEMA DE VIDEOS PROMO ALEATORIOS
@@ -7242,7 +7090,7 @@ function homeStopRunnerLoop() {
   }
   
   // Mostrar modal de ganador
-  function showWinnerModal(sheetId, amount, maquina, posicion) {
+  function showWinnerModal(sheetId, amount, maquina, posicion, snapshotSprite) {
     const modal = document.getElementById('winnerModal');
     const titleEl = document.getElementById('winnerTitle');
     const msgEl = document.getElementById('winnerMessage');
@@ -7271,7 +7119,15 @@ function homeStopRunnerLoop() {
     
     const nameEl = document.getElementById('winnerTitleName');
     if (nameEl) nameEl.textContent = '¡' + (titles[sheetId] || 'MINI');
-    msgEl.textContent = messages[sheetId];
+    // Si SPRITE_CONFIG === false para grand/major, usar mensaje de "por ganar"
+    // (no se muestra auto/moto en el modal: el premio es en efectivo).
+    // Si nos pasaron snapshotSprite (estado al momento del ganador), usar ese
+    // para evitar inconsistencias si el flag cambia durante el delay.
+    const cfgGrand = snapshotSprite ? snapshotSprite.grand : (window.SPRITE_CONFIG ? window.SPRITE_CONFIG.grand : true);
+    const cfgMajor = snapshotSprite ? snapshotSprite.major : (window.SPRITE_CONFIG ? window.SPRITE_CONFIG.major : true);
+    const isSpriteOff = (sheetId === 'grand' && cfgGrand === false) ||
+                        (sheetId === 'major' && cfgMajor === false);
+    msgEl.textContent = isSpriteOff ? '¡FELICIDADES POR GANAR!' : messages[sheetId];
 
     // ============================================================
     // ACENTO DE COLOR por sheet (se aplica al borde del modal,
@@ -7295,14 +7151,17 @@ function homeStopRunnerLoop() {
     if (boxC && sprC) {
       sprC.className = 'winner-sprite';   // resetear
       boxC.classList.remove('show');
-      if (sheetId === 'grand') {
+      // Si el flag SPRITE_CONFIG[sheet] === false, tratamos como mini/minor
+      // (no se muestra el auto/moto en el modal: solo el monto en efectivo)
+      const showSprite = window.SPRITE_CONFIG ? window.SPRITE_CONFIG[sheetId] !== false : true;
+      if (sheetId === 'grand' && showSprite) {
         sprC.classList.add('winner-car');
         boxC.classList.add('show');
-      } else if (sheetId === 'major') {
+      } else if (sheetId === 'major' && showSprite) {
         sprC.classList.add('winner-moto');
         boxC.classList.add('show');
       }
-      // En mini/minor queda oculto (no .show)
+      // En mini/minor (o grand/major con flag=false) queda oculto (no .show)
     }
 
     // ============================================================
@@ -7325,7 +7184,8 @@ function homeStopRunnerLoop() {
       }
     }
     
-    if (sheetId === 'mini' || sheetId === 'minor') {
+    const showAmountInModal = (sheetId === 'mini' || sheetId === 'minor') || isSpriteOff;
+    if (showAmountInModal) {
       // Marcar el modal con el sheet para que el loop globalAnimate
       // escriba el monto SINCRONIZADO con el sheet y el home.
       modal.dataset.sheet = sheetId;
@@ -7425,7 +7285,33 @@ function homeStopRunnerLoop() {
   
   // Handler de datos del API
   window.__casinoHandlers.onUpdate = function(data) {
-    if (!data || !data.sheet) return;
+    if (!data) return;
+
+    // ============================================================
+    // _endpoint === 'sprite-config': actualizar flag en vivo
+    // ============================================================
+    if (data._endpoint === 'sprite-config') {
+      if (data.sheet === 'grand' || data.sheet === 'major') {
+        window.SPRITE_CONFIG[data.sheet] = !!data.show;
+        console.log('[SPRITE_CONFIG] Actualizado:', data.sheet, '=', data.show);
+        applySpriteConfig(data.sheet);
+      }
+      return;
+    }
+
+    // ============================================================
+    // _endpoint === 'sprite-config-bulk': actualizar AMBOS flags
+    // ============================================================
+    if (data._endpoint === 'sprite-config-bulk') {
+      if (typeof data.grand === 'boolean') window.SPRITE_CONFIG.grand = data.grand;
+      if (typeof data.major === 'boolean') window.SPRITE_CONFIG.major = data.major;
+      console.log('[SPRITE_CONFIG] Bulk actualizado:', window.SPRITE_CONFIG);
+      applySpriteConfig('grand');
+      applySpriteConfig('major');
+      return;
+    }
+
+    if (!data.sheet) return;
     
     console.log('[API] === UPDATE RECIBIDO ===', JSON.stringify(data));
     
@@ -7474,8 +7360,12 @@ function homeStopRunnerLoop() {
     // ============================================================
     // ACTUALIZAR TARGET para que la animacion interpole hacia ese valor
     // (Esto siempre se hace, en modo prueba o produccion)
+    // Para grand/major: solo si SPRITE_CONFIG[sheet] === false (modo cash)
     // ============================================================
-    if (data.sheet === 'mini' || data.sheet === 'minor') {
+    const targetIsCash = (data.sheet === 'mini' || data.sheet === 'minor') ||
+                         ((data.sheet === 'grand' || data.sheet === 'major') &&
+                          window.SPRITE_CONFIG && window.SPRITE_CONFIG[data.sheet] === false);
+    if (targetIsCash) {
       if (data.amount !== undefined) {
         if (!state.miniMinorTarget) state.miniMinorTarget = {};
         if (!state.miniMinorOdo) state.miniMinorOdo = {};
@@ -7500,7 +7390,7 @@ function homeStopRunnerLoop() {
     // ACTUALIZACION INMEDIATA del reel visual (sin esperar al loop)
     // Funciona aunque la hoja no este activa
     // ============================================================
-    if ((data.sheet === 'mini' || data.sheet === 'minor') && data.amount !== undefined) {
+    if (targetIsCash && data.amount !== undefined) {
       // Buscar la hoja correspondiente (este o no activa)
       const targetSheet = document.querySelector('.sheet[data-id="' + data.sheet + '"]');
       if (targetSheet) {
@@ -7529,18 +7419,40 @@ function homeStopRunnerLoop() {
     // ============================================================
     // GANADOR
     // ============================================================
-    if (data.ganador === true) {
+    // Aceptar ganador como cualquier valor truthy: true, 1, "true", "1"
+    const esGanador = data.ganador === true || data.ganador === 1 ||
+                      data.ganador === 'true' || data.ganador === '1';
+    console.log('[API] Check ganador:', data.sheet, '| valor recibido:', JSON.stringify(data.ganador),
+                '| typeof:', typeof data.ganador, '| esGanador:', esGanador);
+
+    if (esGanador) {
       const delay = (window.CASINO_CONFIG.winnerDelaySec || 5) * 1000;
-      console.log('[API] GANADOR:', data.sheet, '- modal en', delay, 'ms');
-      
+      console.log('[API] GANADOR confirmado:', data.sheet, '- modal en', delay, 'ms');
+
+      // Capturar SPRITE_CONFIG al MOMENTO del ganador (no cuando se muestre el modal).
+      // Si entre el push del ganador y el modal alguien cambia el flag, el modal
+      // se muestra con el flag del momento en que se gano (consistencia).
+      const snapshotSprite = {
+        grand: window.SPRITE_CONFIG ? !!window.SPRITE_CONFIG.grand : true,
+        major: window.SPRITE_CONFIG ? !!window.SPRITE_CONFIG.major : true
+      };
+
+      // Marcar pendiente (util para evitar recarga por memoria durante el delay)
+      window.__winnerPending = true;
+
       // Para mini/minor: actualizar target a monto final ANTES del delay
       if ((data.sheet === 'mini' || data.sheet === 'minor') && data.amount !== undefined) {
         if (!state.miniMinorTarget) state.miniMinorTarget = {};
         state.miniMinorTarget[data.sheet] = Math.round(data.amount * 100);
       }
-      
+
       setTimeout(() => {
-        showWinnerModal(data.sheet, data.amount, data.maquina, data.posicion);
+        try {
+          showWinnerModal(data.sheet, data.amount, data.maquina, data.posicion, snapshotSprite);
+        } catch (e) {
+          console.error('[API] Error mostrando modal ganador:', e);
+        }
+        window.__winnerPending = false;
       }, delay);
     }
   };
