@@ -249,6 +249,28 @@ async function initDatabase() {
       );
     `);
 
+    // ============================================================
+    // MIGRACION: agregar columnas que faltan en BDs viejas.
+    // SQLite no soporta "ADD COLUMN IF NOT EXISTS", asi que probamos
+    // y silenciamos el error si ya existe.
+    // ============================================================
+    function migrarColumna(tabla, columna, definicion) {
+      try {
+        db.run('ALTER TABLE ' + tabla + ' ADD COLUMN ' + columna + ' ' + definicion);
+        logInfo('Migracion: columna ' + tabla + '.' + columna + ' agregada');
+      } catch (e) {
+        // Si ya existe, SQLite tira "duplicate column name" - lo ignoramos
+        if (!/duplicate column/i.test(e.message)) {
+          logError('Error agregando columna ' + tabla + '.' + columna + ': ' + e.message);
+        }
+      }
+    }
+    migrarColumna('peticiones', 'endpoint',        "TEXT NOT NULL DEFAULT 'update'");
+    migrarColumna('peticiones', 'posicion',        'INTEGER');
+    migrarColumna('peticiones', 'cod_sala',        'TEXT');
+    migrarColumna('peticiones', 'id_race',         'INTEGER');
+    migrarColumna('peticiones', 'enviado_externo', 'INTEGER DEFAULT 0');
+
     // Defaults: mostrar sprite=true para grand y major (solo si no existen)
     db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('grand', 1, datetime('now'));`);
     db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('major', 1, datetime('now'));`);
