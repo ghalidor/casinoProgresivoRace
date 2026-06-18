@@ -960,6 +960,33 @@ function startHttpServer(config) {
     }
   });
   
+  // ============================================================
+  // GET /ultimo-monto
+  // Devuelve el ultimo monto registrado para grand (car) y major (moto)
+  // tomados de la tabla peticiones (cualquier endpoint: update, update-bulk, ganador)
+  // ============================================================
+  httpApp.get('/ultimo-monto', (req, res) => {
+    if (!db || !dbReady) return res.json({ error: 'DB no disponible' });
+    try {
+      // Mapeo sheet -> nombre en la respuesta
+      const mapping = { grand: 'Car', major: 'Moto', mini: 'Mini', minor: 'Minor' };
+      const out = {};
+      for (const sheet in mapping) {
+        const rows = queryRows(
+          'SELECT amount, fecha_registro FROM peticiones WHERE sheet = ? AND amount IS NOT NULL ORDER BY id DESC LIMIT 1',
+          [sheet]
+        );
+        out[mapping[sheet]] = {
+          Monto: rows[0] ? rows[0].amount : 0,
+          Fecha: rows[0] ? rows[0].fecha_registro : null
+        };
+      }
+      res.json(out);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Estadisticas por hoja
   httpApp.get('/stats', (req, res) => {
     if (!db || !dbReady) return res.json({ error: 'DB no disponible' });
@@ -1008,6 +1035,7 @@ function startHttpServer(config) {
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/status');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/history?limit=50');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/audit?limit=50&tipo=sprite-config');
+    console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ultimo-monto');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/stats');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ias-status');
   });
