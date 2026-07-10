@@ -3134,7 +3134,11 @@ window.CASINO_CONFIG = window.CASINO_CONFIG || {
   useTestData: true,              // true=valores de prueba, false=espera servicio
   winnerDelaySec: 0,              // delay antes del modal ganador (instantaneo)
   winnerModalDurationSec: 12,     // duracion del modal ganador
-  modalVideoVolume: 0.7           // volumen videos modales (0.0-1.0)
+  modalVideoVolume: 0.7,          // volumen videos modales (0.0-1.0)
+  bgMusicVolume: 0.3,             // volumen musica de fondo (0.0-1.0)
+  confirmMinDisplaySec: 8,        // minimo que se muestra el mensaje de acreditacion
+  msgAcreditadoOk: 'Maquina acreditada correctamente',
+  msgAcreditadoError: 'error al acreditar, verifique con el administrador'
 };
 
 // API publica para datos externos:
@@ -3264,16 +3268,36 @@ const SHEET_DURATION = 8000; // 8 segundos por hoja (sheets de jackpot)
 let HOME_DURATION = 60000;   // 60 segundos para la vista HOME (se sobrescribe con config)
 const TRANSITION_DURATION = 800; // duracion del slide
 
-// Cargar HOME_DURATION desde el config del servidor (fetch al endpoint /status)
+// Cargar la config del servidor (endpoint /status) y aplicarla al dashboard.
+// Antes solo se leia homeViewDurationSec; ahora tambien se aplican los demas
+// valores que usa el frontend, para que config.json controle el dashboard.
 fetch('http://localhost:3000/status')
   .then(r => r.json())
   .then(s => {
-    if (s && s.config && s.config.homeViewDurationSec) {
-      HOME_DURATION = s.config.homeViewDurationSec * 1000;
-      console.log('[HOME] Duracion cargada desde config:', HOME_DURATION, 'ms');
+    if (!s || !s.config) return;
+    const c = s.config;
+
+    // Solo las claves que usa el frontend (si vienen en el config del server).
+    const CLAVES_UI = [
+      'promoIntervalSec', 'promoDurationSec', 'kpiSpeed', 'useTestData',
+      'winnerDelaySec', 'winnerModalDurationSec', 'modalVideoVolume', 'bgMusicVolume',
+      'confirmMinDisplaySec', 'msgAcreditadoOk', 'msgAcreditadoError'
+    ];
+    CLAVES_UI.forEach(k => {
+      if (c[k] !== undefined) window.CASINO_CONFIG[k] = c[k];
+    });
+
+    // homeViewDurationSec controla la duracion de la hoja HOME.
+    if (c.homeViewDurationSec) {
+      HOME_DURATION = c.homeViewDurationSec * 1000;
     }
+
+    // useTestData pudo cambiar: re-aplicar modo produccion/prueba (clase CSS).
+    applyProductionMode();
+
+    console.log('[CONFIG] Config del servidor aplicada:', window.CASINO_CONFIG);
   })
-  .catch((e) => { console.warn('[STATUS] fetch fallo:', e.message); });
+  .catch((e) => { console.warn('[STATUS] fetch fallo, se usa config por defecto:', e.message); });
 
 // Cargar SPRITE_CONFIG con reintento (independiente del fetch /status)
 function loadSpriteConfig(intentos) {
@@ -6585,6 +6609,32 @@ function homeStopRunnerLoop() {
 }
 </style>
 
+<style>
+.winner-acreditado {
+  /* Ocupa SIEMPRE su lugar (min-height) y se muestra/oculta con
+     visibility, no con display, para que nunca empuje el resto. */
+  visibility: hidden;
+  min-height: clamp(26px, 4.2vmin, 54px);
+  margin-top: 1.5vmin;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Montserrat','Arial Black',sans-serif;
+  font-weight: 800;
+  font-size: clamp(16px, 3vmin, 42px);
+  text-align: center;
+  line-height: 1.15;
+}
+.winner-acreditado.ok {
+  color: #0aff7a;
+  text-shadow: 0 0 12px rgba(10,255,122,0.7), 0 2px 3px rgba(0,0,0,0.6);
+}
+.winner-acreditado.error {
+  color: #ff4040;
+  text-shadow: 0 0 12px rgba(255,64,64,0.7), 0 2px 3px rgba(0,0,0,0.6);
+}
+</style>
+
 <!-- Modal de ganador HTML -->
 <div class="winner-modal" id="winnerModal">
   <!-- Audio del ganador (suena al aparecer el modal).
@@ -6980,6 +7030,9 @@ function homeStopRunnerLoop() {
       <span id="winnerMachineText">Máquina #000</span>
     </div>
 
+    <!-- Mensaje de acreditacion (verde=ok / rojo=error). Oculto hasta confirmSubida -->
+    <div class="winner-acreditado" id="winnerAcreditado" style="visibility:hidden;"></div>
+
     <!-- Contador en reversa - esquina inferior derecha -->
     <div class="winner-countdown" id="winnerCountdown">12</div>
     </div><!-- /winner-inner -->
@@ -7222,66 +7275,119 @@ function homeStopRunnerLoop() {
     setTimeout(spawnFireworks, 1500);
     setTimeout(spawnFireworks, 3000);
     
-    // Cerrar despues de duracion configurada
-    const durationSec = window.CASINO_CONFIG.winnerModalDurationSec || 12;
-    const duration = durationSec * 1000;
+    // Ocultar mensaje de acreditacion de un ganador anterior
+    const acrEl = document.getElementById('winnerAcreditado');
+    if (acrEl) { acrEl.style.visibility = 'hidden'; acrEl.textContent = ''; acrEl.className = 'winner-acreditado'; }
 
-    // Countdown visual en esquina inferior derecha
+    // Programar cierre (duracion configurada). Se puede EXTENDER si llega
+    // confirmSubida cerca del final (ver window.casinoConfirmSubida).
+    const durationSec = window.CASINO_CONFIG.winnerModalDurationSec || 12;
+    programarCierreGanador(modal, Date.now() + durationSec * 1000);
+
+    // Si el confirmSubida llego ANTES de abrir el modal, aplicarlo ahora.
+    if (window.__pendingConfirm) {
+      const pc = window.__pendingConfirm;
+      window.__pendingConfirm = null;
+      window.casinoConfirmSubida(pc);
+    }
+
+    console.log('[WINNER] Modal mostrado:', sheetId, 'amount:', amount, 'maquina:', maquina);
+  }
+
+  // Cierra el modal ganador y limpia todo (extraido para poder reprogramarlo).
+  function cerrarModalGanador(modal) {
+    modal.classList.remove('showing');
+    document.body.classList.remove('winner-visible');
+    stopConfetti();
+    if (window.__winnerCountdownInterval) {
+      clearInterval(window.__winnerCountdownInterval);
+      window.__winnerCountdownInterval = null;
+    }
+    const wa = document.getElementById('winnerAudio');
+    if (wa) { try { wa.pause(); wa.currentTime = 0; } catch (e) {} }
+
+    // Ocultar mensaje de acreditacion
+    const acrEl = document.getElementById('winnerAcreditado');
+    if (acrEl) { acrEl.style.visibility = 'hidden'; acrEl.textContent = ''; acrEl.className = 'winner-acreditado'; }
+    window.__pendingConfirm = null;
+    window.__winnerCloseAt = 0;
+
+    // Limpiar sheet activo del modal
+    const closedSheet = window.__activeWinnerSheet;
+    window.__activeWinnerSheet = null;
+
+    // Procesar reinicios que quedaron postergados para este sheet
+    if (window.__pendingReinicios && window.__pendingReinicios.length > 0) {
+      const remaining = [];
+      window.__pendingReinicios.forEach(rData => {
+        if (rData.sheet === closedSheet) {
+          console.log('[API][REINICIO] Aplicando reinicio postergado:', rData.sheet);
+          window.__casinoHandlers.onUpdate(rData);
+        } else {
+          remaining.push(rData);
+        }
+      });
+      window.__pendingReinicios = remaining;
+    }
+  }
+
+  // (Re)programa el cierre del modal para un instante absoluto (ms epoch).
+  // Reajusta tambien el countdown visual. Se usa al abrir y al extender.
+  function programarCierreGanador(modal, closeAtMs) {
+    window.__winnerCloseAt = closeAtMs;
+    const remaining = Math.max(0, closeAtMs - Date.now());
+
+    if (window.__winnerCloseTimer) clearTimeout(window.__winnerCloseTimer);
+    window.__winnerCloseTimer = setTimeout(() => cerrarModalGanador(modal), remaining);
+
     const countdownEl = document.getElementById('winnerCountdown');
     if (countdownEl) {
-      let secsLeft = durationSec;
-      countdownEl.textContent = secsLeft;
-      // Limpiar interval anterior si existia
       if (window.__winnerCountdownInterval) clearInterval(window.__winnerCountdownInterval);
+      let secsLeft = Math.ceil(remaining / 1000);
+      countdownEl.textContent = secsLeft;
       window.__winnerCountdownInterval = setInterval(() => {
         secsLeft--;
+        countdownEl.textContent = secsLeft > 0 ? secsLeft : 0;
         if (secsLeft <= 0) {
-          countdownEl.textContent = 0;
           clearInterval(window.__winnerCountdownInterval);
           window.__winnerCountdownInterval = null;
-        } else {
-          countdownEl.textContent = secsLeft;
         }
       }, 1000);
     }
-
-    setTimeout(() => {
-      modal.classList.remove('showing');
-      document.body.classList.remove('winner-visible');
-      stopConfetti();
-      if (window.__winnerCountdownInterval) {
-        clearInterval(window.__winnerCountdownInterval);
-        window.__winnerCountdownInterval = null;
-      }
-      // Detener audio del ganador al cerrar el modal
-      const wa = document.getElementById('winnerAudio');
-      if (wa) {
-        try { wa.pause(); wa.currentTime = 0; } catch (e) {}
-      }
-      
-      // Limpiar sheet activo del modal
-      const closedSheet = window.__activeWinnerSheet;
-      window.__activeWinnerSheet = null;
-      
-      // Procesar reinicios que quedaron postergados para este sheet
-      if (window.__pendingReinicios && window.__pendingReinicios.length > 0) {
-        const remaining = [];
-        window.__pendingReinicios.forEach(rData => {
-          if (rData.sheet === closedSheet) {
-            console.log('[API][REINICIO] Aplicando reinicio postergado:', rData.sheet);
-            // Reenviar al onUpdate para que aplique con la logica normal
-            // (que ahora ya no encontrara modal activo de ese sheet)
-            window.__casinoHandlers.onUpdate(rData);
-          } else {
-            remaining.push(rData);
-          }
-        });
-        window.__pendingReinicios = remaining;
-      }
-    }, duration);
-    
-    console.log('[WINNER] Modal mostrado:', sheetId, 'amount:', amount, 'maquina:', maquina);
   }
+
+  // Muestra el mensaje verde/rojo de acreditacion debajo del monto.
+  function mostrarMensajeAcreditado(estado) {
+    const el = document.getElementById('winnerAcreditado');
+    if (!el) return;
+    const okTxt  = window.CASINO_CONFIG.msgAcreditadoOk  || 'Maquina acreditada correctamente';
+    const errTxt = window.CASINO_CONFIG.msgAcreditadoError || 'error al acreditar, verifique con el administrador';
+    el.textContent = estado ? okTxt : errTxt;
+    el.className = 'winner-acreditado ' + (estado ? 'ok' : 'error');
+    el.style.visibility = 'visible';
+  }
+
+  // Llamada desde main.js cuando llega POST /confirmSubida.
+  // Muestra el mensaje y garantiza que se vea minimo confirmMinDisplaySec.
+  window.casinoConfirmSubida = function(payload) {
+    const estado = !!(payload && payload.estado);
+    const modal = document.getElementById('winnerModal');
+
+    // Si el modal aun no abrio, guardar y aplicarlo al abrir.
+    if (!modal || !modal.classList.contains('showing')) {
+      window.__pendingConfirm = { estado: estado };
+      return;
+    }
+
+    mostrarMensajeAcreditado(estado);
+
+    // Asegurar visibilidad minima: extender el cierre si hace falta.
+    const minMs = (window.CASINO_CONFIG.confirmMinDisplaySec || 8) * 1000;
+    const minCloseAt = Date.now() + minMs;
+    if (minCloseAt > (window.__winnerCloseAt || 0)) {
+      programarCierreGanador(modal, minCloseAt);
+    }
+  };
   
   // Handler de datos del API
   window.__casinoHandlers.onUpdate = function(data) {

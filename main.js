@@ -47,12 +47,18 @@ function loadConfig() {
     kpiSpeed: 1.0, useTestData: true, winnerDelaySec: 5, winnerModalDurationSec: 12,
     modalVideoVolume: 0.7, httpPort: 3000, cleanupIntervalMin: 60,
     memoryReloadMB: 300, reloadCheckIntervalSec: 60,
-    iasEnabled: false, iasBaseUrl: '', iasRetryIntervalSec: 30
+    iasEnabled: false, iasBaseUrl: '', iasRetryIntervalSec: 30,
+    confirmMinDisplaySec: 8,
+    msgAcreditadoOk: 'Maquina acreditada correctamente',
+    msgAcreditadoError: 'error al acreditar, verifique con el administrador',
+    detalleAcreditadoTimeout: 'no se envio acreditacion(no confirmaron)'
   };
 }
 
 let mainWindow;
 let isWinnerActive = false;
+let ganadorPendiente = null;   // ganador esperando confirmSubida (acreditacion IAS)
+let iasDetalleTimeout = 'no se envio acreditacion(no confirmaron)';
 let isPromoActive = false;
 let pendingUpdates = [];
 let dashboardReady = false;
@@ -270,6 +276,9 @@ async function initDatabase() {
     migrarColumna('peticiones', 'cod_sala',        'TEXT');
     migrarColumna('peticiones', 'id_race',         'INTEGER');
     migrarColumna('peticiones', 'enviado_externo', 'INTEGER DEFAULT 0');
+    migrarColumna('peticiones', 'acreditado_estado',  'INTEGER');
+    migrarColumna('peticiones', 'acreditado_detalle', 'TEXT');
+    migrarColumna('peticiones', 'acreditado_enviado', 'INTEGER DEFAULT 0');
 
     // Defaults: mostrar sprite=true para grand y major (solo si no existen)
     db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('grand', 1, datetime('now'));`);
@@ -370,6 +379,125 @@ function marcarGanadorEnviadoIAS(peticionId) {
   } catch (e) {
     logError('Error marcando enviado_externo: ' + e.message);
   }
+}
+
+// ============================================================
+// ACREDITACION: ActualizarEstadoAcreditado en el IAS.
+// Se dispara cuando llega /confirmSubida (estado 1/0) o cuando el
+// modal ganador cierra sin confirmSubida (estado 2 = no confirmaron).
+// Se persiste en la DB y se reintenta si el POST al IAS falla.
+// ============================================================
+function marcarAcreditadoEnviadoIAS(peticionId) {
+  if (!db || !dbReady || !peticionId) return;
+  try {
+    const stmt = db.prepare('UPDATE peticiones SET acreditado_enviado = 1 WHERE id = ?');
+    stmt.run([peticionId]);
+    stmt.free();
+    scheduleDbSave();
+  } catch (e) {
+    logError('Error marcando acreditado_enviado: ' + e.message);
+  }
+}
+
+function guardarAcreditadoEnDB(peticionId, estado, detalle) {
+  if (!db || !dbReady || !peticionId) return;
+  try {
+    const stmt = db.prepare('UPDATE peticiones SET acreditado_estado = ?, acreditado_detalle = ?, acreditado_enviado = 0 WHERE id = ?');
+    stmt.run([estado, detalle || '', peticionId]);
+    stmt.free();
+    scheduleDbSave();
+  } catch (e) {
+    logError('Error guardando acreditado en DB: ' + e.message);
+  }
+}
+
+async function enviarAcreditadoAIas(peticionId, info) {
+  if (!iasConfig || !iasConfig.iasEnabled || !iasConfig.iasBaseUrl) {
+    return false;
+  }
+  const url = iasConfig.iasBaseUrl.replace(/\/+$/, '') + '/PraGanadores/ActualizarEstadoAcreditado';
+  // Body tal cual lo espera el IAS externo (camelCase). codSala va como texto.
+  const body = {
+    idRace: info.idRace,
+    codSala: info.codSala,
+    codMaquina: info.codMaquina,
+    estadoAcreditado: info.estadoAcreditado,
+    detalle: info.detalle || ''
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (resp.ok) {
+      marcarAcreditadoEnviadoIAS(peticionId);
+      logInfo('IAS acreditado OK: id=' + peticionId + ' estado=' + info.estadoAcreditado);
+      return true;
+    } else {
+      const txt = await resp.text().catch(() => '');
+      logWarn('IAS acreditado FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 200));
+      return false;
+    }
+  } catch (e) {
+    logWarn('IAS acreditado ERROR id=' + peticionId + ': ' + e.message);
+    return false;
+  }
+}
+
+function reintentarAcreditadosIAS() {
+  if (!db || !dbReady) return;
+  if (!iasConfig || !iasConfig.iasEnabled) return;
+  try {
+    const stmt = db.prepare(`
+      SELECT id, id_race AS idRace, cod_sala AS codSala, maquina AS codMaquina,
+             acreditado_estado AS estadoAcreditado, acreditado_detalle AS detalle
+      FROM peticiones
+      WHERE ganador = 1 AND acreditado_estado IS NOT NULL AND acreditado_enviado = 0
+      ORDER BY id
+      LIMIT 50
+    `);
+    const filas = [];
+    while (stmt.step()) { filas.push(stmt.getAsObject()); }
+    stmt.free();
+    if (filas.length === 0) return;
+    logInfo('IAS retry acreditados: ' + filas.length + ' pendientes');
+    filas.forEach(fila => {
+      enviarAcreditadoAIas(fila.id, {
+        idRace: fila.idRace,
+        codSala: fila.codSala,
+        codMaquina: fila.codMaquina,
+        estadoAcreditado: fila.estadoAcreditado,
+        detalle: fila.detalle
+      });
+    });
+  } catch (e) {
+    logError('Error en reintentarAcreditadosIAS: ' + e.message);
+  }
+}
+
+// Resuelve la acreditacion del ganador pendiente: persiste y envia al IAS.
+// estadoAcreditado: 1=confirmado ok, 0=confirmado error, 2=no confirmaron (timeout).
+function resolverAcreditado(estadoAcreditado, detalle) {
+  const g = ganadorPendiente;
+  if (!g) return false;
+  ganadorPendiente = null;  // resuelto (evita doble envio)
+  guardarAcreditadoEnDB(g.peticionId, estadoAcreditado, detalle);
+  setImmediate(() => {
+    enviarAcreditadoAIas(g.peticionId, {
+      idRace: g.idRace,
+      codSala: g.codSala,
+      codMaquina: g.codMaquina,
+      estadoAcreditado: estadoAcreditado,
+      detalle: detalle
+    });
+  });
+  return true;
 }
 
 function mapearPozo(sheet) {
@@ -649,6 +777,7 @@ function startHttpServer(config) {
     iasBaseUrl: config.iasBaseUrl || '',
     iasRetryIntervalSec: config.iasRetryIntervalSec || 30
   };
+  if (config.detalleAcreditadoTimeout) iasDetalleTimeout = config.detalleAcreditadoTimeout;
   
   // Arrancar timer de reintento de envios pendientes al IAS.
   // Esto cubre: ganadores que estaban en la DB de un crash anterior,
@@ -656,9 +785,9 @@ function startHttpServer(config) {
   if (iasConfig.iasEnabled && iasConfig.iasBaseUrl) {
     logInfo('IAS habilitado: ' + iasConfig.iasBaseUrl + ' (retry cada ' + iasConfig.iasRetryIntervalSec + 's)');
     // Primer reintento al arrancar (despues de 5s para dejar que la DB cargue)
-    setTimeout(reintentarPendientesIAS, 5000);
+    setTimeout(() => { reintentarPendientesIAS(); reintentarAcreditadosIAS(); }, 5000);
     // Despues cada N segundos
-    iasRetryTimer = setInterval(reintentarPendientesIAS, iasConfig.iasRetryIntervalSec * 1000);
+    iasRetryTimer = setInterval(() => { reintentarPendientesIAS(); reintentarAcreditadosIAS(); }, iasConfig.iasRetryIntervalSec * 1000);
   } else {
     logInfo('IAS deshabilitado (iasEnabled=false o iasBaseUrl vacio)');
   }
@@ -706,6 +835,19 @@ function startHttpServer(config) {
       setImmediate(() => {
         enviarGanadorAIas(peticionId, data, fechaGanador);
       });
+
+      // Si habia un ganador anterior esperando confirmSubida que nunca llego,
+      // resolverlo como timeout (estado 2) antes de reemplazarlo.
+      if (ganadorPendiente) {
+        resolverAcreditado(2, iasDetalleTimeout);
+      }
+      // Este ganador queda pendiente de acreditacion (espera /confirmSubida).
+      ganadorPendiente = {
+        peticionId: peticionId,
+        idRace: data.idRace,
+        codSala: data.codSala,
+        codMaquina: data.maquina
+      };
     }
     
     sendUpdateToDashboard(data, peticionId);
@@ -716,6 +858,42 @@ function startHttpServer(config) {
       dashboardReady: dashboardReady, 
       queueSize: pendingUpdates.length 
     });
+  });
+
+  // ============================================================
+  // ENDPOINT /confirmSubida  (endpoint NUESTRO)
+  // Body: {"estado": true|false, "mensaje": "texto"}
+  // Es la confirmacion de subida del ganador que esta en el modal.
+  //  - Muestra en el dashboard el mensaje verde (true) o rojo (false).
+  //  - Llama al IAS ActualizarEstadoAcreditado: estado true->1, false->0,
+  //    detalle = el mensaje recibido.
+  // Si no hay ganador activo, se ignora.
+  // ============================================================
+  httpApp.post('/confirmSubida', (req, res) => {
+    const data = req.body;
+    if (!data || typeof data.estado !== 'boolean') {
+      return res.status(400).json({ error: 'estado es requerido (boolean)' });
+    }
+    const mensaje = (typeof data.mensaje === 'string') ? data.mensaje : '';
+
+    if (!ganadorPendiente) {
+      // Llego fuera del tiempo del modal (tardio). NO se reenvia al IAS:
+      // si el modal ya cerro, ya se reporto estado 2 y ese es definitivo.
+      // Solo se registra en auditoria para saber que llego fuera de rango.
+      logWarn('confirmSubida recibido sin ganador activo (tardio), solo auditoria');
+      guardarEvento('confirmSubida-tardio', JSON.stringify({ estado: data.estado, mensaje: mensaje }));
+      return res.json({ ok: false, motivo: 'no hay ganador activo (llego fuera de tiempo)' });
+    }
+
+    // Mostrar el mensaje en el dashboard (verde/rojo) y extender el modal.
+    const code = `if (window.casinoConfirmSubida) { window.casinoConfirmSubida(${JSON.stringify({ estado: data.estado })}); } return 'sent';`;
+    safeExecJs(code);
+
+    // Enviar al IAS: true->1, false->0. detalle = mensaje recibido.
+    resolverAcreditado(data.estado ? 1 : 0, mensaje);
+
+    guardarEvento('confirmSubida', JSON.stringify({ estado: data.estado, mensaje: mensaje }));
+    res.json({ ok: true });
   });
 
   // ============================================================
@@ -1450,7 +1628,14 @@ function startWatchdog(config) {
     
     // Si termino ganador o promo, procesar cola
     if ((isWinnerActive && !winnerActive) || (isPromoActive && !promoActive)) {
-      if (isWinnerActive && !winnerActive) logInfo('Ganador termino, procesando cola');
+      if (isWinnerActive && !winnerActive) {
+        logInfo('Ganador termino, procesando cola');
+        // Si el modal cerro sin recibir confirmSubida -> avisar al IAS (estado 2).
+        if (ganadorPendiente) {
+          logInfo('confirmSubida NO llego (timeout modal) -> ActualizarEstadoAcreditado estado=2');
+          resolverAcreditado(2, iasDetalleTimeout);
+        }
+      }
       if (isPromoActive && !promoActive) logInfo('Promo termino, procesando cola');
       isWinnerActive = winnerActive;
       isPromoActive = promoActive;

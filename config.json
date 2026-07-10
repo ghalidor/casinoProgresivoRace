@@ -13,7 +13,11 @@
   "cleanupIntervalMin": 60,
   "memoryReloadMB": 300,
   "reloadCheckIntervalSec": 60,
-  "iasEnabled": false,
+  "iasEnabled": true,
   "iasBaseUrl": "http://192.168.1.32/IAS",
-  "iasRetryIntervalSec": 30
+  "iasRetryIntervalSec": 30,
+  "confirmMinDisplaySec": 8,
+  "msgAcreditadoOk": "Maquina acreditada correctamente",
+  "msgAcreditadoError": "error al acreditar, verifique con el administrador",
+  "detalleAcreditadoTimeout": "no se envio acreditacion(no confirmaron)"
 }
