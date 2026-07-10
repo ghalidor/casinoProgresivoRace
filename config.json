@@ -14,7 +14,7 @@
   "memoryReloadMB": 300,
   "reloadCheckIntervalSec": 60,
   "iasEnabled": true,
-  "iasBaseUrl": "http://192.168.1.32/IAS",
+  "iasBaseUrl": "http://40.122.134.6/IAS",
   "iasRetryIntervalSec": 30,
   "confirmMinDisplaySec": 8,
   "msgAcreditadoOk": "Maquina acreditada correctamente",
