@@ -3138,7 +3138,8 @@ window.CASINO_CONFIG = window.CASINO_CONFIG || {
   bgMusicVolume: 0.3,             // volumen musica de fondo (0.0-1.0)
   confirmMinDisplaySec: 8,        // minimo que se muestra el mensaje de acreditacion
   msgAcreditadoOk: 'Maquina acreditada correctamente',
-  msgAcreditadoError: 'error al acreditar, verifique con el administrador'
+  msgAcreditadoError: 'error al acreditar, verifique con el administrador',
+  msgSinConfirmacion: 'No se ha recibido confirmacion para la acreditacion'
 };
 
 // API publica para datos externos:
@@ -3281,7 +3282,8 @@ fetch('http://localhost:3000/status')
     const CLAVES_UI = [
       'promoIntervalSec', 'promoDurationSec', 'kpiSpeed', 'useTestData',
       'winnerDelaySec', 'winnerModalDurationSec', 'modalVideoVolume', 'bgMusicVolume',
-      'confirmMinDisplaySec', 'msgAcreditadoOk', 'msgAcreditadoError'
+      'confirmMinDisplaySec', 'msgAcreditadoOk', 'msgAcreditadoError',
+      'msgSinConfirmacion'
     ];
     CLAVES_UI.forEach(k => {
       if (c[k] !== undefined) window.CASINO_CONFIG[k] = c[k];
@@ -6471,6 +6473,7 @@ function homeStopRunnerLoop() {
   align-items: center;
   justify-content: center;
   overflow: visible;             /* el sprite puede sobresalir sin empujar la placa */
+  transform: translateY(1.5vh);  /* baja un poco el auto/moto */
   z-index: 2;
 }
 .winner-vehicle-center .winner-sprite { flex: 0 0 auto; }
@@ -6480,7 +6483,7 @@ function homeStopRunnerLoop() {
 .winner-vehicle-center.show { display: flex; }
 /* Cuando hay vehiculo (grand/major) la placa sube, pero MENOS que en mini/minor */
 .winner-inner:has(.winner-vehicle-center.show) .winner-machine {
-  transform: translateY(-4.5vh) !important;
+  transform: translateY(-2vh) !important;   /* placa mas abajo, separada del auto */
 }
 /* Y el titulo+subtitulo a la MISMA altura que mini/minor */
 .winner-inner:has(.winner-vehicle-center.show) .winner-title-row {
@@ -6564,7 +6567,7 @@ function homeStopRunnerLoop() {
   min-width: min(56%, 330px) !important;
   max-width: min(92%, 660px) !important;
   margin: 0 auto !important;
-  transform: translateY(-9vh) !important;   /* mini/minor: placa bien arriba */
+  transform: translateY(-7.5vh) !important; /* mini/minor: separacion intermedia respecto al monto */
   padding: 0 !important;
   background: none !important;
   border: none !important;
@@ -6611,19 +6614,21 @@ function homeStopRunnerLoop() {
 
 <style>
 .winner-acreditado {
-  /* Ocupa SIEMPRE su lugar (min-height) y se muestra/oculta con
-     visibility, no con display, para que nunca empuje el resto. */
+  /* En el flujo, debajo de la maquina. Reserva SIEMPRE 2 lineas
+     (min-height) y se muestra/oculta con visibility, para que un
+     mensaje de 2 lineas NO empuje ni apine el resto. */
   visibility: hidden;
-  min-height: clamp(26px, 4.2vmin, 54px);
-  margin-top: 1.5vmin;
+  min-height: clamp(46px, 7.5vmin, 72px);   /* ~2 lineas reservadas */
+  width: min(92%, 640px);
+  margin: 0.6vmin auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Montserrat','Arial Black',sans-serif;
   font-weight: 800;
-  font-size: clamp(16px, 3vmin, 42px);
+  font-size: clamp(15px, 2.3vmin, 28px);
   text-align: center;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .winner-acreditado.ok {
   color: #0aff7a;
@@ -7278,6 +7283,9 @@ function homeStopRunnerLoop() {
     // Ocultar mensaje de acreditacion de un ganador anterior
     const acrEl = document.getElementById('winnerAcreditado');
     if (acrEl) { acrEl.style.visibility = 'hidden'; acrEl.textContent = ''; acrEl.className = 'winner-acreditado'; }
+    // Flags para el caso 'no llego confirmSubida' (aviso rojo antes de cerrar).
+    window.__winnerConfirmRecibido = false;
+    window.__winnerAvisoSinConfirm = false;
 
     // Programar cierre (duracion configurada). Se puede EXTENDER si llega
     // confirmSubida cerca del final (ver window.casinoConfirmSubida).
@@ -7311,6 +7319,8 @@ function homeStopRunnerLoop() {
     if (acrEl) { acrEl.style.visibility = 'hidden'; acrEl.textContent = ''; acrEl.className = 'winner-acreditado'; }
     window.__pendingConfirm = null;
     window.__winnerCloseAt = 0;
+    window.__winnerConfirmRecibido = false;
+    window.__winnerAvisoSinConfirm = false;
 
     // Limpiar sheet activo del modal
     const closedSheet = window.__activeWinnerSheet;
@@ -7338,7 +7348,7 @@ function homeStopRunnerLoop() {
     const remaining = Math.max(0, closeAtMs - Date.now());
 
     if (window.__winnerCloseTimer) clearTimeout(window.__winnerCloseTimer);
-    window.__winnerCloseTimer = setTimeout(() => cerrarModalGanador(modal), remaining);
+    window.__winnerCloseTimer = setTimeout(() => alVencerTiempoGanador(modal), remaining);
 
     const countdownEl = document.getElementById('winnerCountdown');
     if (countdownEl) {
@@ -7367,6 +7377,30 @@ function homeStopRunnerLoop() {
     el.style.visibility = 'visible';
   }
 
+  // Muestra en ROJO el aviso de que no llego confirmSubida.
+  function mostrarMensajeSinConfirmacion() {
+    const el = document.getElementById('winnerAcreditado');
+    if (!el) return;
+    const txt = window.CASINO_CONFIG.msgSinConfirmacion || 'No se ha recibido confirmacion para la acreditacion';
+    el.textContent = txt;
+    el.className = 'winner-acreditado error';
+    el.style.visibility = 'visible';
+  }
+
+  // Se llama cuando vence el tiempo del modal. Si NUNCA llego confirmSubida,
+  // muestra el aviso rojo confirmMinDisplaySec segundos y RECIEN cierra.
+  // (El envio al IAS con estado 2 sigue disparandose al cerrar, sin cambios.)
+  function alVencerTiempoGanador(modal) {
+    if (!window.__winnerConfirmRecibido && !window.__winnerAvisoSinConfirm) {
+      window.__winnerAvisoSinConfirm = true;
+      mostrarMensajeSinConfirmacion();
+      const minMs = (window.CASINO_CONFIG.confirmMinDisplaySec || 8) * 1000;
+      programarCierreGanador(modal, Date.now() + minMs);
+      return;
+    }
+    cerrarModalGanador(modal);
+  }
+
   // Llamada desde main.js cuando llega POST /confirmSubida.
   // Muestra el mensaje y garantiza que se vea minimo confirmMinDisplaySec.
   window.casinoConfirmSubida = function(payload) {
@@ -7379,6 +7413,7 @@ function homeStopRunnerLoop() {
       return;
     }
 
+    window.__winnerConfirmRecibido = true;
     mostrarMensajeAcreditado(estado);
 
     // Asegurar visibilidad minima: extender el cierre si hace falta.

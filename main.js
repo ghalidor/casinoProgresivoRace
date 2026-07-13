@@ -51,7 +51,8 @@ function loadConfig() {
     confirmMinDisplaySec: 8,
     msgAcreditadoOk: 'Maquina acreditada correctamente',
     msgAcreditadoError: 'error al acreditar, verifique con el administrador',
-    detalleAcreditadoTimeout: 'no se envio acreditacion(no confirmaron)'
+    detalleAcreditadoTimeout: 'no se envio acreditacion(no confirmaron)',
+    msgSinConfirmacion: 'No se ha recibido confirmacion para la acreditacion'
   };
 }
 
