@@ -904,6 +904,22 @@ function startHttpServer(config) {
   });
 
   // ============================================================
+  // ENDPOINT /winner-closed  (USO INTERNO - lo llama el dashboard)
+  // El dashboard lo invoca en el momento exacto en que cierra el modal
+  // ganador. Si en ese momento todavia hay un ganador esperando la
+  // confirmacion, significa que nunca llego -> se reporta estado 2.
+  // Si ya se resolvio (estado 1 o 0), ganadorPendiente es null y no
+  // hace nada. No lo llama ningun sistema externo.
+  // ============================================================
+  httpApp.post('/winner-closed', (req, res) => {
+    if (ganadorPendiente) {
+      logInfo('Modal cerrado sin confirmSubida -> ActualizarEstadoAcreditado estado=2');
+      resolverAcreditado(2, iasDetalleTimeout);
+    }
+    res.json({ ok: true });
+  });
+
+  // ============================================================
   // ENDPOINT /reinicio
   // Reinicia el odometro de mini o minor al amount enviado, sin
   // animacion (snap directo). No es ganador, no dispara modal.
@@ -1512,8 +1528,14 @@ function createWindow() {
     // (cuando esta empaquetado, promos esta en resources/, no en el asar)
     const promosBaseUrl = 'file:///' + promosDir.replace(/\\/g, '/') + '/';
 
+    // URL base del servidor HTTP interno. El dashboard la usa para avisarle
+    // a main.js (ej: cierre del modal ganador). Sale del config:
+    // apiBaseUrl si esta definido, si no http://127.0.0.1:<httpPort>.
+    const apiBaseUrl = config.apiBaseUrl || ('http://127.0.0.1:' + (config.httpPort || 3000));
+
     await safeExecJs(`
       window.CASINO_CONFIG = ${configJson};
+      window.CASINO_API = ${JSON.stringify(apiBaseUrl)};
       window.PROMO_FILES = ${promosJson};
       window.PROMO_BASE_URL = ${JSON.stringify(promosBaseUrl)};
       // Desactivar console.log en produccion para no acumular memoria
