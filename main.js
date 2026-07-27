@@ -81,11 +81,11 @@ let DB_PATH = null;
 function initPaths() {
   USER_DATA_DIR = app.getPath('userData');
   if (!fs.existsSync(USER_DATA_DIR)) fs.mkdirSync(USER_DATA_DIR, { recursive: true });
-  
+
   PENDING_FILE = path.join(USER_DATA_DIR, 'pending-updates.json');
   LOGS_DIR = path.join(USER_DATA_DIR, 'logs');
   DB_PATH = path.join(USER_DATA_DIR, 'dashboard.db');
-  
+
   if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 }
 
@@ -96,23 +96,23 @@ function initPaths() {
 
 function getLogFilePath() {
   const d = new Date();
-  const filename = 'dashboard-' + d.getFullYear() + '-' + 
-    String(d.getMonth()+1).padStart(2,'0') + '-' + 
-    String(d.getDate()).padStart(2,'0') + '.log';
+  const filename = 'dashboard-' + d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0') + '.log';
   return path.join(LOGS_DIR, filename);
 }
 
 function logToFile(level, message) {
   const timestamp = fechaLocalISO();
   const line = `[${timestamp}] [${level}] ${message}\n`;
-  
+
   try {
     fs.appendFileSync(getLogFilePath(), line);
   } catch (e) {
     // Si falla escribir, al menos consola
     console.error('[LOGGER] Error escribiendo log:', e.message);
   }
-  
+
   // Tambien mostrar errores en consola
   if (level === 'ERROR' || level === 'WARN') {
     console.error(line.trim());
@@ -129,7 +129,7 @@ function cleanOldLogs() {
     const files = fs.readdirSync(LOGS_DIR);
     const now = Date.now();
     const maxAge = 7 * 24 * 60 * 60 * 1000;  // 7 dias
-    
+
     files.forEach(f => {
       if (f.startsWith('dashboard-') && f.endsWith('.log')) {
         const fpath = path.join(LOGS_DIR, f);
@@ -208,7 +208,7 @@ async function initDatabase() {
   try {
     const initSqlJs = require('sql.js');
     const SQL = await initSqlJs();
-    
+
     // Cargar DB existente o crear nueva
     if (fs.existsSync(DB_PATH)) {
       const fileBuffer = fs.readFileSync(DB_PATH);
@@ -218,7 +218,7 @@ async function initDatabase() {
       db = new SQL.Database();
       logInfo('DB SQLite nueva creada');
     }
-    
+
     // Crear tablas si no existen
     db.run(`
       CREATE TABLE IF NOT EXISTS peticiones (
@@ -272,25 +272,25 @@ async function initDatabase() {
         }
       }
     }
-    migrarColumna('peticiones', 'endpoint',        "TEXT NOT NULL DEFAULT 'update'");
-    migrarColumna('peticiones', 'posicion',        'INTEGER');
-    migrarColumna('peticiones', 'cod_sala',        'TEXT');
-    migrarColumna('peticiones', 'id_race',         'INTEGER');
+    migrarColumna('peticiones', 'endpoint', "TEXT NOT NULL DEFAULT 'update'");
+    migrarColumna('peticiones', 'posicion', 'INTEGER');
+    migrarColumna('peticiones', 'cod_sala', 'TEXT');
+    migrarColumna('peticiones', 'id_race', 'INTEGER');
     migrarColumna('peticiones', 'enviado_externo', 'INTEGER DEFAULT 0');
-    migrarColumna('peticiones', 'acreditado_estado',  'INTEGER');
+    migrarColumna('peticiones', 'acreditado_estado', 'INTEGER');
     migrarColumna('peticiones', 'acreditado_detalle', 'TEXT');
     migrarColumna('peticiones', 'acreditado_enviado', 'INTEGER DEFAULT 0');
 
     // Defaults: mostrar sprite=true para grand y major (solo si no existen)
     db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('grand', 1, datetime('now'));`);
     db.run(`INSERT OR IGNORE INTO sprite_config (sheet, show_sprite, updated_at) VALUES ('major', 1, datetime('now'));`);
-    
+
     // Obtener el proximo ID de peticiones
     const res = db.exec('SELECT MAX(id) as maxId FROM peticiones');
     if (res.length > 0 && res[0].values[0][0]) {
       nextPeticionId = res[0].values[0][0] + 1;
     }
-    
+
     dbReady = true;
     scheduleDbSave();
     return true;
@@ -437,12 +437,15 @@ async function enviarAcreditadoAIas(peticionId, info) {
     });
     clearTimeout(timeoutId);
     if (resp.ok) {
+      const respText = await resp.text().catch(() => '');
       marcarAcreditadoEnviadoIAS(peticionId);
-      logInfo('IAS acreditado OK: id=' + peticionId + ' estado=' + info.estadoAcreditado);
+      logInfo('IAS acreditado OK ' + resp.status + ' id=' + peticionId +
+        ' estado=' + info.estadoAcreditado +
+        ' | respuesta: ' + (respText.substring(0, 500) || '(vacio)'));
       return true;
     } else {
       const txt = await resp.text().catch(() => '');
-      logWarn('IAS acreditado FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 200));
+      logWarn('IAS acreditado FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
       return false;
     }
   } catch (e) {
@@ -546,7 +549,7 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
   if (!iasConfig || !iasConfig.iasEnabled || !iasConfig.iasBaseUrl) {
     return false;
   }
-  
+
   const url = iasConfig.iasBaseUrl.replace(/\/+$/, '') + '/PraGanadores/CrearGanador';
   const body = {
     IdRace: data.idRace,
@@ -557,14 +560,14 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
     Pozo: mapearPozo(data.sheet),
     FechaGanador: formatearFechaGanador(fechaRegistro)
   };
-  
+
   iasStats.ultimoIntento = new Date().toISOString();
-  
+
   try {
     // fetch nativo de Node 18+ (Electron 28+ ya lo tiene)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
+
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -572,18 +575,21 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-    
+
     if (resp.ok) {
+      const respText = await resp.text().catch(() => '');
       marcarGanadorEnviadoIAS(peticionId);
       iasStats.ultimoExito = new Date().toISOString();
       iasStats.totalEnviados++;
-      logInfo('IAS OK: ganador id=' + peticionId + ' sheet=' + data.sheet);
+      logInfo('IAS OK ' + resp.status + ': ganador id=' + peticionId +
+        ' sheet=' + data.sheet +
+        ' | respuesta: ' + (respText.substring(0, 500) || '(vacio)'));
       return true;
     } else {
       const txt = await resp.text().catch(() => '');
       iasStats.ultimoError = 'HTTP ' + resp.status + ' - ' + txt.substring(0, 200);
       iasStats.totalErrores++;
-      logWarn('IAS FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 200));
+      logWarn('IAS FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
       return false;
     }
   } catch (e) {
@@ -597,7 +603,7 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
 function reintentarPendientesIAS() {
   if (!db || !dbReady) return;
   if (!iasConfig || !iasConfig.iasEnabled) return;
-  
+
   try {
     const stmt = db.prepare(`
       SELECT id, sheet, amount, maquina, posicion, cod_sala AS codSala, id_race AS idRace, fecha_registro
@@ -611,11 +617,11 @@ function reintentarPendientesIAS() {
       filas.push(stmt.getAsObject());
     }
     stmt.free();
-    
+
     if (filas.length === 0) return;
-    
+
     logInfo('IAS retry: ' + filas.length + ' ganadores pendientes');
-    
+
     // Enviar uno por uno (secuencial para no saturar)
     filas.forEach(fila => {
       enviarGanadorAIas(fila.id, {
@@ -699,7 +705,7 @@ function getSpriteConfig() {
 }
 
 function setSpriteConfig(sheet, show) {
-  if (!['grand','major'].includes(sheet)) return false;
+  if (!['grand', 'major'].includes(sheet)) return false;
   if (!db || !dbReady) return false;
   try {
     db.run(
@@ -779,7 +785,7 @@ function startHttpServer(config) {
     iasRetryIntervalSec: config.iasRetryIntervalSec || 30
   };
   if (config.detalleAcreditadoTimeout) iasDetalleTimeout = config.detalleAcreditadoTimeout;
-  
+
   // Arrancar timer de reintento de envios pendientes al IAS.
   // Esto cubre: ganadores que estaban en la DB de un crash anterior,
   // y ganadores cuyo POST inicial fallo (servidor externo caido).
@@ -792,10 +798,10 @@ function startHttpServer(config) {
   } else {
     logInfo('IAS deshabilitado (iasEnabled=false o iasBaseUrl vacio)');
   }
-  
+
   const httpApp = express();
   httpApp.use(express.json());
-  
+
   httpApp.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
@@ -803,16 +809,16 @@ function startHttpServer(config) {
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
   });
-  
+
   httpApp.post('/update', (req, res) => {
     const data = req.body;
     const ipOrigen = req.ip || req.connection.remoteAddress || 'unknown';
-    
+
     // Validacion de campos obligatorios
     if (!data || !data.sheet) {
       return res.status(400).json({ error: 'sheet es requerido' });
     }
-    if (!['mini','minor','major','grand'].includes(data.sheet)) {
+    if (!['mini', 'minor', 'major', 'grand'].includes(data.sheet)) {
       return res.status(400).json({ error: 'sheet debe ser: mini, minor, major o grand' });
     }
     if (!data.codSala || typeof data.codSala !== 'string') {
@@ -825,10 +831,10 @@ function startHttpServer(config) {
     if (data.posicion !== undefined && data.posicion !== null && !Number.isInteger(data.posicion)) {
       return res.status(400).json({ error: 'posicion debe ser entero (si se envia)' });
     }
-    
+
     // Guardar en SQLite ANTES de procesar (siempre se registra)
     const peticionId = guardarPeticion(data, ipOrigen, false, 'update');
-    
+
     // Si es ganador, disparar envio al servidor IAS en paralelo (no bloquea).
     // Si falla, queda con enviado_externo=0 y el retry timer lo intentara despues.
     if (data.ganador === true && peticionId) {
@@ -850,14 +856,14 @@ function startHttpServer(config) {
         codMaquina: data.maquina
       };
     }
-    
+
     sendUpdateToDashboard(data, peticionId);
-    
-    res.json({ 
-      ok: true, 
+
+    res.json({
+      ok: true,
       peticionId: peticionId,
-      dashboardReady: dashboardReady, 
-      queueSize: pendingUpdates.length 
+      dashboardReady: dashboardReady,
+      queueSize: pendingUpdates.length
     });
   });
 
@@ -907,11 +913,11 @@ function startHttpServer(config) {
   httpApp.post('/reinicio', (req, res) => {
     const data = req.body;
     const ipOrigen = req.ip || req.connection.remoteAddress || 'unknown';
-    
+
     if (!data || !data.sheet) {
       return res.status(400).json({ error: 'sheet es requerido' });
     }
-    if (!['mini','minor'].includes(data.sheet)) {
+    if (!['mini', 'minor'].includes(data.sheet)) {
       return res.status(400).json({ error: 'sheet debe ser: mini o minor' });
     }
     if (data.amount === undefined || data.amount === null || typeof data.amount !== 'number') {
@@ -923,23 +929,23 @@ function startHttpServer(config) {
     if (data.idRace === undefined || data.idRace === null || !Number.isInteger(data.idRace)) {
       return res.status(400).json({ error: 'idRace es requerido (entero)' });
     }
-    
+
     // Marcar internamente que es reinicio para que el dashboard lo trate distinto.
     // Esto NO va a la DB (la DB usa la columna endpoint).
     const dataExt = Object.assign({}, data, { _endpoint: 'reinicio' });
-    
+
     const peticionId = guardarPeticion(data, ipOrigen, false, 'reinicio');
-    
+
     sendUpdateToDashboard(dataExt, peticionId);
-    
-    res.json({ 
-      ok: true, 
+
+    res.json({
+      ok: true,
       peticionId: peticionId,
-      dashboardReady: dashboardReady, 
-      queueSize: pendingUpdates.length 
+      dashboardReady: dashboardReady,
+      queueSize: pendingUpdates.length
     });
   });
-  
+
   httpApp.get('/health', (req, res) => {
     res.json({
       status: 'ok',
@@ -962,7 +968,7 @@ function startHttpServer(config) {
   // ============================================================
   httpApp.post('/sprite-config', (req, res) => {
     const data = req.body;
-    if (!data || !['grand','major'].includes(data.sheet)) {
+    if (!data || !['grand', 'major'].includes(data.sheet)) {
       return res.status(400).json({ error: 'sheet debe ser: grand o major' });
     }
     if (typeof data.show !== 'boolean') {
@@ -999,8 +1005,8 @@ function startHttpServer(config) {
   httpApp.post('/sprite-config-bulk', (req, res) => {
     const data = req.body;
     if (!data || typeof data.grand !== 'boolean' || typeof data.major !== 'boolean') {
-      return res.status(400).json({ 
-        error: 'Se requieren ambos campos boolean: grand y major' 
+      return res.status(400).json({
+        error: 'Se requieren ambos campos boolean: grand y major'
       });
     }
 
@@ -1011,7 +1017,7 @@ function startHttpServer(config) {
     }
 
     // Auditoria: registrar el evento con el detalle del cambio
-    guardarEvento('sprite-config-bulk', 
+    guardarEvento('sprite-config-bulk',
       JSON.stringify({ grand: data.grand, major: data.major }));
 
     // Notificar al dashboard con un solo mensaje que trae ambos cambios.
@@ -1043,7 +1049,7 @@ function startHttpServer(config) {
       return res.status(400).json({ error: 'body es requerido' });
     }
 
-    const SHEETS = ['mini','minor','major','grand'];
+    const SHEETS = ['mini', 'minor', 'major', 'grand'];
 
     // Validar que esten los 4 pozos
     for (const s of SHEETS) {
@@ -1056,8 +1062,8 @@ function startHttpServer(config) {
     for (const s of SHEETS) {
       const p = body[s];
       if (p.ganador === true) {
-        return res.status(400).json({ 
-          error: 'update-bulk NO acepta ganador=true. Usar /update para ganadores.' 
+        return res.status(400).json({
+          error: 'update-bulk NO acepta ganador=true. Usar /update para ganadores.'
         });
       }
       if (p.amount === undefined || p.amount === null || typeof p.amount !== 'number') {
@@ -1080,25 +1086,25 @@ function startHttpServer(config) {
       sendUpdateToDashboard(data, peticionId);
     }
 
-    res.json({ 
+    res.json({
       ok: true,
       peticionIds: peticionIds,
       dashboardReady: dashboardReady,
       queueSize: pendingUpdates.length
     });
   });
-  
+
   httpApp.get('/status', (req, res) => {
-    res.json({ 
+    res.json({
       config: config,
       spriteConfig: getSpriteConfig(),
       isWinnerActive: isWinnerActive,
       isPromoActive: isPromoActive,
       dashboardReady: dashboardReady,
-      pendingUpdates: pendingUpdates 
+      pendingUpdates: pendingUpdates
     });
   });
-  
+
   // Endpoint para ver el historial reciente
   httpApp.get('/history', (req, res) => {
     if (!db || !dbReady) return res.json({ error: 'DB no disponible' });
@@ -1138,7 +1144,7 @@ function startHttpServer(config) {
       res.status(500).json({ error: e.message });
     }
   });
-  
+
   // ============================================================
   // GET /ultimo-monto
   // Devuelve el ultimo monto registrado para grand (car) y major (moto)
@@ -1186,7 +1192,7 @@ function startHttpServer(config) {
       res.status(500).json({ error: e.message });
     }
   });
-  
+
   // Estado de envios al servidor IAS externo
   httpApp.get('/ias-status', (req, res) => {
     res.json({
@@ -1201,7 +1207,7 @@ function startHttpServer(config) {
       totalErrores: iasStats.totalErrores
     });
   });
-  
+
   httpApp.listen(config.httpPort, '0.0.0.0', () => {
     logInfo('Servidor HTTP en puerto ' + config.httpPort);
     console.log('[HTTP] POST http://localhost:' + config.httpPort + '/update');
@@ -1225,14 +1231,14 @@ function startHttpServer(config) {
 // ============================================================
 async function sendUpdateToDashboard(data, peticionId) {
   const isReinicio = (data._endpoint === 'reinicio');
-  
+
   if (!mainWindow || mainWindow.isDestroyed() || !dashboardReady) {
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
     marcarPeticionEncolada(peticionId);
     return;
   }
-  
+
   // REGLA REINICIO: si el modal ganador esta activo Y el reinicio es del
   // MISMO sheet del ganador, encolar. Si es de OTRO sheet, procesar
   // inmediatamente (actualiza el otro odometro mientras el modal sigue).
@@ -1257,7 +1263,7 @@ async function sendUpdateToDashboard(data, peticionId) {
     }
     return;
   }
-  
+
   // FLUJO ORIGINAL (update normal)
   if (isWinnerActive && data.ganador !== true) {
     pendingUpdates.push({ data, peticionId });
@@ -1265,7 +1271,7 @@ async function sendUpdateToDashboard(data, peticionId) {
     marcarPeticionEncolada(peticionId);
     return;
   }
-  
+
   // Si hay PROMO activo Y este update ES de ganador, encolar
   // (asi el modal de ganador no interrumpe el video promo)
   if (isPromoActive && data.ganador === true) {
@@ -1275,7 +1281,7 @@ async function sendUpdateToDashboard(data, peticionId) {
     marcarPeticionEncolada(peticionId);
     return;
   }
-  
+
   const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
   const code = `
     if (window.casinoUpdate) {
@@ -1283,7 +1289,7 @@ async function sendUpdateToDashboard(data, peticionId) {
     }
     return 'sent';
   `;
-  
+
   const result = await safeExecJs(code);
   if (result === 'sent' && peticionId) {
     marcarPeticionProcesada(peticionId);
@@ -1296,11 +1302,11 @@ async function sendUpdateToDashboard(data, peticionId) {
 function flushPendingUpdates() {
   if (pendingUpdates.length === 0) return;
   logInfo('Procesando ' + pendingUpdates.length + ' updates encolados');
-  
+
   const updates = pendingUpdates.slice();
   pendingUpdates = [];
   savePendingToDisk();  // limpiar archivo tambien
-  
+
   updates.forEach(item => {
     if (item.data) {
       sendUpdateToDashboard(item.data, item.peticionId);
@@ -1316,7 +1322,7 @@ function flushPendingUpdates() {
 // ============================================================
 function createWindow() {
   const config = loadConfig();
-  
+
   // ============================================================
   // MODO DE VENTANA: 'kiosk' (pantalla completa sin bordes)
   //                  'window' (con barra de titulo, movible)
@@ -1324,7 +1330,7 @@ function createWindow() {
   // Se puede cambiar editando config.json o con Ctrl+Shift+K en caliente.
   // ============================================================
   const isKiosk = (config.windowMode === 'kiosk');
-  
+
   mainWindow = new BrowserWindow({
     fullscreen: isKiosk,
     autoHideMenuBar: true,
@@ -1378,7 +1384,7 @@ function createWindow() {
     try {
       const gpuFeatures = app.getGPUFeatureStatus();
       const gpuInfo = await app.getGPUInfo('complete');
-      
+
       // Tambien obtener info desde el renderer (lo que ve el HTML)
       const rendererInfoStr = await safeExecJs(`
         try {
@@ -1397,7 +1403,7 @@ function createWindow() {
           });
         } catch(e) { return JSON.stringify({ error: e.message }); }
       `);
-      
+
       const report = [
         '============================================================',
         'DIAGNOSTICO GPU DE ELECTRON',
@@ -1414,14 +1420,14 @@ function createWindow() {
         JSON.stringify(gpuInfo, null, 2),
         ''
       ].join('\n');
-      
+
       fs.writeFileSync(path.join(USER_DATA_DIR, 'gpu-info.txt'), report);
       logInfo('Diagnostico GPU escrito en gpu-info.txt');
       console.log('[GPU] Diagnostico escrito en gpu-info.txt');
     } catch (e) {
       logError('Error escribiendo diagnostico GPU: ' + e.message);
     }
-    
+
     // ============================================================
     // MEDIDOR FPS automatico: mide 30s, escribe fps-info.txt
     // ============================================================
@@ -1460,7 +1466,7 @@ function createWindow() {
           }, 30000);
         });
       `);
-      
+
       try {
         const fpsReport = [
           '============================================================',
@@ -1479,9 +1485,9 @@ function createWindow() {
         logError('Error escribiendo FPS: ' + e.message);
       }
     }, 3000);
-    
+
     const configJson = JSON.stringify(config);
-    
+
     // Escanear carpeta promos/ y obtener lista de webm
     // En empaquetado promos/ viene como extraResource fuera del asar
     const promosDir = app.isPackaged
@@ -1500,12 +1506,12 @@ function createWindow() {
     } else {
       logWarn('Carpeta promos/ no existe - crear y poner videos .mp4 dentro');
     }
-    
+
     const promosJson = JSON.stringify(promoFiles);
     // Ruta absoluta de promos para construir URLs file:// correctas
     // (cuando esta empaquetado, promos esta en resources/, no en el asar)
     const promosBaseUrl = 'file:///' + promosDir.replace(/\\/g, '/') + '/';
-    
+
     await safeExecJs(`
       window.CASINO_CONFIG = ${configJson};
       window.PROMO_FILES = ${promosJson};
@@ -1545,11 +1551,11 @@ function createWindow() {
       }
       return 'config-applied';
     `);
-    
+
     dashboardReady = true;
     logInfo('Dashboard listo');
     setTimeout(flushPendingUpdates, 500);
-    
+
     if (!global.serversStarted) {
       global.serversStarted = true;
       loadPendingFromDisk();   // recuperar pending del reload anterior
@@ -1567,11 +1573,11 @@ function createWindow() {
 function startWatchdog(config) {
   const reloadCheckMs = (config.reloadCheckIntervalSec || 60) * 1000;
   const memoryThresholdMB = config.memoryReloadMB || 300;
-  
+
   // Watchdog principal cada 60s: revisar estado y memoria
   setInterval(async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
-    
+
     const statusStr = await safeExecJs(`
       return JSON.stringify({
         winner: !!document.querySelector('.winner-modal.showing'),
@@ -1579,54 +1585,54 @@ function startWatchdog(config) {
         memMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 0
       });
     `);
-    
+
     if (!statusStr) return;
-    
+
     let status;
-    try { status = JSON.parse(statusStr); } catch(e) { return; }
-    
+    try { status = JSON.parse(statusStr); } catch (e) { return; }
+
     isWinnerActive = status.winner;
     isPromoActive = status.promo;
-    
+
     // Guardar memoria a la DB cada hora
     if (Math.random() < 0.02) {  // ~1% probabilidad por check = ~1 vez por hora si check es cada 60s
       guardarEvento('memoria', 'Check de memoria', status.memMB);
     }
-    
+
     // Si memoria pasa el umbral Y no hay ganador NI promo activo, hacer reload
     if (status.memMB > memoryThresholdMB && !status.winner && !status.promo && pendingUpdates.length === 0) {
       logWarn('Memoria > ' + memoryThresholdMB + 'MB (actual: ' + status.memMB + 'MB) - RELOAD automatico');
       guardarEvento('reload_auto', 'Memoria excedida: ' + status.memMB + 'MB', status.memMB);
-      
+
       // Persistir pending updates al disco antes de reload
       savePendingToDisk();
-      
+
       dashboardReady = false;
       mainWindow.reload();
     } else if (status.memMB > memoryThresholdMB) {
       logInfo('Memoria alta (' + status.memMB + 'MB) pero hay actividad - reload pospuesto');
     }
   }, reloadCheckMs);
-  
+
   // Watchdog rapido (cada 5s) para sincronizar estado ganador + promo
   setInterval(async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
-    
+
     const statusStr = await safeExecJs(`
       return JSON.stringify({
         winner: !!document.querySelector('.winner-modal.showing'),
         promo: !!document.querySelector('.promo-video.showing')
       });
     `);
-    
+
     if (statusStr === null) return;
-    
+
     let status;
-    try { status = JSON.parse(statusStr); } catch(e) { return; }
-    
+    try { status = JSON.parse(statusStr); } catch (e) { return; }
+
     const winnerActive = status.winner;
     const promoActive = status.promo;
-    
+
     // Si termino ganador o promo, procesar cola
     if ((isWinnerActive && !winnerActive) || (isPromoActive && !promoActive)) {
       if (isWinnerActive && !winnerActive) {
@@ -1646,7 +1652,7 @@ function startWatchdog(config) {
       isPromoActive = promoActive;
     }
   }, 5 * 1000);  // mas rapido (era 30s) para detectar fin promo a tiempo
-  
+
   // Limpieza de logs viejos cada 6 horas
   setInterval(cleanOldLogs, 6 * 60 * 60 * 1000);
 
@@ -1654,7 +1660,7 @@ function startWatchdog(config) {
   setInterval(cleanOldDbData, 24 * 60 * 60 * 1000);
   // Y una vez al iniciar (despues de 60s para que la DB este lista)
   setTimeout(cleanOldDbData, 60 * 1000);
-  
+
   logInfo('Watchdog iniciado - reload si memoria > ' + memoryThresholdMB + 'MB');
 }
 
@@ -1664,24 +1670,24 @@ function startWatchdog(config) {
 app.whenReady().then(async () => {
   // CRITICAL: inicializar rutas userData ANTES de cualquier cosa
   initPaths();
-  
+
   // Limpiar logs viejos al iniciar
   cleanOldLogs();
-  
+
   // Iniciar DB (espera a que termine antes de continuar)
   await initDatabase();
-  
+
   logInfo('============================================================');
   logInfo('Casino Dashboard iniciado');
   logInfo('============================================================');
-  
+
   createWindow();
-  
+
   globalShortcut.register('Ctrl+Shift+Q', () => {
     logInfo('App cerrada por usuario');
     app.quit();
   });
-  
+
   globalShortcut.register('Ctrl+Shift+R', () => {
     if (mainWindow && !isWinnerActive) {
       logInfo('Reload manual por usuario');
@@ -1692,14 +1698,14 @@ app.whenReady().then(async () => {
       logWarn('Reload manual OMITIDO (ganador activo)');
     }
   });
-  
+
   // Ctrl+Shift+K: alternar entre kiosko y ventana en caliente
   // (no reinicia la app, solo cambia la ventana)
   globalShortcut.register('Ctrl+Shift+K', () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
-    
+
     const ahoraEsKiosko = mainWindow.isKiosk();
-    
+
     if (ahoraEsKiosko) {
       // pasar a modo ventana
       mainWindow.setKiosk(false);
