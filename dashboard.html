@@ -8231,7 +8231,12 @@
                     // Para grand/major: solo si SPRITE_CONFIG[sheet] === false (modo cash)
                     // ============================================================
                     const targetIsCash = data.sheet === "mini" || data.sheet === "minor" || ((data.sheet === "grand" || data.sheet === "major") && window.SPRITE_CONFIG && window.SPRITE_CONFIG[data.sheet] === false);
-                    if (targetIsCash) {
+
+                    // El monto se GUARDA siempre para los 4 sheets, aunque el sprite
+                    // (moto/auto) este visible y el monto no se vea en pantalla. Asi,
+                    // al pasar a modo cash el odometro ya tiene el valor real acumulado.
+                    // targetIsCash sigue controlando solo la parte VISUAL (mas abajo).
+                    if (data.amount !== undefined) {
                         if (data.amount !== undefined) {
                             if (!state.miniMinorTarget) state.miniMinorTarget = {};
                             if (!state.miniMinorOdo) state.miniMinorOdo = {};
