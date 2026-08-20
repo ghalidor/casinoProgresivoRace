@@ -8104,6 +8104,17 @@
                 // muestra el aviso rojo confirmMinDisplaySec segundos y RECIEN cierra.
                 // (El envio al IAS con estado 2 sigue disparandose al cerrar, sin cambios.)
                 function alVencerTiempoGanador(modal) {
+                    // grand/major con el sprite (moto/auto) visible: main.js ya acredito
+                    // automatico con estado 1. No se espera confirmSubida ni se muestra
+                    // ningun mensaje: el modal simplemente cierra.
+                    const shAuto = window.__activeWinnerSheet;
+                    const esAutoAcreditado = (shAuto === "grand" || shAuto === "major") &&
+                        (window.SPRITE_CONFIG ? window.SPRITE_CONFIG[shAuto] !== false : true);
+                    if (esAutoAcreditado) {
+                        cerrarModalGanador(modal);
+                        return;
+                    }
+
                     if (!window.__winnerConfirmRecibido && !window.__winnerAvisoSinConfirm) {
                         window.__winnerAvisoSinConfirm = true;
                         mostrarMensajeSinConfirmacion();
@@ -8131,7 +8142,7 @@
 
                     // Asegurar visibilidad minima: extender el cierre si hace falta.
                     const minMs = (window.CASINO_CONFIG.confirmMinDisplaySec || 8) * 1000;
-                    const minCloseAt = Date.now() + minMs;
+                    const minCloseAt = (window.__winnerCloseAt || Date.now()) + minMs;
                     if (minCloseAt > (window.__winnerCloseAt || 0)) {
                         programarCierreGanador(modal, minCloseAt);
                     }
@@ -8195,7 +8206,10 @@
                         }
 
                         // Aplicar snap directo: setear tanto el valor actual como el target al mismo valor
-                        if (data.sheet === "mini" || data.sheet === "minor") {
+                        // Aplica a los 4 sheets. En grand/major con sprite activo el monto no se
+                        // visualiza, pero igual queda actualizado para cuando se muestre en cash.
+                        if (data.sheet === "mini" || data.sheet === "minor" ||
+                            data.sheet === "grand" || data.sheet === "major") {
                             if (!state.miniMinorOdo) state.miniMinorOdo = {};
                             if (!state.miniMinorTarget) state.miniMinorTarget = {};
                             const newCents = Math.round(data.amount * 100);

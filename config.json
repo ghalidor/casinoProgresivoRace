@@ -14,11 +14,12 @@
   "memoryReloadMB": 300,
   "reloadCheckIntervalSec": 60,
   "iasEnabled": true,
-  "iasBaseUrl": "http://192.168.1.16/IAS",
+  "iasBaseUrl": "http://localhost:56382/",
   "iasRetryIntervalSec": 30,
   "confirmMinDisplaySec": 8,
   "msgAcreditadoOk": "Maquina acreditada correctamente",
   "msgAcreditadoError": "error al acreditar, verifique con el administrador",
   "detalleAcreditadoTimeout": "no se envio acreditacion(no confirmaron)",
+   "detalleAcreditadoAuto": "subida correcta",
   "msgSinConfirmacion": "No se ha recibido confirmacion para la acreditacion"
 }

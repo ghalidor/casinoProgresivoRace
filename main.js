@@ -60,6 +60,7 @@ let mainWindow;
 let isWinnerActive = false;
 let ganadorPendiente = null;   // ganador esperando confirmSubida (acreditacion IAS)
 let iasDetalleTimeout = 'no se envio acreditacion(no confirmaron)';
+let iasDetalleAuto = 'subida correcta';
 let isPromoActive = false;
 let pendingUpdates = [];
 let dashboardReady = false;
@@ -426,6 +427,9 @@ async function enviarAcreditadoAIas(peticionId, info) {
     detalle: info.detalle || ''
   };
 
+  logInfo('IAS acreditado ENVIA id=' + peticionId + ' -> POST ' + url +
+    ' | body: ' + JSON.stringify(body));
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -562,6 +566,9 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
   };
 
   iasStats.ultimoIntento = new Date().toISOString();
+
+  logInfo('IAS ganador ENVIA id=' + peticionId + ' -> POST ' + url +
+    ' | body: ' + JSON.stringify(body));
 
   try {
     // fetch nativo de Node 18+ (Electron 28+ ya lo tiene)
@@ -785,6 +792,7 @@ function startHttpServer(config) {
     iasRetryIntervalSec: config.iasRetryIntervalSec || 30
   };
   if (config.detalleAcreditadoTimeout) iasDetalleTimeout = config.detalleAcreditadoTimeout;
+  if (config.detalleAcreditadoAuto) iasDetalleAuto = config.detalleAcreditadoAuto;
 
   // Arrancar timer de reintento de envios pendientes al IAS.
   // Esto cubre: ganadores que estaban en la DB de un crash anterior,
@@ -839,8 +847,22 @@ function startHttpServer(config) {
     // Si falla, queda con enviado_externo=0 y el retry timer lo intentara despues.
     if (data.ganador === true && peticionId) {
       const fechaGanador = fechaLocalISO();  // hora local de Peru
-      setImmediate(() => {
-        enviarGanadorAIas(peticionId, data, fechaGanador);
+
+      // grand/major con el sprite (moto/auto) visible: el premio es fisico,
+      // nadie va a mandar /confirmSubida. Se acredita solo con estado 1.
+      // Si esta en modo cash (montos) se espera la confirmacion normal.
+      const spriteCfg = getSpriteConfig();
+      const autoAcreditar = (data.sheet === 'grand' || data.sheet === 'major') &&
+                            spriteCfg[data.sheet] === true;
+
+      setImmediate(async () => {
+        // Esperar a CrearGanador antes de acreditar, si no el IAS
+        // puede recibir la acreditacion antes de que exista el ganador.
+        await enviarGanadorAIas(peticionId, data, fechaGanador);
+        if (autoAcreditar) {
+          logInfo('Sprite activo en ' + data.sheet + ' -> acreditacion automatica estado=1');
+          resolverAcreditado(1, iasDetalleAuto);
+        }
       });
 
       // Si habia un ganador anterior esperando confirmSubida que nunca llego,
@@ -933,8 +955,8 @@ function startHttpServer(config) {
     if (!data || !data.sheet) {
       return res.status(400).json({ error: 'sheet es requerido' });
     }
-    if (!['mini', 'minor'].includes(data.sheet)) {
-      return res.status(400).json({ error: 'sheet debe ser: mini o minor' });
+    if (!['mini', 'minor', 'grand', 'major'].includes(data.sheet)) {
+      return res.status(400).json({ error: 'sheet debe ser: mini, minor, grand o major' });
     }
     if (data.amount === undefined || data.amount === null || typeof data.amount !== 'number') {
       return res.status(400).json({ error: 'amount es requerido (numero decimal)' });
