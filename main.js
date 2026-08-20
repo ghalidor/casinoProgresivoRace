@@ -58,6 +58,12 @@ function loadConfig() {
 
 let mainWindow;
 let isWinnerActive = false;
+// Ganador ya enviado al dashboard: el modal tarda winnerDelaySec en abrir y el
+// watchdog puede tardar hasta 5s en verlo. Sin esta marca, un ganador que llega
+// en ese hueco se colaria encima del anterior.
+let winnerDespachado = false;
+let winnerDespachadoAt = 0;
+let winnerDespachoMaxMs = 60000;  // limite de seguridad, se ajusta desde config
 let ganadorPendiente = null;   // ganador esperando confirmSubida (acreditacion IAS)
 let iasDetalleTimeout = 'no se envio acreditacion(no confirmaron)';
 let iasDetalleAuto = 'subida correcta';
@@ -794,6 +800,11 @@ function startHttpServer(config) {
   if (config.detalleAcreditadoTimeout) iasDetalleTimeout = config.detalleAcreditadoTimeout;
   if (config.detalleAcreditadoAuto) iasDetalleAuto = config.detalleAcreditadoAuto;
 
+  // Tope de seguridad: cuanto puede durar como maximo un ganador en pantalla.
+  winnerDespachoMaxMs = ((config.winnerDelaySec || 5) +
+                         (config.winnerModalDurationSec || 12) +
+                         (config.confirmMinDisplaySec || 8) + 20) * 1000;
+
   // Arrancar timer de reintento de envios pendientes al IAS.
   // Esto cubre: ganadores que estaban en la DB de un crash anterior,
   // y ganadores cuyo POST inicial fallo (servidor externo caido).
@@ -1303,7 +1314,14 @@ async function sendUpdateToDashboard(data, peticionId) {
   }
 
   // FLUJO ORIGINAL (update normal)
-  if (isWinnerActive && data.ganador !== true) {
+  // Con un modal de ganador en pantalla se encola TODO, incluidos los
+  // ganadores nuevos: cada ganador debe completar su tiempo en pantalla
+  // antes de que se muestre el siguiente. La cola se procesa al cerrar
+  // el modal ('Ganador termino, procesando cola').
+  if (isWinnerActive || winnerDespachado) {
+    if (data.ganador === true) {
+      logInfo('Ganador encolado (otro ganador en pantalla): ' + data.sheet);
+    }
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
     marcarPeticionEncolada(peticionId);
@@ -1318,6 +1336,12 @@ async function sendUpdateToDashboard(data, peticionId) {
     savePendingToDisk();
     marcarPeticionEncolada(peticionId);
     return;
+  }
+
+  // Desde aca el ganador ocupa la pantalla, aunque el modal todavia no abrio.
+  if (data.ganador === true) {
+    winnerDespachado = true;
+    winnerDespachadoAt = Date.now();
   }
 
   const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
@@ -1345,14 +1369,30 @@ function flushPendingUpdates() {
   pendingUpdates = [];
   savePendingToDisk();  // limpiar archivo tambien
 
+  // Se libera UN SOLO ganador por vez: si en la cola hay mas de uno, el resto
+  // vuelve a la cola y sale cuando cierre este modal. Asi cada ganador
+  // completa su tiempo en pantalla.
+  let ganadorLiberado = false;
+  const restantes = [];
+
   updates.forEach(item => {
-    if (item.data) {
-      sendUpdateToDashboard(item.data, item.peticionId);
-    } else {
-      // formato antiguo sin peticionId
-      sendUpdateToDashboard(item, null);
+    const d = item.data ? item.data : item;
+    const pid = item.data ? item.peticionId : null;
+
+    if (ganadorLiberado) {
+      restantes.push(item);
+      return;
     }
+
+    sendUpdateToDashboard(d, pid);
+    if (d && d.ganador === true) ganadorLiberado = true;
   });
+
+  if (restantes.length > 0) {
+    logInfo('Quedan ' + restantes.length + ' updates en cola (hay un ganador en pantalla)');
+    pendingUpdates = restantes.concat(pendingUpdates);
+    savePendingToDisk();
+  }
 }
 
 // ============================================================
@@ -1677,10 +1717,20 @@ function startWatchdog(config) {
     const winnerActive = status.winner;
     const promoActive = status.promo;
 
+    // Seguridad: si se despacho un ganador y el modal nunca llego a verse,
+    // liberar la marca para no bloquear la cola indefinidamente.
+    if (winnerDespachado && !winnerActive && !isWinnerActive &&
+        (Date.now() - winnerDespachadoAt) > winnerDespachoMaxMs) {
+      logWarn('Ganador despachado pero el modal nunca aparecio - liberando cola');
+      winnerDespachado = false;
+      flushPendingUpdates();
+    }
+
     // Si termino ganador o promo, procesar cola
     if ((isWinnerActive && !winnerActive) || (isPromoActive && !promoActive)) {
       if (isWinnerActive && !winnerActive) {
         logInfo('Ganador termino, procesando cola');
+        winnerDespachado = false;
         // Si el modal cerro sin recibir confirmSubida -> avisar al IAS (estado 2).
         if (ganadorPendiente) {
           logInfo('confirmSubida NO llego (timeout modal) -> ActualizarEstadoAcreditado estado=2');
