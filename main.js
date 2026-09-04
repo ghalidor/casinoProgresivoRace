@@ -64,7 +64,9 @@ let isWinnerActive = false;
 let winnerDespachado = false;
 let winnerDespachadoAt = 0;
 let winnerDespachoMaxMs = 60000;  // limite de seguridad, se ajusta desde config
-let ganadorPendiente = null;   // ganador esperando confirmSubida (acreditacion IAS)
+let ganadorPendiente = null;   // ganador EN PANTALLA esperando confirmSubida (acreditacion IAS)
+let gapEntreGanadoresMs = 2000;  // pausa entre que cierra un modal y abre el siguiente
+let flushProgramado = false;     // evita que /winner-closed y el watchdog flusheen doble
 let iasDetalleTimeout = 'no se envio acreditacion(no confirmaron)';
 let iasDetalleAuto = 'subida correcta';
 let isPromoActive = false;
@@ -501,6 +503,25 @@ function resolverAcreditado(estadoAcreditado, detalle) {
   const g = ganadorPendiente;
   if (!g) return false;
   ganadorPendiente = null;  // resuelto (evita doble envio)
+  if (estadoAcreditado === 2) {
+    // Sin confirmacion. Queda en eventos igual que los demas casos,
+    // para poder auditar todo desde una sola tabla.
+    guardarEvento('confirmSubida-noLlego', JSON.stringify({
+      maquina: g.codMaquina,
+      peticionId: g.peticionId,
+      detalle: detalle
+    }));
+  }
+  acreditarDirecto(g, estadoAcreditado, detalle);
+  return true;
+}
+
+// Acredita un ganador concreto SIN pasar por ganadorPendiente.
+// Se usa para el sprite (grand/major automatico), que nunca espera
+// confirmSubida y por lo tanto no debe ocupar lugar en la cola.
+// g: { peticionId, idRace, codSala, codMaquina }
+function acreditarDirecto(g, estadoAcreditado, detalle) {
+  if (!g || !g.peticionId) return false;
   guardarAcreditadoEnDB(g.peticionId, estadoAcreditado, detalle);
   setImmediate(() => {
     enviarAcreditadoAIas(g.peticionId, {
@@ -512,6 +533,20 @@ function resolverAcreditado(estadoAcreditado, detalle) {
     });
   });
   return true;
+}
+
+// Libera la cola despues de que cierra un modal ganador, esperando
+// gapEntreGanadoresMs para que no salga uno pegado al otro.
+// El flag evita que /winner-closed y el watchdog lo hagan dos veces.
+function programarFlushGanador() {
+  if (flushProgramado) return;
+  flushProgramado = true;
+  winnerDespachado = false;
+  isWinnerActive = false;
+  setTimeout(() => {
+    flushProgramado = false;
+    flushPendingUpdates();
+  }, gapEntreGanadoresMs);
 }
 
 function mapearPozo(sheet) {
@@ -800,6 +835,11 @@ function startHttpServer(config) {
   if (config.detalleAcreditadoTimeout) iasDetalleTimeout = config.detalleAcreditadoTimeout;
   if (config.detalleAcreditadoAuto) iasDetalleAuto = config.detalleAcreditadoAuto;
 
+  // Pausa entre que cierra un modal ganador y abre el siguiente.
+  if (typeof config.gapEntreGanadoresSec === 'number') {
+    gapEntreGanadoresMs = config.gapEntreGanadoresSec * 1000;
+  }
+
   // Tope de seguridad: cuanto puede durar como maximo un ganador en pantalla.
   winnerDespachoMaxMs = ((config.winnerDelaySec || 5) +
                          (config.winnerModalDurationSec || 12) +
@@ -840,6 +880,11 @@ function startHttpServer(config) {
     if (!['mini', 'minor', 'major', 'grand'].includes(data.sheet)) {
       return res.status(400).json({ error: 'sheet debe ser: mini, minor, major o grand' });
     }
+    // El dashboard aceptaba true, 1, "true" y "1". El servidor solo true.
+    // Se normaliza a booleano aca para que los dos vean lo mismo: si no,
+    // un ganador enviado como 1 abria el modal sin pasar por la cola.
+    data.ganador = (data.ganador === true || data.ganador === 1 ||
+                    data.ganador === 'true' || data.ganador === '1');
     if (!data.codSala || typeof data.codSala !== 'string') {
       return res.status(400).json({ error: 'codSala es requerido (string)' });
     }
@@ -866,28 +911,33 @@ function startHttpServer(config) {
       const autoAcreditar = (data.sheet === 'grand' || data.sheet === 'major') &&
                             spriteCfg[data.sheet] === true;
 
-      setImmediate(async () => {
-        // Esperar a CrearGanador antes de acreditar, si no el IAS
-        // puede recibir la acreditacion antes de que exista el ganador.
-        await enviarGanadorAIas(peticionId, data, fechaGanador);
-        if (autoAcreditar) {
-          logInfo('Sprite activo en ' + data.sheet + ' -> acreditacion automatica estado=1');
-          resolverAcreditado(1, iasDetalleAuto);
-        }
-      });
-
-      // Si habia un ganador anterior esperando confirmSubida que nunca llego,
-      // resolverlo como timeout (estado 2) antes de reemplazarlo.
-      if (ganadorPendiente) {
-        resolverAcreditado(2, iasDetalleTimeout);
-      }
-      // Este ganador queda pendiente de acreditacion (espera /confirmSubida).
-      ganadorPendiente = {
+      // Datos que identifican a este ganador para la acreditacion.
+      const refGanador = {
         peticionId: peticionId,
         idRace: data.idRace,
         codSala: data.codSala,
         codMaquina: data.maquina
       };
+
+      setImmediate(async () => {
+        // Esperar a CrearGanador antes de acreditar, si no el IAS
+        // puede recibir la acreditacion antes de que exista el ganador.
+        await enviarGanadorAIas(peticionId, data, fechaGanador);
+        if (autoAcreditar) {
+          logInfo('Sprite activo en ' + data.sheet + ' -> acreditacion automatica estado=1 (peticion ' + peticionId + ')');
+          // Directo, con SU propia referencia: si mientras tanto llego otro
+          // ganador, este no puede acreditarse sobre la maquina equivocada.
+          acreditarDirecto(refGanador, 1, iasDetalleAuto);
+        }
+      });
+
+      // El ganador NO entra a la cola de acreditacion aca. Entra recien
+      // cuando se despacha al dashboard (sendUpdateToDashboard), que es
+      // cuando de verdad va a estar en pantalla. Si llegan dos ganadores
+      // casi juntos, el segundo espera su turno y no pisa al primero.
+      if (!autoAcreditar) {
+        data._refGanador = refGanador;
+      }
     }
 
     sendUpdateToDashboard(data, peticionId);
@@ -916,13 +966,42 @@ function startHttpServer(config) {
     }
     const mensaje = (typeof data.mensaje === 'string') ? data.mensaje : '';
 
+    // Maquina que envia el sistema externo. Sirve para saber de QUE ganador
+    // es esta confirmacion cuando hubo dos ganadores casi seguidos.
+    const maquinaConfirm = (data.maquina !== undefined && data.maquina !== null)
+      ? String(data.maquina).trim()
+      : null;
+
     if (!ganadorPendiente) {
       // Llego fuera del tiempo del modal (tardio). NO se reenvia al IAS:
       // si el modal ya cerro, ya se reporto estado 2 y ese es definitivo.
       // Solo se registra en auditoria para saber que llego fuera de rango.
-      logWarn('confirmSubida recibido sin ganador activo (tardio), solo auditoria');
-      guardarEvento('confirmSubida-tardio', JSON.stringify({ estado: data.estado, mensaje: mensaje }));
+      logWarn('confirmSubida recibido sin ganador activo (tardio), solo auditoria. maquina=' + (maquinaConfirm || 'no enviada'));
+      guardarEvento('confirmSubida-tardio', JSON.stringify({ estado: data.estado, mensaje: mensaje, maquina: maquinaConfirm }));
       return res.json({ ok: false, motivo: 'no hay ganador activo (llego fuera de tiempo)' });
+    }
+
+    // Si mandan la maquina, tiene que ser la del ganador que esta en pantalla.
+    // Si no coincide es una confirmacion que llego tarde (el modal de esa
+    // maquina ya cerro) y ahora hay otro ganador distinto: se descarta para
+    // no acreditar a la maquina equivocada.
+    const maquinaEnPantalla = String(ganadorPendiente.codMaquina || '').trim();
+    if (maquinaConfirm && maquinaConfirm !== maquinaEnPantalla) {
+      logWarn('confirmSubida de maquina ' + maquinaConfirm +
+              ' pero en pantalla esta la ' + maquinaEnPantalla + ' -> descartado (tardio)');
+      guardarEvento('confirmSubida-otraMaquina', JSON.stringify({
+        estado: data.estado,
+        mensaje: mensaje,
+        maquinaRecibida: maquinaConfirm,
+        maquinaEnPantalla: maquinaEnPantalla
+      }));
+      return res.json({ ok: false, motivo: 'la maquina no corresponde al ganador en pantalla (llego fuera de tiempo)' });
+    }
+
+    if (!maquinaConfirm) {
+      // Compatibilidad: sistemas que todavia no mandan la maquina.
+      // Se aplica al ganador en pantalla, pero queda avisado en el log.
+      logWarn('confirmSubida sin campo maquina - se aplica al ganador en pantalla (' + maquinaEnPantalla + ')');
     }
 
     // Mostrar el mensaje en el dashboard (verde/rojo) y extender el modal.
@@ -930,9 +1009,14 @@ function startHttpServer(config) {
     safeExecJs(code);
 
     // Enviar al IAS: true->1, false->0. detalle = mensaje recibido.
-    resolverAcreditado(data.estado ? 1 : 0, mensaje);
+    const estadoIas = data.estado ? 1 : 0;
+    logInfo('confirmSubida OK maquina ' + maquinaEnPantalla +
+            ' (peticion ' + ganadorPendiente.peticionId + ')' +
+            ' -> ActualizarEstadoAcreditado estado=' + estadoIas +
+            (mensaje ? ' | ' + mensaje : ''));
+    resolverAcreditado(estadoIas, mensaje);
 
-    guardarEvento('confirmSubida', JSON.stringify({ estado: data.estado, mensaje: mensaje }));
+    guardarEvento('confirmSubida', JSON.stringify({ estado: data.estado, mensaje: mensaje, maquina: maquinaEnPantalla }));
     res.json({ ok: true });
   });
 
@@ -949,6 +1033,10 @@ function startHttpServer(config) {
       logInfo('Modal cerrado sin confirmSubida -> ActualizarEstadoAcreditado estado=2');
       resolverAcreditado(2, iasDetalleTimeout);
     }
+    // El dashboard avisa apenas cierra, asi que la cola se libera aca y no
+    // hay que esperar al watchdog (que corre cada 5s). Pausa configurable
+    // entre un ganador y el siguiente.
+    programarFlushGanador();
     res.json({ ok: true });
   });
 
@@ -1318,7 +1406,7 @@ async function sendUpdateToDashboard(data, peticionId) {
   // ganadores nuevos: cada ganador debe completar su tiempo en pantalla
   // antes de que se muestre el siguiente. La cola se procesa al cerrar
   // el modal ('Ganador termino, procesando cola').
-  if (isWinnerActive || winnerDespachado) {
+  if (isWinnerActive || winnerDespachado || flushProgramado) {
     if (data.ganador === true) {
       logInfo('Ganador encolado (otro ganador en pantalla): ' + data.sheet);
     }
@@ -1342,9 +1430,25 @@ async function sendUpdateToDashboard(data, peticionId) {
   if (data.ganador === true) {
     winnerDespachado = true;
     winnerDespachadoAt = Date.now();
+
+    // Recien ahora queda esperando confirmSubida: este es el que se va a ver.
+    // Si quedo alguno sin resolver del turno anterior, se cierra como timeout.
+    if (ganadorPendiente) {
+      logWarn('Ganador anterior sin resolver al despachar el siguiente -> estado=2');
+      resolverAcreditado(2, iasDetalleTimeout);
+    }
+    if (data._refGanador) {
+      ganadorPendiente = data._refGanador;
+      logInfo('Ganador en pantalla esperando confirmSubida: maquina ' +
+              ganadorPendiente.codMaquina + ' (peticion ' + ganadorPendiente.peticionId + ')');
+    }
   }
 
-  const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
+  // _refGanador es interno del servidor, no viaja al dashboard.
+  const dataParaDashboard = Object.assign({}, data);
+  delete dataParaDashboard._refGanador;
+
+  const dataJson = JSON.stringify(dataParaDashboard).replace(/</g, '\\u003c');
   const code = `
     if (window.casinoUpdate) {
       window.casinoUpdate(${dataJson});
@@ -1388,9 +1492,12 @@ function flushPendingUpdates() {
     if (d && d.ganador === true) ganadorLiberado = true;
   });
 
+  // pendingUpdates puede tener items que sendUpdateToDashboard volvio a
+  // encolar dentro del loop (dashboard no listo). Esos son ANTERIORES a
+  // 'restantes', asi que van primero para no invertir el orden.
   if (restantes.length > 0) {
     logInfo('Quedan ' + restantes.length + ' updates en cola (hay un ganador en pantalla)');
-    pendingUpdates = restantes.concat(pendingUpdates);
+    pendingUpdates = pendingUpdates.concat(restantes);
     savePendingToDisk();
   }
 }
@@ -1722,15 +1829,15 @@ function startWatchdog(config) {
     if (winnerDespachado && !winnerActive && !isWinnerActive &&
         (Date.now() - winnerDespachadoAt) > winnerDespachoMaxMs) {
       logWarn('Ganador despachado pero el modal nunca aparecio - liberando cola');
-      winnerDespachado = false;
-      flushPendingUpdates();
+      if (ganadorPendiente) resolverAcreditado(2, iasDetalleTimeout);
+      programarFlushGanador();
     }
 
     // Si termino ganador o promo, procesar cola
     if ((isWinnerActive && !winnerActive) || (isPromoActive && !promoActive)) {
-      if (isWinnerActive && !winnerActive) {
+      const ganadorTermino = (isWinnerActive && !winnerActive);
+      if (ganadorTermino) {
         logInfo('Ganador termino, procesando cola');
-        winnerDespachado = false;
         // Si el modal cerro sin recibir confirmSubida -> avisar al IAS (estado 2).
         if (ganadorPendiente) {
           logInfo('confirmSubida NO llego (timeout modal) -> ActualizarEstadoAcreditado estado=2');
@@ -1738,9 +1845,15 @@ function startWatchdog(config) {
         }
       }
       if (isPromoActive && !promoActive) logInfo('Promo termino, procesando cola');
-      isWinnerActive = winnerActive;
       isPromoActive = promoActive;
-      flushPendingUpdates();
+      if (ganadorTermino) {
+        // Respaldo por si el dashboard no pudo llamar a /winner-closed.
+        // Si ya lo llamo, programarFlushGanador no hace nada (flag).
+        programarFlushGanador();
+      } else {
+        isWinnerActive = winnerActive;
+        flushPendingUpdates();
+      }
     } else {
       isWinnerActive = winnerActive;
       isPromoActive = promoActive;

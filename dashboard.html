@@ -7854,6 +7854,15 @@
 
                     if (!modal) return;
 
+                    // Red de seguridad: nunca montar un ganador encima de otro.
+                    // El servidor ya encola los ganadores de a uno, asi que esto
+                    // no deberia pasar; si pasa, queda registrado.
+                    if (modal.classList.contains("showing")) {
+                        console.error("showWinnerModal ignorado: ya hay un ganador en pantalla",
+                                      { entrante: maquina, sheet: sheetId });
+                        return;
+                    }
+
                     // Marcar el sheet activo del modal (lo usa /reinicio para decidir
                     // si postergar o aplicar directo).
                     window.__activeWinnerSheet = sheetId;

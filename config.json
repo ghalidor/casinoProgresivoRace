@@ -13,7 +13,7 @@
   "cleanupIntervalMin": 60,
   "memoryReloadMB": 300,
   "reloadCheckIntervalSec": 60,
-  "iasEnabled": true,
+  "iasEnabled": false,
   "iasBaseUrl": "http://localhost:56382/",
   "iasRetryIntervalSec": 30,
   "confirmMinDisplaySec": 8,
