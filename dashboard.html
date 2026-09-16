@@ -6290,7 +6290,8 @@
 
                         // Activar sonido y reproducir desde el inicio
                         promo.muted = false;
-                        promo.volume = window.CASINO_CONFIG.modalVideoVolume || 0.7;
+                        // '|| 0.7' convertia el 0 en 0.7 (las promos sonaban con volumen 0).
+                        promo.volume = window.CASINO_CONFIG.modalVideoVolume !== undefined ? window.CASINO_CONFIG.modalVideoVolume : 0.7;
                         promo.currentTime = 0;
 
                         // Reproducir (con reintentos)
@@ -6396,6 +6397,13 @@
                         if (isShowingPromo) {
                             // Mientras se muestra el promo, no avanza el contador externo
                             // pero podemos mostrar el tiempo restante del video
+                            return;
+                        }
+
+                        // Turno del ganador: si hay uno en pantalla o esperando su
+                        // delay, la promo se pausa (no avanza ni arranca).
+                        const modalGanador = document.getElementById("winnerModal");
+                        if (window.__winnerPending || (modalGanador && modalGanador.classList.contains("showing"))) {
                             return;
                         }
 
@@ -6523,8 +6531,22 @@
                 width: clamp(150px, 19vh, 205px) !important;
                 top: clamp(20px, 4vh, 50px) !important;
             }
+            /* MODO MONTO (mini/minor, o grand/major sin sprite).
+               Antes el titulo se bajaba con translateY(9vh) y la placa se subia
+               con translateY(-7.5vh). translateY mueve solo visualmente, sin
+               empujar a los demas: por eso el titulo y la placa quedaban
+               encima del monto y abajo sobraba espacio.
+               Ahora el titulo baja con padding-top (misma altura que con el
+               vehiculo) y el resto se reparte solo con space-between, asi
+               titulo, monto, maquina y mensaje quedan con el mismo espacio. */
+            .winner-inner:not(:has(.winner-vehicle-center.show)) {
+                padding-top: calc(clamp(130px, 14vh, 175px) + 9vh) !important;
+            }
             .winner-inner:not(:has(.winner-vehicle-center.show)) .winner-title-row {
-                transform: translateY(9vh) !important;
+                transform: none !important;
+            }
+            .winner-inner:not(:has(.winner-vehicle-center.show)) .winner-machine {
+                transform: none !important;
             }
             @keyframes trophyBounce {
                 0%,
@@ -6998,6 +7020,17 @@
                     inset 0 0 8px rgba(212, 175, 55, 0.2) !important;
                 animation: none !important;
             }
+            /* Contador en PRORROGA: el tiempo normal ya se acabo y se dan
+               segundos extra esperando la confirmacion. En rojo para que no
+               se confunda con el tiempo normal. */
+            .winner-countdown.extra {
+                border-color: #ff5252 !important;
+                color: #ff8a80 !important;
+                box-shadow:
+                    0 0 12px rgba(255, 82, 82, 0.5),
+                    inset 0 0 8px rgba(255, 82, 82, 0.25) !important;
+            }
+
             /* Ocultar elementos del tema F1 que chocan con el azul */
             .winner-speed-lines,
             .winner-rays {
@@ -7993,6 +8026,9 @@
                     // Flags para el caso 'no llego confirmSubida' (aviso rojo antes de cerrar).
                     window.__winnerConfirmRecibido = false;
                     window.__winnerAvisoSinConfirm = false;
+                    // Contador en color normal (por si el anterior termino en rojo).
+                    const cdInit = document.getElementById("winnerCountdown");
+                    if (cdInit) cdInit.classList.remove("extra");
 
                     // Programar cierre (duracion configurada). Se puede EXTENDER si llega
                     // confirmSubida cerca del final (ver window.casinoConfirmSubida).
@@ -8043,6 +8079,8 @@
                     window.__winnerCloseAt = 0;
                     window.__winnerConfirmRecibido = false;
                     window.__winnerAvisoSinConfirm = false;
+                    const cdEnd = document.getElementById("winnerCountdown");
+                    if (cdEnd) cdEnd.classList.remove("extra");
 
                     // Limpiar sheet activo del modal
                     const closedSheet = window.__activeWinnerSheet;
@@ -8127,6 +8165,9 @@
                     if (!window.__winnerConfirmRecibido && !window.__winnerAvisoSinConfirm) {
                         window.__winnerAvisoSinConfirm = true;
                         mostrarMensajeSinConfirmacion();
+                        // Empieza la prorroga: contador en rojo.
+                        const cdEl = document.getElementById("winnerCountdown");
+                        if (cdEl) cdEl.classList.add("extra");
                         const minMs = (window.CASINO_CONFIG.confirmMinDisplaySec || 8) * 1000;
                         programarCierreGanador(modal, Date.now() + minMs);
                         return;
@@ -8325,15 +8366,28 @@
                         }
 
                         setTimeout(() => {
-                            try {
-                                showWinnerModal(data.sheet, data.amount, data.maquina, data.posicion, snapshotSprite);
-                            } catch (e) {
-                                console.error("[API] Error mostrando modal ganador:", e);
-                            }
-                            window.__winnerPending = false;
+                            abrirGanadorEnSuTurno(data, snapshotSprite);
                         }, delay);
                     }
                 };
+
+                // Abre el modal ganador. Si hay una promo en pantalla, espera a que
+                // termine (el sonido va por turno: o promo o ganador, nunca los dos).
+                // main.js se entera de la promo cada 5s, asi que un ganador puede
+                // llegar con la promo recien empezada: por eso se revisa aca.
+                function abrirGanadorEnSuTurno(data, snapshotSprite) {
+                    if (document.querySelector(".promo-video.showing")) {
+                        console.log("[API] Ganador esperando que termine la promo:", data.sheet);
+                        setTimeout(() => abrirGanadorEnSuTurno(data, snapshotSprite), 500);
+                        return;
+                    }
+                    try {
+                        showWinnerModal(data.sheet, data.amount, data.maquina, data.posicion, snapshotSprite);
+                    } catch (e) {
+                        console.error("[API] Error mostrando modal ganador:", e);
+                    }
+                    window.__winnerPending = false;
+                }
 
                 // Funcion de prueba (para testing manual desde consola)
                 window.testWinner = function (sheet, amount, maquina, posicion) {

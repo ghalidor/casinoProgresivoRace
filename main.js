@@ -421,7 +421,9 @@ function guardarAcreditadoEnDB(peticionId, estado, detalle) {
   }
 }
 
-async function enviarAcreditadoAIas(peticionId, info) {
+// esReintento: true cuando lo llama el timer de reintentos (no repite el body en el log).
+async function enviarAcreditadoAIas(peticionId, info, esReintento) {
+  const marca = esReintento ? ' (reintento)' : '';
   if (!iasConfig || !iasConfig.iasEnabled || !iasConfig.iasBaseUrl) {
     return false;
   }
@@ -435,8 +437,10 @@ async function enviarAcreditadoAIas(peticionId, info) {
     detalle: info.detalle || ''
   };
 
-  logInfo('IAS acreditado ENVIA id=' + peticionId + ' -> POST ' + url +
-    ' | body: ' + JSON.stringify(body));
+  if (!esReintento) {
+    logInfo('IAS acreditado ENVIA id=' + peticionId + ' -> POST ' + url +
+      ' | body: ' + JSON.stringify(body));
+  }
 
   try {
     const controller = new AbortController();
@@ -451,17 +455,17 @@ async function enviarAcreditadoAIas(peticionId, info) {
     if (resp.ok) {
       const respText = await resp.text().catch(() => '');
       marcarAcreditadoEnviadoIAS(peticionId);
-      logInfo('IAS acreditado OK ' + resp.status + ' id=' + peticionId +
+      logInfo('IAS acreditado OK' + marca + ' ' + resp.status + ' id=' + peticionId +
         ' estado=' + info.estadoAcreditado +
         ' | respuesta: ' + (respText.substring(0, 500) || '(vacio)'));
       return true;
     } else {
       const txt = await resp.text().catch(() => '');
-      logWarn('IAS acreditado FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
+      logWarn('IAS acreditado FAIL' + marca + ' ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
       return false;
     }
   } catch (e) {
-    logWarn('IAS acreditado ERROR id=' + peticionId + ': ' + e.message);
+    logWarn('IAS acreditado ERROR' + marca + ' id=' + peticionId + ': ' + e.message);
     return false;
   }
 }
@@ -490,7 +494,7 @@ function reintentarAcreditadosIAS() {
         codMaquina: fila.codMaquina,
         estadoAcreditado: fila.estadoAcreditado,
         detalle: fila.detalle
-      });
+      }, true);
     });
   } catch (e) {
     logError('Error en reintentarAcreditadosIAS: ' + e.message);
@@ -549,6 +553,30 @@ function programarFlushGanador() {
   }, gapEntreGanadoresMs);
 }
 
+// Hay algun ganador sin terminar: en pantalla, en el delay antes de abrir,
+// en la pausa entre ganadores o esperando en la cola.
+// Mientras sea true NO se recarga el dashboard (se perderia el ganador).
+function hayGanadorEnCurso() {
+  if (isWinnerActive || winnerDespachado || flushProgramado) return true;
+  return pendingUpdates.some(item => {
+    const d = item.data ? item.data : item;
+    return d && d.ganador === true;
+  });
+}
+
+// Texto corto del body para el log (maximo 500 caracteres).
+function bodyParaLog(body) {
+  let txt = '';
+  try { txt = JSON.stringify(body === undefined ? null : body) || ''; } catch (e) { txt = '(no se pudo leer)'; }
+  return txt.substring(0, 500);
+}
+
+// Responde 400 igual que antes y ademas lo deja en el log.
+function rechazar(res, endpoint, error, body) {
+  logWarn(endpoint + ' RECHAZADO (400): ' + error + ' | body: ' + bodyParaLog(body));
+  return res.status(400).json({ error: error });
+}
+
 function mapearPozo(sheet) {
   // Mapeo solicitado: Car=grand, Moto=major, Minor=minor, Mini=mini
   const map = { mini: 'Mini', minor: 'Minor', major: 'Moto', grand: 'Car' };
@@ -589,7 +617,9 @@ function formatearFechaGanador(fechaLocal) {
   }
 }
 
-async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
+// esReintento: true cuando lo llama el timer de reintentos (no repite el body en el log).
+async function enviarGanadorAIas(peticionId, data, fechaRegistro, esReintento) {
+  const marca = esReintento ? ' (reintento)' : '';
   // Verificar config
   if (!iasConfig || !iasConfig.iasEnabled || !iasConfig.iasBaseUrl) {
     return false;
@@ -608,8 +638,10 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
 
   iasStats.ultimoIntento = new Date().toISOString();
 
-  logInfo('IAS ganador ENVIA id=' + peticionId + ' -> POST ' + url +
-    ' | body: ' + JSON.stringify(body));
+  if (!esReintento) {
+    logInfo('IAS ganador ENVIA id=' + peticionId + ' -> POST ' + url +
+      ' | body: ' + JSON.stringify(body));
+  }
 
   try {
     // fetch nativo de Node 18+ (Electron 28+ ya lo tiene)
@@ -629,7 +661,7 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
       marcarGanadorEnviadoIAS(peticionId);
       iasStats.ultimoExito = new Date().toISOString();
       iasStats.totalEnviados++;
-      logInfo('IAS OK ' + resp.status + ': ganador id=' + peticionId +
+      logInfo('IAS OK' + marca + ' ' + resp.status + ': ganador id=' + peticionId +
         ' sheet=' + data.sheet +
         ' | respuesta: ' + (respText.substring(0, 500) || '(vacio)'));
       return true;
@@ -637,13 +669,13 @@ async function enviarGanadorAIas(peticionId, data, fechaRegistro) {
       const txt = await resp.text().catch(() => '');
       iasStats.ultimoError = 'HTTP ' + resp.status + ' - ' + txt.substring(0, 200);
       iasStats.totalErrores++;
-      logWarn('IAS FAIL ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
+      logWarn('IAS FAIL' + marca + ' ' + resp.status + ' id=' + peticionId + ': ' + txt.substring(0, 500));
       return false;
     }
   } catch (e) {
     iasStats.ultimoError = e.message;
     iasStats.totalErrores++;
-    logWarn('IAS ERROR id=' + peticionId + ': ' + e.message);
+    logWarn('IAS ERROR' + marca + ' id=' + peticionId + ': ' + e.message);
     return false;
   }
 }
@@ -679,7 +711,7 @@ function reintentarPendientesIAS() {
         posicion: fila.posicion,
         codSala: fila.codSala,
         idRace: fila.idRace
-      }, fila.fecha_registro);
+      }, fila.fecha_registro, true);
     });
   } catch (e) {
     logError('Error en reintentarPendientesIAS: ' + e.message);
@@ -875,10 +907,10 @@ function startHttpServer(config) {
 
     // Validacion de campos obligatorios
     if (!data || !data.sheet) {
-      return res.status(400).json({ error: 'sheet es requerido' });
+      return rechazar(res, '/update', 'sheet es requerido', data);
     }
     if (!['mini', 'minor', 'major', 'grand'].includes(data.sheet)) {
-      return res.status(400).json({ error: 'sheet debe ser: mini, minor, major o grand' });
+      return rechazar(res, '/update', 'sheet debe ser: mini, minor, major o grand', data);
     }
     // El dashboard aceptaba true, 1, "true" y "1". El servidor solo true.
     // Se normaliza a booleano aca para que los dos vean lo mismo: si no,
@@ -886,18 +918,25 @@ function startHttpServer(config) {
     data.ganador = (data.ganador === true || data.ganador === 1 ||
                     data.ganador === 'true' || data.ganador === '1');
     if (!data.codSala || typeof data.codSala !== 'string') {
-      return res.status(400).json({ error: 'codSala es requerido (string)' });
+      return rechazar(res, '/update', 'codSala es requerido (string)', data);
     }
     if (data.idRace === undefined || data.idRace === null || !Number.isInteger(data.idRace)) {
-      return res.status(400).json({ error: 'idRace es requerido (entero)' });
+      return rechazar(res, '/update', 'idRace es requerido (entero)', data);
     }
     // posicion es opcional pero si viene debe ser numero entero
     if (data.posicion !== undefined && data.posicion !== null && !Number.isInteger(data.posicion)) {
-      return res.status(400).json({ error: 'posicion debe ser entero (si se envia)' });
+      return rechazar(res, '/update', 'posicion debe ser entero (si se envia)', data);
     }
 
     // Guardar en SQLite ANTES de procesar (siempre se registra)
     const peticionId = guardarPeticion(data, ipOrigen, false, 'update');
+
+    // Solo los ganadores (los montos normales llegan seguido y serian ruido).
+    if (data.ganador === true) {
+      logInfo('GANADOR recibido: sheet=' + data.sheet + ' maquina=' + data.maquina +
+              ' monto=' + data.amount + ' peticion=' + peticionId + ' ip=' + ipOrigen +
+              ' | body: ' + bodyParaLog(data));
+    }
 
     // Si es ganador, disparar envio al servidor IAS en paralelo (no bloquea).
     // Si falla, queda con enviado_externo=0 y el retry timer lo intentara despues.
@@ -961,8 +1000,9 @@ function startHttpServer(config) {
   // ============================================================
   httpApp.post('/confirmSubida', (req, res) => {
     const data = req.body;
+    logInfo('confirmSubida recibido | body: ' + bodyParaLog(data));
     if (!data || typeof data.estado !== 'boolean') {
-      return res.status(400).json({ error: 'estado es requerido (boolean)' });
+      return rechazar(res, '/confirmSubida', 'estado es requerido (boolean)', data);
     }
     const mensaje = (typeof data.mensaje === 'string') ? data.mensaje : '';
 
@@ -1546,20 +1586,29 @@ function createWindow() {
   // reload manual).
   // ============================================================
   let resizeReloadTimer = null;
+  let resizeAvisado = false;  // para escribir 'pospuesto' una sola vez
   mainWindow.on('resize', () => {
     if (resizeReloadTimer) clearTimeout(resizeReloadTimer);
-    resizeReloadTimer = setTimeout(() => {
-      if (!mainWindow || mainWindow.isDestroyed()) return;
-      if (isWinnerActive) {
-        logWarn('Resize ignorado (ganador activo)');
-        return;
-      }
-      logInfo('Resize detectado - reload automatico para reajustar layout');
-      dashboardReady = false;
-      savePendingToDisk();
-      mainWindow.reload();
-    }, 400);
+    resizeReloadTimer = setTimeout(recargarPorResize, 400);
   });
+
+  function recargarPorResize() {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    if (hayGanadorEnCurso()) {
+      // Se reintenta cada 2s hasta que terminen los ganadores.
+      if (!resizeAvisado) {
+        logWarn('Resize: reload pospuesto (ganador en curso)');
+        resizeAvisado = true;
+      }
+      resizeReloadTimer = setTimeout(recargarPorResize, 2000);
+      return;
+    }
+    resizeAvisado = false;
+    logInfo('Resize detectado - reload automatico para reajustar layout');
+    dashboardReady = false;
+    savePendingToDisk();
+    mainWindow.reload();
+  }
 
   mainWindow.webContents.on('did-finish-load', async () => {
     // ============================================================
@@ -1745,7 +1794,6 @@ function createWindow() {
 
     dashboardReady = true;
     logInfo('Dashboard listo');
-    setTimeout(flushPendingUpdates, 500);
 
     if (!global.serversStarted) {
       global.serversStarted = true;
@@ -1753,6 +1801,12 @@ function createWindow() {
       startHttpServer(config);
       startWatchdog(config);
     }
+
+    // Procesar la cola AL TOQUE (sin esperar), y despues de cargar lo del
+    // disco. Si se espera, un ganador nuevo que llega en ese lapso sale
+    // antes que los que ya estaban en la cola (se invierte el orden).
+    // Todo esto corre seguido, sin que pueda entrar un request en el medio.
+    flushPendingUpdates();
   });
 
   mainWindow.loadFile('dashboard.html');
@@ -1782,8 +1836,9 @@ function startWatchdog(config) {
     let status;
     try { status = JSON.parse(statusStr); } catch (e) { return; }
 
-    isWinnerActive = status.winner;
-    isPromoActive = status.promo;
+    // Este chequeo SOLO se ocupa de la memoria. isWinnerActive e isPromoActive
+    // los actualiza unicamente el vigilante de 5s: si este tambien los pisara,
+    // el vigilante podria no ver que termino una promo y no liberaria la cola.
 
     // Guardar memoria a la DB cada hora
     if (Math.random() < 0.02) {  // ~1% probabilidad por check = ~1 vez por hora si check es cada 60s
@@ -1791,7 +1846,10 @@ function startWatchdog(config) {
     }
 
     // Si memoria pasa el umbral Y no hay ganador NI promo activo, hacer reload
-    if (status.memMB > memoryThresholdMB && !status.winner && !status.promo && pendingUpdates.length === 0) {
+    // hayGanadorEnCurso cubre el delay antes de abrir el modal, donde
+    // status.winner todavia es false. Si no, se perdia el ganador.
+    if (status.memMB > memoryThresholdMB && !status.winner && !status.promo &&
+        !hayGanadorEnCurso() && pendingUpdates.length === 0) {
       logWarn('Memoria > ' + memoryThresholdMB + 'MB (actual: ' + status.memMB + 'MB) - RELOAD automatico');
       guardarEvento('reload_auto', 'Memoria excedida: ' + status.memMB + 'MB', status.memMB);
 
@@ -1844,7 +1902,8 @@ function startWatchdog(config) {
           resolverAcreditado(2, iasDetalleTimeout);
         }
       }
-      if (isPromoActive && !promoActive) logInfo('Promo termino, procesando cola');
+      // Solo si hay algo esperando (si no, se escribia en cada promo).
+      if (isPromoActive && !promoActive && pendingUpdates.length > 0) logInfo('Promo termino, procesando cola');
       isPromoActive = promoActive;
       if (ganadorTermino) {
         // Respaldo por si el dashboard no pudo llamar a /winner-closed.
@@ -1896,13 +1955,13 @@ app.whenReady().then(async () => {
   });
 
   globalShortcut.register('Ctrl+Shift+R', () => {
-    if (mainWindow && !isWinnerActive) {
+    if (mainWindow && !hayGanadorEnCurso()) {
       logInfo('Reload manual por usuario');
       dashboardReady = false;
       savePendingToDisk();
       mainWindow.reload();
     } else {
-      logWarn('Reload manual OMITIDO (ganador activo)');
+      logWarn('Reload manual OMITIDO (ganador en curso, intente de nuevo al terminar)');
     }
   });
 

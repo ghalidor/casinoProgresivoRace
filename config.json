@@ -7,7 +7,7 @@
   "useTestData": false,
   "winnerDelaySec": 5,
   "winnerModalDurationSec": 12,
-  "modalVideoVolume": 0.7,
+  "modalVideoVolume": 0.4,
   "bgMusicVolume": 0.3,
   "httpPort": 3000,
   "cleanupIntervalMin": 60,
