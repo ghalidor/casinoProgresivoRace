@@ -103,8 +103,8 @@ function initPaths() {
 // Solo loggea errores y eventos importantes, NO debug normal
 // ============================================================
 
-function getLogFilePath() {
-  const d = new Date();
+function getLogFilePath(fecha) {
+  const d = fecha || new Date();
   const filename = 'dashboard-' + d.getFullYear() + '-' +
     String(d.getMonth() + 1).padStart(2, '0') + '-' +
     String(d.getDate()).padStart(2, '0') + '.log';
@@ -503,6 +503,12 @@ function reintentarAcreditadosIAS() {
 
 // Resuelve la acreditacion del ganador pendiente: persiste y envia al IAS.
 // estadoAcreditado: 1=confirmado ok, 0=confirmado error, 2=no confirmaron (timeout).
+// " (maquina X, peticion N)" del ganador que espera confirmacion, para el log.
+function textoPendiente() {
+  if (!ganadorPendiente) return '';
+  return ' (maquina ' + ganadorPendiente.codMaquina + ', peticion ' + ganadorPendiente.peticionId + ')';
+}
+
 function resolverAcreditado(estadoAcreditado, detalle) {
   const g = ganadorPendiente;
   if (!g) return false;
@@ -562,6 +568,44 @@ function hayGanadorEnCurso() {
     const d = item.data ? item.data : item;
     return d && d.ganador === true;
   });
+}
+
+// ============================================================
+// PANEL ADMIN (se abre con Ctrl+Shift+C en la pantalla)
+// ============================================================
+
+// true si el pedido viene de esta misma maquina.
+function esPedidoLocal(req) {
+  const ip = (req.socket && req.socket.remoteAddress) || '';
+  return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+}
+
+// Lineas del log que interesan en el panel: solo ganadores y confirmaciones.
+const FILTRO_LOG_GANADORES = [
+  'GANADOR recibido', 'Ganador encolado', 'Ganador en pantalla esperando',
+  'Ganador anterior sin resolver', 'Ganador despachado pero', 'Sprite activo en',
+  'IAS ganador ENVIA', 'IAS OK', 'IAS FAIL', 'IAS ERROR', 'IAS retry',
+  'IAS acreditado', 'confirmSubida', 'Modal cerrado sin confirmSubida',
+  '/update RECHAZADO'
+];
+
+// Lee el log de hoy y de ayer, filtra y devuelve lo mas nuevo primero.
+function leerLogGanadores() {
+  const hoy = new Date();
+  const ayer = new Date(hoy.getTime() - 24 * 60 * 60 * 1000);
+  let lineas = [];
+  [ayer, hoy].forEach(fecha => {
+    const ruta = getLogFilePath(fecha);
+    if (!fs.existsSync(ruta)) return;
+    try {
+      fs.readFileSync(ruta, 'utf8').split(/\r?\n/).forEach(l => {
+        if (l && FILTRO_LOG_GANADORES.some(f => l.includes(f))) lineas.push(l);
+      });
+    } catch (e) {
+      logError('Panel admin: no se pudo leer ' + ruta + ': ' + e.message);
+    }
+  });
+  return lineas.reverse().slice(0, 500);
 }
 
 // Texto corto del body para el log (maximo 500 caracteres).
@@ -1070,7 +1114,7 @@ function startHttpServer(config) {
   // ============================================================
   httpApp.post('/winner-closed', (req, res) => {
     if (ganadorPendiente) {
-      logInfo('Modal cerrado sin confirmSubida -> ActualizarEstadoAcreditado estado=2');
+      logInfo('Modal cerrado sin confirmSubida' + textoPendiente() + ' -> ActualizarEstadoAcreditado estado=2');
       resolverAcreditado(2, iasDetalleTimeout);
     }
     // El dashboard avisa apenas cierra, asi que la cola se libera aca y no
@@ -1121,6 +1165,30 @@ function startHttpServer(config) {
       dashboardReady: dashboardReady,
       queueSize: pendingUpdates.length
     });
+  });
+
+  // ============================================================
+  // PANEL ADMIN
+  // /admin/pin: solo desde esta misma maquina.
+  //   PIN en config.json -> "adminPin". Si no esta, se usa 1234.
+  // /admin/log-ganadores: desde cualquier lado (solo lectura,
+  //   igual que /history). Sirve para Postman u otro sistema.
+  // ============================================================
+  const adminPin = (config.adminPin !== undefined && config.adminPin !== null && String(config.adminPin) !== '')
+    ? String(config.adminPin) : '1234';
+  if (adminPin === '1234' && String(config.adminPin) !== '1234') {
+    logWarn('adminPin no configurado en config.json - el panel usa el PIN 1234');
+  }
+
+  httpApp.post('/admin/pin', (req, res) => {
+    if (!esPedidoLocal(req)) return res.status(403).json({ error: 'solo desde esta maquina' });
+    const ok = !!(req.body && String(req.body.pin) === adminPin);
+    if (!ok) logWarn('Panel admin: PIN incorrecto');
+    res.json({ ok: ok });
+  });
+
+  httpApp.get('/admin/log-ganadores', (req, res) => {
+    res.json({ lineas: leerLogGanadores() });
   });
 
   httpApp.get('/health', (req, res) => {
@@ -1400,6 +1468,7 @@ function startHttpServer(config) {
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ultimo-monto');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/stats');
     console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/ias-status');
+    console.log('[HTTP] GET  http://localhost:' + config.httpPort + '/admin/log-ganadores');
   });
 }
 
@@ -1448,7 +1517,8 @@ async function sendUpdateToDashboard(data, peticionId) {
   // el modal ('Ganador termino, procesando cola').
   if (isWinnerActive || winnerDespachado || flushProgramado) {
     if (data.ganador === true) {
-      logInfo('Ganador encolado (otro ganador en pantalla): ' + data.sheet);
+      logInfo('Ganador encolado (otro ganador en pantalla): ' + data.sheet +
+              ' maquina ' + data.maquina + ' (peticion ' + peticionId + ')');
     }
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
@@ -1459,7 +1529,8 @@ async function sendUpdateToDashboard(data, peticionId) {
   // Si hay PROMO activo Y este update ES de ganador, encolar
   // (asi el modal de ganador no interrumpe el video promo)
   if (isPromoActive && data.ganador === true) {
-    logInfo('Ganador encolado (promo activo): ' + data.sheet);
+    logInfo('Ganador encolado (promo activo): ' + data.sheet +
+            ' maquina ' + data.maquina + ' (peticion ' + peticionId + ')');
     pendingUpdates.push({ data, peticionId });
     savePendingToDisk();
     marcarPeticionEncolada(peticionId);
@@ -1474,7 +1545,7 @@ async function sendUpdateToDashboard(data, peticionId) {
     // Recien ahora queda esperando confirmSubida: este es el que se va a ver.
     // Si quedo alguno sin resolver del turno anterior, se cierra como timeout.
     if (ganadorPendiente) {
-      logWarn('Ganador anterior sin resolver al despachar el siguiente -> estado=2');
+      logWarn('Ganador anterior sin resolver al despachar el siguiente' + textoPendiente() + ' -> estado=2');
       resolverAcreditado(2, iasDetalleTimeout);
     }
     if (data._refGanador) {
@@ -1886,7 +1957,7 @@ function startWatchdog(config) {
     // liberar la marca para no bloquear la cola indefinidamente.
     if (winnerDespachado && !winnerActive && !isWinnerActive &&
         (Date.now() - winnerDespachadoAt) > winnerDespachoMaxMs) {
-      logWarn('Ganador despachado pero el modal nunca aparecio - liberando cola');
+      logWarn('Ganador despachado pero el modal nunca aparecio' + textoPendiente() + ' - liberando cola');
       if (ganadorPendiente) resolverAcreditado(2, iasDetalleTimeout);
       programarFlushGanador();
     }
@@ -1898,7 +1969,7 @@ function startWatchdog(config) {
         logInfo('Ganador termino, procesando cola');
         // Si el modal cerro sin recibir confirmSubida -> avisar al IAS (estado 2).
         if (ganadorPendiente) {
-          logInfo('confirmSubida NO llego (timeout modal) -> ActualizarEstadoAcreditado estado=2');
+          logInfo('confirmSubida NO llego (timeout modal)' + textoPendiente() + ' -> ActualizarEstadoAcreditado estado=2');
           resolverAcreditado(2, iasDetalleTimeout);
         }
       }

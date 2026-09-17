@@ -8731,5 +8731,384 @@
                 }, 150);
             })();
         </script>
+        <!-- ============================================================
+             PANEL ADMIN (Ctrl+Shift+C)
+             - Pide PIN (lo valida main.js con "adminPin" de config.json)
+             - Cambia moto/auto con el mismo /sprite-config-bulk de Postman
+             - Muestra del log solo ganadores y confirmaciones (hoy y ayer)
+             Todo queda aparte: no toca ganadores, cola ni promos.
+             ============================================================ -->
+        <style>
+            .panel-admin {
+                position: fixed;
+                inset: 0;
+                z-index: 30000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                background: rgba(2, 6, 18, 0.72);
+                font-family: "Share Tech Mono", "Courier New", monospace;
+                color: #dfe6f3;
+            }
+            .panel-admin.abierto { display: flex; }
+            .pa-caja {
+                width: min(760px, 94vw);
+                max-height: 90vh;
+                display: flex;
+                flex-direction: column;
+                background: #0b1631;
+                border: 1px solid #c8a24a;
+                border-radius: 10px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+                overflow: hidden;
+            }
+            .pa-cabecera {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px;
+                border-bottom: 1px solid rgba(200, 162, 74, 0.4);
+                font-family: "Orbitron", sans-serif;
+                font-size: 15px;
+                color: #f4d169;
+            }
+            .pa-cabecera button {
+                background: none;
+                border: none;
+                color: #dfe6f3;
+                font-size: 18px;
+                cursor: pointer;
+            }
+            .pa-cuerpo { padding: 16px; overflow: auto; }
+            .pa-cuerpo h3 {
+                margin: 0 0 10px;
+                font-family: "Orbitron", sans-serif;
+                font-size: 13px;
+                color: #f4d169;
+            }
+            .pa-seccion + .pa-seccion {
+                margin-top: 18px;
+                padding-top: 16px;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .pa-pin { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+            .pa-pin input {
+                width: 140px;
+                padding: 8px 10px;
+                font-size: 16px;
+                font-family: inherit;
+                color: #fff;
+                background: #07102a;
+                border: 1px solid #3a4d78;
+                border-radius: 6px;
+            }
+            .pa-boton {
+                padding: 8px 16px;
+                font-family: "Orbitron", sans-serif;
+                font-size: 12px;
+                color: #0b1631;
+                background: #f4d169;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            .pa-boton.secundario { color: #f4d169; background: transparent; border: 1px solid #c8a24a; }
+            .pa-fila {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                font-size: 15px;
+                cursor: pointer;
+            }
+            .pa-fila input { width: 20px; height: 20px; cursor: pointer; accent-color: #f4d169; }
+            .pa-nota { margin: 4px 0 12px; font-size: 12px; color: #8d9ab5; }
+            .pa-msg { margin-left: 10px; font-size: 13px; }
+            .pa-msg.ok { color: #5fe39a; }
+            .pa-msg.error, .pa-error { color: #ff7070; }
+            .pa-error { width: 100%; font-size: 13px; min-height: 16px; }
+            .pa-filtro { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+            .pa-filtro input {
+                width: 200px;
+                padding: 7px 10px;
+                font-size: 14px;
+                font-family: inherit;
+                color: #fff;
+                background: #07102a;
+                border: 1px solid #3a4d78;
+                border-radius: 6px;
+            }
+            .pa-filtro input:focus { outline: none; border-color: #c8a24a; }
+            .pa-contador { font-size: 12px; color: #8d9ab5; }
+            .pa-log {
+                margin-top: 10px;
+                max-height: 38vh;
+                overflow: auto;
+                padding: 8px;
+                background: #060d22;
+                border: 1px solid #22335a;
+                border-radius: 6px;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+            /* Barras de scroll del panel (cuerpo y log). overflow:auto hace
+               que solo aparezcan cuando el contenido no entra. */
+            .pa-cuerpo::-webkit-scrollbar,
+            .pa-log::-webkit-scrollbar { width: 10px; }
+            .pa-cuerpo::-webkit-scrollbar-track,
+            .pa-log::-webkit-scrollbar-track {
+                background: #0a1430;
+                border-left: 1px solid #22335a;
+            }
+            .pa-log::-webkit-scrollbar-track { border-radius: 0 6px 6px 0; }
+            .pa-cuerpo::-webkit-scrollbar-thumb,
+            .pa-log::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #f4d169, #c8a24a);
+                border: 2px solid #0a1430;
+                border-radius: 6px;
+            }
+            .pa-cuerpo::-webkit-scrollbar-thumb:hover,
+            .pa-log::-webkit-scrollbar-thumb:hover { background: #ffe08a; }
+            .pa-cuerpo::-webkit-scrollbar-button,
+            .pa-log::-webkit-scrollbar-button { display: none; }
+            .pa-linea { white-space: pre-wrap; word-break: break-word; padding: 2px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+            .pa-linea .hora { color: #8d9ab5; margin-right: 8px; }
+            .pa-linea.ganador { color: #f4d169; }
+            .pa-linea.ok { color: #5fe39a; }
+            .pa-linea.mal { color: #ff7070; }
+        </style>
+
+        <div id="panelAdmin" class="panel-admin">
+            <div class="pa-caja">
+                <div class="pa-cabecera">
+                    <span>Panel de configuracion</span>
+                    <button id="paCerrar" title="Cerrar (Esc)">&#10005;</button>
+                </div>
+                <div class="pa-cuerpo">
+                    <!-- Paso 1: PIN -->
+                    <div id="paPaso1" class="pa-pin">
+                        <label for="paPin">PIN</label>
+                        <input id="paPin" type="password" autocomplete="off" />
+                        <button id="paEntrar" class="pa-boton">Entrar</button>
+                        <div id="paPinError" class="pa-error"></div>
+                    </div>
+
+                    <!-- Paso 2: configuracion + log -->
+                    <div id="paPaso2" style="display: none">
+                        <div class="pa-seccion">
+                            <h3>Vehiculo en pantalla</h3>
+                            <label class="pa-fila"><span>GRAND - mostrar auto</span><input type="checkbox" id="paGrand" /></label>
+                            <label class="pa-fila"><span>MAJOR - mostrar moto</span><input type="checkbox" id="paMajor" /></label>
+                            <p class="pa-nota">Desmarcado = se muestra el monto en efectivo.</p>
+                            <button id="paGuardar" class="pa-boton">Guardar</button>
+                            <span id="paEstado" class="pa-msg"></span>
+                        </div>
+                        <div class="pa-seccion">
+                            <h3>Ganadores y confirmaciones (hoy y ayer)</h3>
+                            <div class="pa-filtro">
+                                <button id="paActualizar" class="pa-boton secundario">Actualizar</button>
+                                <input id="paFiltroMaquina" type="text" placeholder="Filtrar por maquina" autocomplete="off" />
+                                <button id="paLimpiarFiltro" class="pa-boton secundario">Limpiar</button>
+                                <span id="paContador" class="pa-contador"></span>
+                            </div>
+                            <div id="paLog" class="pa-log"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                const panel = document.getElementById("panelAdmin");
+                const paso1 = document.getElementById("paPaso1");
+                const paso2 = document.getElementById("paPaso2");
+                const inputPin = document.getElementById("paPin");
+                const pinError = document.getElementById("paPinError");
+                const chkGrand = document.getElementById("paGrand");
+                const chkMajor = document.getElementById("paMajor");
+                const estado = document.getElementById("paEstado");
+                const cajaLog = document.getElementById("paLog");
+                const inputFiltro = document.getElementById("paFiltroMaquina");
+                const contador = document.getElementById("paContador");
+                let lineasLog = []; // ultimas lineas leidas (sin filtrar)
+
+                function api(ruta, opciones) {
+                    if (!window.CASINO_API) return Promise.reject(new Error("API no disponible"));
+                    return fetch(window.CASINO_API + ruta, opciones).then((r) => r.json());
+                }
+
+                function abrir() {
+                    // Siempre pide el PIN al abrir
+                    paso1.style.display = "";
+                    paso2.style.display = "none";
+                    inputPin.value = "";
+                    pinError.textContent = "";
+                    estado.textContent = "";
+                    inputFiltro.value = "";
+                    panel.classList.add("abierto");
+                    setTimeout(() => inputPin.focus(), 50);
+                }
+
+                function cerrar() {
+                    panel.classList.remove("abierto");
+                    inputPin.value = "";
+                }
+
+                function entrar() {
+                    pinError.textContent = "";
+                    api("/admin/pin", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ pin: inputPin.value }),
+                    })
+                        .then((r) => {
+                            if (!r.ok) {
+                                pinError.textContent = "PIN incorrecto";
+                                inputPin.select();
+                                return;
+                            }
+                            paso1.style.display = "none";
+                            paso2.style.display = "";
+                            cargarConfig();
+                            cargarLog();
+                        })
+                        .catch((e) => (pinError.textContent = "Error: " + e.message));
+                }
+
+                function cargarConfig() {
+                    api("/sprite-config")
+                        .then((c) => {
+                            chkGrand.checked = c.grand === true;
+                            chkMajor.checked = c.major === true;
+                        })
+                        .catch((e) => mostrarEstado("No se pudo leer: " + e.message, false));
+                }
+
+                function guardar() {
+                    mostrarEstado("Guardando...", true);
+                    // Mismo pedido que desde Postman
+                    api("/sprite-config-bulk", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ grand: chkGrand.checked, major: chkMajor.checked }),
+                    })
+                        .then((r) => {
+                            if (r.ok) mostrarEstado("Guardado", true);
+                            else mostrarEstado("Error: " + (r.error || "no se pudo guardar"), false);
+                        })
+                        .catch((e) => mostrarEstado("Error: " + e.message, false));
+                }
+
+                function mostrarEstado(texto, ok) {
+                    estado.textContent = texto;
+                    estado.className = "pa-msg " + (ok ? "ok" : "error");
+                }
+
+                function cargarLog() {
+                    cajaLog.textContent = "Cargando...";
+                    contador.textContent = "";
+                    api("/admin/log-ganadores")
+                        .then((r) => {
+                            lineasLog = r.lineas || [];
+                            dibujarLog();
+                        })
+                        .catch((e) => (cajaLog.textContent = "No se pudo leer el log: " + e.message));
+                }
+
+                // Dibuja el log aplicando el filtro de maquina (si hay).
+                function dibujarLog() {
+                    cajaLog.textContent = "";
+                    const filtro = inputFiltro.value.trim().toLowerCase();
+                    const lineas = filtro ? filtrarPorMaquina(lineasLog, filtro) : lineasLog;
+
+                    if (lineasLog.length === 0) {
+                        cajaLog.textContent = "Sin movimientos de ganadores hoy ni ayer.";
+                    } else if (lineas.length === 0) {
+                        cajaLog.textContent = "No hay movimientos de esa maquina.";
+                    }
+                    lineas.forEach((l) => cajaLog.appendChild(crearLinea(l)));
+                    contador.textContent = filtro ? lineas.length + " de " + lineasLog.length + " lineas" : lineasLog.length + " lineas";
+                }
+
+                // Maquinas que aparecen en una linea: maquina=X, maquina X,
+                // "maquina":"X", "CodMaquina":"X" y "en pantalla (X)".
+                function maquinasDeLinea(linea) {
+                    const encontradas = [];
+                    const re = /maquina[=\s]+([\w-]+)|"(?:Cod)?[Mm]aquina"\s*:\s*"([^"]*)"|en pantalla \(([^)]+)\)/g;
+                    let m;
+                    while ((m = re.exec(linea)) !== null) {
+                        encontradas.push((m[1] || m[2] || m[3] || "").toLowerCase());
+                    }
+                    return encontradas;
+                }
+
+                // Id de la peticion: "peticion=7", "peticion 7" o "id=7".
+                function idDeLinea(linea) {
+                    const m = linea.match(/(?:peticion[=\s]+|\bid=)(\d+)/);
+                    return m ? m[1] : null;
+                }
+
+                // Lineas de esa maquina + las del mismo id de peticion
+                // (las respuestas del IAS solo traen el id, no la maquina).
+                function filtrarPorMaquina(lineas, filtro) {
+                    const esDeLaMaquina = (l) => maquinasDeLinea(l).some((maq) => maq.includes(filtro));
+                    const ids = new Set();
+                    lineas.forEach((l) => {
+                        if (esDeLaMaquina(l)) {
+                            const id = idDeLinea(l);
+                            if (id) ids.add(id);
+                        }
+                    });
+                    return lineas.filter((l) => esDeLaMaquina(l) || ids.has(idDeLinea(l)));
+                }
+
+                // "[2026-09-16T19:09:29.859] [INFO] mensaje" -> "16/09 19:09:29  mensaje"
+                function crearLinea(linea) {
+                    const div = document.createElement("div");
+                    div.className = "pa-linea";
+                    const m = linea.match(/^\[(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2}:\d{2})[^\]]*\]\s*\[(\w+)\]\s*(.*)$/);
+                    let texto = linea;
+                    if (m) {
+                        const hora = document.createElement("span");
+                        hora.className = "hora";
+                        hora.textContent = m[3] + "/" + m[2] + " " + m[4];
+                        div.appendChild(hora);
+                        texto = m[6];
+                    }
+                    div.appendChild(document.createTextNode(texto));
+
+                    if (/FAIL|ERROR|RECHAZADO|descartado|NO llego|sin confirmSubida/.test(linea)) div.classList.add("mal");
+                    else if (/GANADOR recibido/.test(linea)) div.classList.add("ganador");
+                    else if (/ OK|confirmSubida OK/.test(linea)) div.classList.add("ok");
+                    return div;
+                }
+
+                document.getElementById("paCerrar").addEventListener("click", cerrar);
+                document.getElementById("paEntrar").addEventListener("click", entrar);
+                document.getElementById("paGuardar").addEventListener("click", guardar);
+                document.getElementById("paActualizar").addEventListener("click", cargarLog);
+                inputFiltro.addEventListener("input", dibujarLog);
+                document.getElementById("paLimpiarFiltro").addEventListener("click", () => {
+                    inputFiltro.value = "";
+                    dibujarLog();
+                    inputFiltro.focus();
+                });
+                inputPin.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") entrar();
+                });
+
+                // Ctrl+Shift+C abre/cierra. Esc cierra.
+                window.addEventListener("keydown", (e) => {
+                    if (e.ctrlKey && e.shiftKey && e.code === "KeyC") {
+                        e.preventDefault();
+                        if (panel.classList.contains("abierto")) cerrar();
+                        else abrir();
+                    } else if (e.key === "Escape" && panel.classList.contains("abierto")) {
+                        cerrar();
+                    }
+                });
+            })();
+        </script>
     </body>
 </html>
