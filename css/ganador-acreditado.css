@@ -1,0 +1,29 @@
+       .winner-acreditado {
+           /* En el flujo, debajo de la maquina. Reserva SIEMPRE 2 lineas
+(min-height) y se muestra/oculta con visibility, para que un
+mensaje de 2 lineas NO empuje ni apine el resto. */
+           visibility: hidden;
+           min-height: clamp(46px, 7.5vmin, 72px); /* ~2 lineas reservadas */
+           width: min(92%, 640px);
+           margin: 0.6vmin auto 0;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-family: "Montserrat", "Arial Black", sans-serif;
+           font-weight: 800;
+           font-size: clamp(15px, 2.3vmin, 28px);
+           text-align: center;
+           line-height: 1.2;
+       }
+       .winner-acreditado.ok {
+           color: #0aff7a;
+           text-shadow:
+               0 0 12px rgba(10, 255, 122, 0.7),
+               0 2px 3px rgba(0, 0, 0, 0.6);
+       }
+       .winner-acreditado.error {
+           color: #ff4040;
+           text-shadow:
+               0 0 12px rgba(255, 64, 64, 0.7),
+               0 2px 3px rgba(0, 0, 0, 0.6);
+       }

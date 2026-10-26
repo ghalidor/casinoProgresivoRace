@@ -1,0 +1,400 @@
+/* ============================================================
+   VARIANTES - VIDEO (data-v-promo)
+   ============================================================ */
+
+/* ============================================================
+   VIDEO - CINTA: los 4 pozos a la vez en una cinta abajo; el pozo
+   de turno se ilumina y sube un poco
+   ============================================================ */
+body[data-v-promo="cinta"] .promo-pozos {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1vw;
+    padding: 1.4vh 1.5vw;
+    background: linear-gradient(180deg, rgba(10, 5, 0, 0.88), rgba(7, 2, 6, 0.97));
+    border-top: 0.5vh solid #ffd24f;
+    box-shadow: 0 -0.8vh 2.4vh rgba(255, 170, 0, 0.35);
+}
+body[data-v-promo="cinta"] .promo-placa {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vh;
+    padding: 1.2vh 1vw;
+    font-size: min(3.4vh, 1.75vw);
+    min-width: 0;
+    animation: none;
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+body[data-v-promo="cinta"] .promo-placa-monto {
+    font-size: min(4.2vh, 1.95vw);
+}
+body[data-v-promo="cinta"] .promo-placa-premio {
+    font-size: min(2.4vh, 1.2vw);
+}
+body[data-v-promo="cinta"] .promo-placa.activa {
+    transform: translateY(-1.2vh) scale(1.04);
+}
+body[data-v-promo="cinta"] .promo-puntos {
+    display: none;
+}
+body[data-v-promo="cinta"] .promo-timer {
+    top: 3vh;
+}
+
+/* ============================================================
+   VIDEO - ESQUINAS: un pozo en cada esquina (mismo orden que el
+   dashboard); flotan suavemente y el de turno brilla
+   ============================================================ */
+body[data-v-promo="esquinas"] .promo-pozos {
+    inset: 0;
+    transform: none;
+}
+body[data-v-promo="esquinas"] .promo-placa {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8vh;
+    padding: 1.2vh 1.4vw;
+    font-size: 3vh;
+    animation: vFlota 4s ease-in-out infinite;
+}
+body[data-v-promo="esquinas"] .promo-placa-monto {
+    font-size: 3.6vh;
+}
+body[data-v-promo="esquinas"] .promo-placa[data-pozo="grand"] { left: 3vw; top: 13vh; }
+body[data-v-promo="esquinas"] .promo-placa[data-pozo="major"] { right: 3vw; top: 13vh; animation-delay: -1s; }
+body[data-v-promo="esquinas"] .promo-placa[data-pozo="minor"] { left: 3vw; bottom: 5vh; animation-delay: -2s; }
+body[data-v-promo="esquinas"] .promo-placa[data-pozo="mini"] { right: 3vw; bottom: 5vh; animation-delay: -3s; }
+body[data-v-promo="esquinas"] .promo-placa.activa {
+    filter: brightness(1.25);
+}
+@keyframes vFlota {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1vh); }
+}
+body[data-v-promo="esquinas"] .promo-puntos {
+    display: none;
+}
+body[data-v-promo="esquinas"] .promo-marca {
+    left: 50%;
+    transform: translateX(-50%);
+}
+body[data-v-promo="esquinas"] .promo-timer {
+    top: auto;
+    bottom: 2vh;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+/* ============================================================
+   VIDEO - VENTANA: el video dentro de un marco de oro y los 4 pozos
+   en una columna; el de turno se adelanta
+   ============================================================ */
+/* fondo oscuro detras de la ventana del video (en el mismo nivel que los videos, debajo de ellos) */
+body[data-v-promo="ventana"] .promo-vhs-overlay {
+    display: none !important;
+}
+body[data-v-promo="ventana"].promo-visible #promoVideosContainer::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: radial-gradient(ellipse at 40% 50%, #1c0a12, #070206 75%);
+}
+body[data-v-promo="ventana"] .promo-video {
+    top: 4vh;
+    left: 2.5vw;
+    width: 66vw;
+    height: 86vh;
+    border: 0.5vh solid #ffd24f;
+    border-radius: 1.6vh;
+    box-shadow: 0 0 0 0.3vh #6f3700, 0 0 3vh rgba(255, 200, 40, 0.5);
+}
+body[data-v-promo="ventana"] .promo-pozos {
+    left: auto;
+    right: 2.5vw;
+    top: 4vh;
+    bottom: 10vh;
+    width: 27vw;
+    transform: none;
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 1.6vh;
+}
+body[data-v-promo="ventana"] .promo-placa {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.8vh;
+    padding: 1vh 1.2vw;
+    font-size: min(3vh, 1.9vw);
+    min-width: 0;
+    animation: none;
+    transition: transform 0.5s ease;
+}
+body[data-v-promo="ventana"] .promo-placa-monto {
+    font-size: min(3.4vh, 2vw);
+}
+body[data-v-promo="ventana"] .promo-placa-premio {
+    font-size: min(2.4vh, 1.45vw);
+}
+body[data-v-promo="ventana"] .promo-placa.activa {
+    transform: translateX(-1.5vw) scale(1.04);
+}
+body[data-v-promo="ventana"] .promo-puntos {
+    display: none;
+}
+body[data-v-promo="ventana"] .promo-marca {
+    left: 4vw;
+    top: 6vh;
+}
+body[data-v-promo="ventana"] .promo-timer {
+    top: auto;
+    bottom: 2.5vh;
+    right: 2.5vw;
+}
+
+/* ============================================================
+   VIDEO - TICKER: el video arriba y abajo una banda por la que pasan
+   los 4 pozos uno tras otro, con su monto en grande
+   ============================================================ */
+body[data-v-promo="ticker"] .promo-vhs-overlay {
+    display: none !important;
+}
+body[data-v-promo="ticker"] .promo-video {
+    height: 76vh;
+    border-bottom: 0.7vh solid #ffd24f;
+    box-shadow: 0 1vh 3vh rgba(255, 200, 40, 0.35);
+}
+body[data-v-promo="ticker"].promo-visible #promoVideosContainer::before {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24vh;
+    z-index: 998;
+    background: linear-gradient(180deg, #120a18, #050307);
+}
+body[data-v-promo="ticker"] .promo-pozos {
+    left: 0;
+    bottom: 0;
+    height: 24vh;
+    width: max-content;
+    display: flex;
+    align-items: center;
+    transform: none;
+}
+body[data-v-promo="ticker"] .promo-pozos.showing {
+    animation: vTicker 22s linear infinite;
+    will-change: transform;
+}
+/* arranca con GRAND ya entrando a la pantalla para que la banda no se vea vacia */
+@keyframes vTicker {
+    from { transform: translateX(45vw); }
+    to { transform: translateX(-100%); }
+}
+body[data-v-promo="ticker"] .promo-placa {
+    display: flex;
+    gap: 2vw;
+    padding: 0 3vw;
+    font-size: 8vh;
+    background: none;
+    border: none;
+    box-shadow: none;
+    animation: none;
+}
+body[data-v-promo="ticker"] .promo-placa::after {
+    content: "";
+    flex: none;
+    width: 3.6vh;
+    height: 3.6vh;
+    margin-left: 3vw;
+    rotate: 45deg;
+    background: linear-gradient(135deg, #fff3a3, #c8861a 50%, #8f4a08);
+}
+body[data-v-promo="ticker"] .promo-placa-monto {
+    font-size: 13vh;
+}
+body[data-v-promo="ticker"] .promo-puntos {
+    display: none;
+}
+
+/* ============================================================
+   VIDEO - MARCO L: el video se reduce a la esquina superior derecha;
+   a la izquierda el nombre del pozo en vertical y abajo el monto
+   GIGANTE, con el fondo del color del pozo de turno
+   ============================================================ */
+body[data-v-promo="marcoL"] .promo-vhs-overlay {
+    display: none !important;
+}
+body[data-v-promo="marcoL"].promo-visible #promoVideosContainer::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: #050307;
+}
+body[data-v-promo="marcoL"] .promo-video {
+    top: 0;
+    left: auto;
+    right: 0;
+    width: 80vw;
+    height: 68vh;
+    border-left: 0.7vh solid #ffd24f;
+    border-bottom: 0.7vh solid #ffd24f;
+    border-bottom-left-radius: 3vh;
+}
+body[data-v-promo="marcoL"] .promo-pozos {
+    inset: 0;
+    transform: none;
+}
+body[data-v-promo="marcoL"] .promo-placa.activa {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--pot-c) 34%, transparent), transparent 60%);
+}
+body[data-v-promo="marcoL"] .promo-placa-titulo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20vw;
+    height: 68vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13vh;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+    transform: none;
+}
+body[data-v-promo="marcoL"] .promo-placa-monto,
+body[data-v-promo="marcoL"] .promo-placa.vehiculo .promo-placa-premio {
+    position: absolute;
+    left: 2vw;
+    right: 2vw;
+    top: 84vh;
+    translate: 0 -50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: min(19vh, 11.5vw);
+}
+body[data-v-promo="marcoL"] .promo-placa.vehiculo .promo-placa-monto {
+    display: none;
+}
+body[data-v-promo="marcoL"] .promo-placa.vehiculo .promo-placa-premio {
+    font-size: 6vh;
+}
+body[data-v-promo="marcoL"] .promo-puntos {
+    left: 2vw;
+    bottom: 26vh;
+    transform: none;
+    flex-direction: column;
+}
+body[data-v-promo="marcoL"] .promo-marca {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* ============================================================
+   VIDEO - VITRINA: el video a pantalla completa y abajo una vitrina
+   con bombillas; al cambiar de pozo da la vuelta (rotateX)
+   ============================================================ */
+body[data-v-promo="vitrina"] .promo-pozos {
+    left: 4vw;
+    right: 4vw;
+    bottom: 5vh;
+    height: 32vh;
+    transform: none;
+    perspective: 140vh;
+}
+body[data-v-promo="vitrina"] .promo-placa.activa {
+    position: absolute;
+    inset: 0;
+    justify-content: center;
+    padding: 4vh 2vw 2vh;
+    border-radius: 2.6vh;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 40%) rgba(6, 3, 10, 0.86);
+    animation: vVitrina 0.6s ease-out;
+    --bt: 1.4vh;
+    --bc: color-mix(in srgb, var(--pot-c) 30%, #fff2c0);
+}
+@keyframes vVitrina {
+    from { transform: rotateX(90deg); }
+}
+body[data-v-promo="vitrina"] .promo-placa.activa::before,
+body[data-v-promo="vitrina"] .promo-placa.activa::after {
+    inset: 0.3vh;
+}
+body[data-v-promo="vitrina"] .promo-placa-titulo {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    z-index: 2;
+    translate: -50% -88%;
+    font-size: 6vh;
+}
+body[data-v-promo="vitrina"] .promo-placa-monto {
+    font-size: min(16vh, 8.6vw);
+}
+body[data-v-promo="vitrina"] .promo-placa.vehiculo .promo-placa-premio {
+    font-size: 6vh;
+}
+body[data-v-promo="vitrina"] .promo-puntos {
+    bottom: 1.4vh;
+}
+
+/* ============================================================
+   PANTALLAS ANGOSTAS O CHICAS (4:3, 5:4, 1024 px): 4 pozos en una fila o en una
+   columna angosta quedan con el monto muy chico.
+   Cinta pasa a 2 x 2 y Ventana ensancha su columna.
+   ============================================================ */
+@media (max-aspect-ratio: 3/2), (max-width: 1100px) {
+    body[data-v-promo="cinta"] .promo-pozos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: 1.2vh;
+    }
+    body[data-v-promo="cinta"] .promo-placa {
+        font-size: min(3.4vh, 3.3vw);
+    }
+    body[data-v-promo="cinta"] .promo-placa-monto {
+        font-size: min(4.4vh, 3.6vw);
+    }
+    body[data-v-promo="cinta"] .promo-placa-premio {
+        font-size: min(2.6vh, 2.2vw);
+    }
+    body[data-v-promo="ventana"] .promo-video {
+        width: 56vw;
+    }
+    body[data-v-promo="ventana"] .promo-pozos {
+        width: 37vw;
+    }
+    body[data-v-promo="ventana"] .promo-placa {
+        font-size: min(3vh, 2.6vw);
+    }
+    body[data-v-promo="ventana"] .promo-placa-monto {
+        font-size: min(3.6vh, 2.8vw);
+    }
+    body[data-v-promo="ventana"] .promo-placa-premio {
+        font-size: min(2.6vh, 2vw);
+    }
+    /* destacado (la de siempre): titulo arriba y monto abajo, asi el monto usa todo el ancho */
+    body[data-v-promo="destacado"] .promo-placa.activa {
+        flex-direction: column;
+        gap: 1.2vh;
+        font-size: min(6vh, 6vw);
+    }
+    body[data-v-promo="destacado"] .promo-placa-monto {
+        font-size: min(10vh, 8.4vw);
+    }
+}

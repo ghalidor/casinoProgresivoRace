@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <!-- Variante ART DECO del modal ganador: medallon de oro con abanico de rayos y estrella -->
+  <defs>
+    <linearGradient id="o" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3a3"/><stop offset=".3" stop-color="#c8861a"/><stop offset=".52" stop-color="#fff0a0"/>
+      <stop offset=".8" stop-color="#8f4a08"/><stop offset="1" stop-color="#ffd24f"/>
+    </linearGradient>
+  </defs>
+  <!-- abanico -->
+  <g stroke="url(#o)" stroke-width="5" stroke-linecap="square">
+    <path d="M120 150 L20 150"/><path d="M120 150 L28 108"/><path d="M120 150 L50 70"/><path d="M120 150 L84 42"/>
+    <path d="M120 150 L120 30"/><path d="M120 150 L156 42"/><path d="M120 150 L190 70"/><path d="M120 150 L212 108"/><path d="M120 150 L220 150"/>
+  </g>
+  <path d="M10 150 A110 110 0 0 1 230 150" fill="none" stroke="url(#o)" stroke-width="6"/>
+  <path d="M34 150 A86 86 0 0 1 206 150" fill="none" stroke="url(#o)" stroke-width="2.5"/>
+  <!-- medallon central escalonado -->
+  <circle cx="120" cy="120" r="54" fill="#07040a" stroke="url(#o)" stroke-width="7"/>
+  <circle cx="120" cy="120" r="44" fill="none" stroke="url(#o)" stroke-width="2.5"/>
+  <path d="M120 82 L130 108 L158 110 L136 127 L144 154 L120 138 L96 154 L104 127 L82 110 L110 108 Z" fill="url(#o)" stroke="#6f3700" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- base escalonada -->
+  <path d="M60 176 H180 V184 H192 V194 H48 V184 H60 Z" fill="url(#o)" stroke="#6f3700" stroke-width="2"/>
+  <rect x="104" y="170" width="32" height="8" fill="url(#o)"/>
+</svg>

@@ -1,0 +1,78 @@
+/* ============================================================
+   VARIANTES DE DISENO - piezas comunes (se eligen en Ctrl+Shift+T > Apariencia)
+   El body lleva data-v-home, data-v-hojas, data-v-promo (estilo) y
+   data-d-home, data-d-hojas (distribucion). La primera opcion de cada
+   lista (oro, destacado, cuadricula, centrado) es el diseno de siempre.
+   Cada vista tiene su archivo: dashboard.css, hojas.css y video.css.
+   Todas las animaciones mueven solo transform/opacity.
+   ============================================================ */
+
+/* bombillas en damero: dos capas (::before y ::after) que se encienden alternadas; solo anima opacity.
+   --bt grosor del anillo, --bc color de la bombilla */
+@keyframes vFoco {
+    0% { opacity: 1; }
+    50% { opacity: 0.22; }
+}
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::before,
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::after,
+body[data-v-hojas="rodillos"] .sheet[data-id] .sheet-letrero::before,
+body[data-v-hojas="rodillos"] .sheet[data-id] .sheet-letrero::after,
+body[data-v-promo="vitrina"] .promo-placa.activa::before,
+body[data-v-promo="vitrina"] .promo-placa.activa::after {
+    content: "";
+    display: block;
+    position: absolute;
+    border-radius: inherit;
+    padding: var(--bt);
+    opacity: 1;
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background-size: calc(var(--bt) * 2) calc(var(--bt) * 2);
+    background-repeat: round;
+    will-change: opacity;
+    animation: vFoco 1s steps(1) infinite;
+}
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::before,
+body[data-v-hojas="rodillos"] .sheet[data-id] .sheet-letrero::before,
+body[data-v-promo="vitrina"] .promo-placa.activa::before {
+    background-image:
+        radial-gradient(circle at 25% 25%, #fff 0 12%, var(--bc) 21%, transparent 31%),
+        radial-gradient(circle at 75% 75%, #fff 0 12%, var(--bc) 21%, transparent 31%);
+}
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::after,
+body[data-v-hojas="rodillos"] .sheet[data-id] .sheet-letrero::after,
+body[data-v-promo="vitrina"] .promo-placa.activa::after {
+    background-image:
+        radial-gradient(circle at 75% 25%, #fff 0 12%, var(--bc) 21%, transparent 31%),
+        radial-gradient(circle at 25% 75%, #fff 0 12%, var(--bc) 21%, transparent 31%);
+    animation-delay: -0.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body[data-v-home] .home-sheet *,
+    body[data-v-home] .home-sheet::before,
+    body[data-v-hojas] .sheet *,
+    body[data-v-promo] .promo-placa {
+        animation: none !important;
+    }
+}
+
+/* las bombillas viven en ::before/::after: tambien se pausan en las hojas que esperan turno
+   y con movimiento reducido (las reglas generales con * no alcanzan a los pseudo-elementos) */
+.sheet.enter-from-back *::before,
+.sheet.enter-from-back *::after {
+    animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    body[data-v-home] .home-sheet *::before,
+    body[data-v-home] .home-sheet *::after,
+    body[data-v-hojas] .sheet *::before,
+    body[data-v-hojas] .sheet *::after,
+    body[data-v-promo] .promo-placa::before,
+    body[data-v-promo] .promo-placa::after,
+    body[data-v-promo="ticker"] .promo-pozos.showing {
+        animation: none !important;
+    }
+}

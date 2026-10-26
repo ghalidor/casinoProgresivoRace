@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <!-- Variante TESORO del modal ganador: cofre abierto lleno de monedas, con brillo -->
+  <defs>
+    <linearGradient id="o" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6c2"/><stop offset=".3" stop-color="#ffd24f"/><stop offset=".7" stop-color="#c8861a"/><stop offset="1" stop-color="#8f4a08"/>
+    </linearGradient>
+    <linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a4f16"/><stop offset="1" stop-color="#4a2208"/></linearGradient>
+    <linearGradient id="t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a3e12"/><stop offset="1" stop-color="#3a1a06"/></linearGradient>
+    <radialGradient id="c" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff8d2"/><stop offset=".4" stop-color="#ffd24f"/><stop offset="1" stop-color="#9a5a08"/></radialGradient>
+    <radialGradient id="h" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="#fff2b0" stop-opacity=".95"/><stop offset="1" stop-color="#ffb300" stop-opacity="0"/></radialGradient>
+  </defs>
+  <ellipse cx="120" cy="92" rx="112" ry="80" fill="url(#h)"/>
+  <!-- tapa abierta -->
+  <path d="M40 92 L52 26 Q120 6 188 26 L200 92 Z" fill="url(#t)" stroke="#ffd24f" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M60 86 L68 36 Q120 22 172 36 L180 86" fill="none" stroke="#ffd24f" stroke-width="2" opacity=".6"/>
+  <!-- monedas que asoman -->
+  <g fill="url(#c)" stroke="#8f4a08" stroke-width="2">
+    <ellipse cx="78" cy="100" rx="18" ry="8"/><ellipse cx="112" cy="94" rx="18" ry="8"/><ellipse cx="146" cy="98" rx="18" ry="8"/><ellipse cx="172" cy="104" rx="16" ry="7"/>
+    <ellipse cx="95" cy="88" rx="16" ry="7"/><ellipse cx="130" cy="84" rx="16" ry="7"/>
+    <circle cx="58" cy="70" r="11"/><circle cx="186" cy="64" r="9"/><circle cx="120" cy="58" r="12"/>
+  </g>
+  <!-- caja -->
+  <rect x="34" y="104" width="172" height="80" rx="8" fill="url(#m)" stroke="#ffd24f" stroke-width="5"/>
+  <rect x="34" y="128" width="172" height="10" fill="url(#o)"/>
+  <rect x="58" y="104" width="10" height="80" fill="url(#o)"/><rect x="172" y="104" width="10" height="80" fill="url(#o)"/>
+  <rect x="106" y="122" width="28" height="30" rx="4" fill="url(#o)" stroke="#6f3700" stroke-width="2"/>
+  <circle cx="120" cy="134" r="4" fill="#3a1a06"/><rect x="118" y="134" width="4" height="10" fill="#3a1a06"/>
+</svg>

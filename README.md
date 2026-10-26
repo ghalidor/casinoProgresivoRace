@@ -1,53 +1,89 @@
-# Herramientas para optimizar el dashboard
+# Casino Progresivo Race - Dashboard
 
-## 1. Generar sprite-sheets de moto y auto F1
+Dashboard 24/7 de jackpots progresivos (MINI, MINOR, MAJOR y GRAND). App Electron que muestra la animacion en pantalla y levanta un servidor HTTP interno donde el sistema del casino envia los montos y los ganadores.
 
-Los modelos 3D consumen mucha GPU. La idea es pregenerar 36 frames del modelo rotando
-y guardarlos como UN solo PNG (sprite-sheet). Después el dashboard solo necesita mostrar
-una imagen y cambiar el frame visible — costo casi 0% CPU/GPU.
+## Estructura
 
-### Cómo usar
-
-1. Copia `generador-sprites.html` a la carpeta donde tienes `moto.glb` y `f1.glb`
-2. Abre la carpeta con un servidor HTTP (necesario por CORS de Three.js):
-   - Opción A: con Node.js → `npx serve`
-   - Opción B: con Python → `python -m http.server`
-   - Opción C: con VS Code → extension "Live Server"
-3. Abre `http://localhost:3000/generador-sprites.html` (o el puerto que use)
-4. Click en "Generar moto" → se descarga `moto_sprite.png`
-5. Click en "Generar auto F1" → se descarga `auto_sprite.png` (puede tardar ~30 seg)
-6. Copia los PNG a la carpeta de tu Electron
-
-### Resultado
-- `moto_sprite.png`: imagen de 1440x1440 con 36 frames de la moto rotando
-- `auto_sprite.png`: igual pero del auto F1
-- Cada frame: 240x240 px, grid 6x6
-
-## 2. Comprimir videos MP4 a WebM (50-70% más liviano)
-
-WebM con codec VP9 es más eficiente que MP4 H.264. Mismo video, mucho menos peso y CPU.
-
-### Requisito: instalar FFmpeg
-- **Windows**: descargar de https://ffmpeg.org/download.html y agregar a PATH
-- **Mac**: `brew install ffmpeg`
-- **Linux**: `sudo apt install ffmpeg`
-
-### Cómo usar
-
-1. Copia el script (`.bat` para Windows, `.sh` para Mac/Linux) a la carpeta de los videos
-2. Ejecutar:
-   - Windows: doble click en `comprimir-videos.bat`
-   - Mac/Linux: `./comprimir-videos.sh`
-3. Esperar 5-10 minutos (depende del peso de los originales)
-4. Se generan: `background-mini.webm`, `background-minor.webm`, etc.
-
-### Después, en el HTML del dashboard
-Cambiar:
-```html
-<source src="background-mini.mp4" type="video/mp4">
 ```
-Por:
-```html
-<source src="background-mini.webm" type="video/webm">
-<source src="background-mini.mp4" type="video/mp4">  <!-- fallback -->
+.
+├── main.js                 # entrada de Electron: flags, ciclo de vida y atajos
+├── src/                    # proceso principal dividido en modulos
+│   ├── estado.js           # estado compartido (cola, ventana, db, rutas) - se usa como estado.X
+│   ├── config.js           # lectura de config.json
+│   ├── rutas.js            # rutas de escritura en userData
+│   ├── logger.js           # log a archivo con rotacion diaria
+│   ├── utilidades.js       # fechas y formatos
+│   ├── db.js               # SQLite (sql.js)
+│   ├── ias.js              # envio de ganadores y acreditaciones al IAS
+│   ├── cola-ganadores.js   # cola hacia el dashboard y acreditacion
+│   ├── panel-admin.js      # PIN local y log de ganadores
+│   ├── ventana.js          # ventana de Electron
+│   ├── servidor-http.js    # endpoints (Express)
+│   └── watchdog.js         # memoria, estado ganador/promo y limpiezas
+├── dashboard.html          # estructura de la pantalla
+├── css/                    # estilos (fuentes, principal, ganador, panel admin)
+│   └── variantes/          # variantes de diseno (comun, dashboard, hojas, video)
+├── js/                     # logica de la pantalla (principal, promos, ganador, sprites, etc.)
+│   └── vendor/three.min.js # Three.js
+├── img/                    # auto, moto, sprites, copa y fondo del monto del ganador
+│   └── variantes/          # miniaturas del selector de variantes (Ctrl+Shift+T)
+├── fonts/                  # fuentes locales
+├── audio/                  # musica de fondo y sonido de ganador
+├── promos/           # videos de promocion (van como extraResources)
+├── config.json       # configuracion (va como extraResources)
+├── simulador.py      # genera trafico de prueba contra el servidor
+└── casino-postman-collection.json
 ```
+
+## Ejecutar en desarrollo
+
+```bash
+npm install
+npm start
+```
+
+Para simular trafico (requiere `pip install requests`):
+
+```bash
+python simulador.py
+```
+
+## Configuracion (`config.json`)
+
+Instalado, esta en `resources/config.json` junto al ejecutable. Las claves principales:
+
+| Clave | Uso |
+|---|---|
+| `windowMode` | `window` o `kiosk` (Ctrl+Shift+K lo cambia en caliente) |
+| `httpPort` | puerto del servidor HTTP (por defecto 3000) |
+| `apiBaseUrl` | opcional; URL que usa la pantalla para hablar con el servidor (por defecto `http://127.0.0.1:<httpPort>`) |
+| `homeViewDurationSec`, `promoIntervalSec`, `promoDurationSec` | tiempos del carrusel y promos |
+| `winnerDelaySec`, `winnerModalDurationSec`, `confirmMinDisplaySec`, `gapEntreGanadoresSec` | tiempos del modal ganador |
+| `modalVideoVolume`, `bgMusicVolume` | volumenes |
+| `useTestData` | modo prueba |
+| `memoryReloadMB`, `reloadCheckIntervalSec` | recarga automatica por memoria |
+| `iasEnabled`, `iasBaseUrl`, `iasRetryIntervalSec` | envio de ganadores y acreditaciones al servidor IAS |
+| `msgAcreditado*`, `detalleAcreditado*`, `msgSinConfirmacion` | textos de acreditacion |
+| `adminPin` | PIN del panel admin (si no esta, 1234) |
+
+## Endpoints HTTP
+
+| Metodo | Ruta | Uso |
+|---|---|---|
+| POST | `/update` | monto o ganador de una hoja (`sheet`, `amount`, `ganador`, `maquina`, `codSala`, `idRace`, `posicion`) |
+| POST | `/update-bulk` | montos de varias hojas a la vez |
+| POST | `/reinicio` | reinicio del monto de una hoja |
+| POST | `/confirmSubida` | confirmacion de acreditacion del ganador en pantalla |
+| POST | `/sprite-config`, `/sprite-config-bulk` | mostrar u ocultar moto/auto en major/grand |
+| GET | `/sprite-config`, `/status`, `/health`, `/stats`, `/ultimo-monto` | estado |
+| GET | `/history`, `/audit`, `/ias-status`, `/admin/log-ganadores` | consultas e historial |
+
+La coleccion `casino-postman-collection.json` tiene ejemplos de cada request.
+
+## Datos y logs
+
+La base SQLite (`dashboard.db`), los logs y `pending-updates.json` se guardan en la carpeta `userData` de Electron, no en la carpeta del proyecto.
+
+## Generar instaladores
+
+Ver `GITHUB-ACTIONS-README.md`. Un tag `v*` dispara el workflow que compila Windows, macOS y Linux y publica el Release.

@@ -1,0 +1,137 @@
+.panel-admin {
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 6, 18, 0.72);
+    font-family: "Share Tech Mono", "Courier New", monospace;
+    color: #dfe6f3;
+}
+.panel-admin.abierto { display: flex; }
+.pa-caja {
+    width: min(760px, 94vw);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: #0b1631;
+    border: 1px solid #c8a24a;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+.pa-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(200, 162, 74, 0.4);
+    font-family: "Orbitron", sans-serif;
+    font-size: 15px;
+    color: #f4d169;
+}
+.pa-cabecera button {
+    background: none;
+    border: none;
+    color: #dfe6f3;
+    font-size: 18px;
+    cursor: pointer;
+}
+.pa-cuerpo { padding: 16px; overflow: auto; }
+.pa-cuerpo h3 {
+    margin: 0 0 10px;
+    font-family: "Orbitron", sans-serif;
+    font-size: 13px;
+    color: #f4d169;
+}
+.pa-seccion + .pa-seccion {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.pa-pin { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pa-pin input {
+    width: 140px;
+    padding: 8px 10px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #fff;
+    background: #07102a;
+    border: 1px solid #3a4d78;
+    border-radius: 6px;
+}
+.pa-boton {
+    padding: 8px 16px;
+    font-family: "Orbitron", sans-serif;
+    font-size: 12px;
+    color: #0b1631;
+    background: #f4d169;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.pa-boton.secundario { color: #f4d169; background: transparent; border: 1px solid #c8a24a; }
+.pa-fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 15px;
+    cursor: pointer;
+}
+.pa-fila input { width: 20px; height: 20px; cursor: pointer; accent-color: #f4d169; }
+.pa-nota { margin: 4px 0 12px; font-size: 12px; color: #8d9ab5; }
+.pa-msg { margin-left: 10px; font-size: 13px; }
+.pa-msg.ok { color: #5fe39a; }
+.pa-msg.error, .pa-error { color: #ff7070; }
+.pa-error { width: 100%; font-size: 13px; min-height: 16px; }
+.pa-filtro { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pa-filtro input {
+    width: 200px;
+    padding: 7px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #fff;
+    background: #07102a;
+    border: 1px solid #3a4d78;
+    border-radius: 6px;
+}
+.pa-filtro input:focus { outline: none; border-color: #c8a24a; }
+.pa-contador { font-size: 12px; color: #8d9ab5; }
+.pa-log {
+    margin-top: 10px;
+    max-height: 38vh;
+    overflow: auto;
+    padding: 8px;
+    background: #060d22;
+    border: 1px solid #22335a;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+/* Barras de scroll del panel (cuerpo y log). overflow:auto hace
+   que solo aparezcan cuando el contenido no entra. */
+.pa-cuerpo::-webkit-scrollbar,
+.pa-log::-webkit-scrollbar { width: 10px; }
+.pa-cuerpo::-webkit-scrollbar-track,
+.pa-log::-webkit-scrollbar-track {
+    background: #0a1430;
+    border-left: 1px solid #22335a;
+}
+.pa-log::-webkit-scrollbar-track { border-radius: 0 6px 6px 0; }
+.pa-cuerpo::-webkit-scrollbar-thumb,
+.pa-log::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #f4d169, #c8a24a);
+    border: 2px solid #0a1430;
+    border-radius: 6px;
+}
+.pa-cuerpo::-webkit-scrollbar-thumb:hover,
+.pa-log::-webkit-scrollbar-thumb:hover { background: #ffe08a; }
+.pa-cuerpo::-webkit-scrollbar-button,
+.pa-log::-webkit-scrollbar-button { display: none; }
+.pa-linea { white-space: pre-wrap; word-break: break-word; padding: 2px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+.pa-linea .hora { color: #8d9ab5; margin-right: 8px; }
+.pa-linea.ganador { color: #f4d169; }
+.pa-linea.ok { color: #5fe39a; }
+.pa-linea.mal { color: #ff7070; }

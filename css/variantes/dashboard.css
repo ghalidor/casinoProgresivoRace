@@ -1,0 +1,446 @@
+/* ============================================================
+   VARIANTES - DASHBOARD INICIAL: estilos (data-v-home) y
+   distribuciones (data-d-home)
+   ============================================================ */
+
+/* ============================================================
+   DASHBOARD - NEON: vidrio negro, tubos de neon magenta y cian,
+   letrero que parpadea como neon y una linea de escaneo por card
+   ============================================================ */
+body[data-v-home="neon"] .home-sheet {
+    background:
+        linear-gradient(rgba(255, 43, 214, 0.06) 1px, transparent 1px) 0 0 / 3.4vh 3.4vh,
+        linear-gradient(90deg, rgba(0, 229, 255, 0.06) 1px, transparent 1px) 0 0 / 3.4vh 3.4vh,
+        radial-gradient(ellipse at 50% 45%, #12062a 0%, #04010c 75%) #04010c;
+}
+body[data-v-home="neon"] .home-sheet .home-riel {
+    display: none;
+}
+body[data-v-home="neon"] .home-sheet::before,
+body[data-v-home="neon"] .home-sheet::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 3vh;
+}
+body[data-v-home="neon"] .home-sheet::before {
+    inset: 1.4vh;
+    border: 0.45vh solid #ff2bd6;
+    box-shadow: 0 0 1.6vh #ff2bd6, inset 0 0 1.6vh #ff2bd6;
+    animation: vNeonParpadeo 6s linear infinite;
+}
+body[data-v-home="neon"] .home-sheet::after {
+    inset: 2.6vh;
+    border: 0.25vh solid #00e5ff;
+    box-shadow: 0 0 1.2vh #00e5ff;
+    opacity: 0.8;
+}
+@keyframes vNeonParpadeo {
+    0%, 41%, 44%, 100% { opacity: 1; }
+    42% { opacity: 0.35; }
+    43% { opacity: 0.85; }
+    70% { opacity: 0.9; }
+}
+body[data-v-home="neon"] .home-sheet .home-marquee-title {
+    background: #05010d;
+    border: 0.35vh solid #ff2bd6;
+    box-shadow: 0 0 2vh #ff2bd6, inset 0 0 2vh rgba(255, 43, 214, 0.5);
+    --ola-c: rgba(255, 43, 214, 0.55);
+}
+body[data-v-home="neon"] .home-sheet .home-marquee-title h1 {
+    background: none;
+    -webkit-text-fill-color: #ffe6fb;
+    -webkit-text-stroke: 0;
+    filter: drop-shadow(0 0 0.06em #fff) drop-shadow(0 0 0.2em #ff2bd6) drop-shadow(0 0 0.45em #ff2bd6);
+    will-change: opacity;
+    animation: vNeonParpadeo 4.5s linear infinite;
+}
+body[data-v-home="neon"] .home-sheet .home-pot.home-grand,
+body[data-v-home="neon"] .home-sheet .home-pot.home-major,
+body[data-v-home="neon"] .home-sheet .home-pot.home-minor,
+body[data-v-home="neon"] .home-sheet .home-pot.home-mini {
+    border: 0.3vh solid transparent;
+    background: linear-gradient(#06020f, #06020f) padding-box, linear-gradient(var(--pot-c), var(--pot-c)) border-box;
+    box-shadow: 0 0 1.8vh color-mix(in srgb, var(--pot-c) 70%, transparent), inset 0 0 2vh color-mix(in srgb, var(--pot-c) 35%, transparent);
+}
+body[data-v-home="neon"] .home-sheet .home-pot-title,
+body[data-v-home="neon"] .home-sheet .home-odometer-prefix-top {
+    background: none;
+    -webkit-text-fill-color: color-mix(in srgb, var(--pot-c) 25%, #fff);
+    -webkit-text-stroke: 0;
+    filter: drop-shadow(0 0 0.06em var(--pot-c)) drop-shadow(0 0 0.22em var(--pot-c));
+}
+body[data-v-home="neon"] .home-sheet .home-digit:not(.comma) {
+    background: rgba(0, 0, 0, 0.55);
+    box-shadow: inset 0 0 0 0.15vh color-mix(in srgb, var(--pot-c) 70%, transparent), 0 0 1vh color-mix(in srgb, var(--pot-c) 45%, transparent);
+}
+body[data-v-home="neon"] .home-sheet .home-digit .home-digit-n {
+    background: none;
+    -webkit-text-fill-color: color-mix(in srgb, var(--pot-c) 25%, #fff);
+    -webkit-text-stroke: 0;
+    filter: drop-shadow(0 0 0.1em var(--pot-c));
+}
+body[data-v-home="neon"] .home-sheet .home-rombo {
+    background: #06020f;
+    box-shadow: 0 0 0 0.4vh #ff2bd6, 0 0 2.4vh #ff2bd6, inset 0 0 1.2vh #ff2bd6;
+}
+body[data-v-home="neon"] .home-sheet .home-rombo::after {
+    background: radial-gradient(circle, #fff 0%, #00e5ff 40%, transparent 75%);
+}
+/* linea de escaneo que baja por cada card */
+body[data-v-home="neon"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: auto 0 auto 0;
+    top: 0;
+    height: 22%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--pot-c) 22%, transparent), transparent);
+    animation: vNeonEscaneo 3.2s linear infinite;
+    will-change: transform;
+}
+body[data-v-home="neon"] .home-sheet .home-major .home-destello,
+body[data-v-home="neon"] .home-sheet .home-mini .home-destello {
+    animation-delay: -1.6s;
+}
+@keyframes vNeonEscaneo {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(460%); }
+}
+
+/* ============================================================
+   DASHBOARD - CROMO: acero cepillado, marcos cromados, letras de
+   plata con filo del color del pozo y un destello que cruza cada card
+   ============================================================ */
+body[data-v-home="cromo"] .home-sheet {
+    background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 4px),
+        radial-gradient(ellipse at 50% 40%, #2a2f38 0%, #0b0d11 75%) #0b0d11;
+}
+body[data-v-home="cromo"] .home-sheet .home-riel,
+body[data-v-home="cromo"] .home-sheet .home-marquee-title,
+body[data-v-home="cromo"] .home-sheet .home-rombo {
+    filter: grayscale(1) brightness(1.25) contrast(1.05);
+}
+body[data-v-home="cromo"] .home-sheet .home-pot.home-grand,
+body[data-v-home="cromo"] .home-sheet .home-pot.home-major,
+body[data-v-home="cromo"] .home-sheet .home-pot.home-minor,
+body[data-v-home="cromo"] .home-sheet .home-pot.home-mini {
+    background:
+        linear-gradient(160deg, #2b3039 0%, #14171c 60%, #1d2128 100%) padding-box,
+        linear-gradient(135deg, #ffffff 0%, #8a9099 28%, #eef1f5 50%, #5c636d 74%, #d7dbe1 100%) border-box;
+    box-shadow: 0 0.5vh 0 #5c636d, 0 1vh 0 #2b3039, 0 1.8vh 1.6vh rgba(0, 0, 0, 0.85), inset 0 0 0 0.25vh rgba(0, 0, 0, 0.5);
+    --ola-c: rgba(220, 228, 240, 0.35);
+}
+body[data-v-home="cromo"] .home-sheet .home-pot::before {
+    background: radial-gradient(circle, rgba(220, 228, 240, 0.08) 30%, transparent 36%) 0 0 / 1.5vh 1.5vh;
+}
+body[data-v-home="cromo"] .home-sheet .home-pot-title,
+body[data-v-home="cromo"] .home-sheet .home-odometer-prefix-top,
+body[data-v-home="cromo"] .home-sheet .home-digit .home-digit-n {
+    background: linear-gradient(180deg, #ffffff 0%, #c9ced6 22%, #6b727d 42%, #f4f6f9 52%, #a9b0ba 66%, #4d535c 84%, #dfe3e8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.02em var(--pot-c);
+    filter: drop-shadow(0 0.04em 0 #1a1d22) drop-shadow(0 0 0.25em color-mix(in srgb, var(--pot-c) 45%, transparent));
+}
+body[data-v-home="cromo"] .home-sheet .home-digit:not(.comma) {
+    background: linear-gradient(180deg, #0c0e11, #1b1f25);
+    box-shadow: inset 0 0.8vh 1vh #000, 0 0 0 0.18vh #9aa1ab, 0 0 0 0.35vh #1b1f25, 0 0.6vh 0 0.35vh #3a4049, 0 1.6vh 1.4vh rgba(0, 0, 0, 0.9);
+}
+/* destello diagonal que cruza cada card */
+body[data-v-home="cromo"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(105deg, transparent 20%, rgba(255, 255, 255, 0.22) 48%, rgba(255, 255, 255, 0.05) 60%, transparent 80%);
+    animation: vCromoDestello 5s ease-in-out infinite;
+    will-change: transform;
+}
+body[data-v-home="cromo"] .home-sheet .home-major .home-destello { animation-delay: -1.25s; }
+body[data-v-home="cromo"] .home-sheet .home-minor .home-destello { animation-delay: -2.5s; }
+body[data-v-home="cromo"] .home-sheet .home-mini .home-destello { animation-delay: -3.75s; }
+@keyframes vCromoDestello {
+    0%, 55% { transform: translateX(-120%); }
+    85%, 100% { transform: translateX(280%); }
+}
+
+/* ============================================================
+   DASHBOARD - RUBI: terciopelo rojo vino, marcos de oro, letrero rubi
+   y destellos de joya que titilan sobre cada card
+   ============================================================ */
+body[data-v-home="rubi"] .home-sheet {
+    background:
+        radial-gradient(circle, rgba(255, 200, 80, 0.05) 30%, transparent 36%) 0 0 / 2.4vh 2.4vh,
+        radial-gradient(ellipse at 50% 40%, #4a0018 0%, #12000a 75%) #12000a;
+}
+body[data-v-home="rubi"] .home-sheet .home-marquee-title {
+    background: linear-gradient(180deg, #5a0020 0%, #2a000e 55%, #4a001a 100%);
+    --ola-c: rgba(255, 120, 150, 0.45);
+}
+body[data-v-home="rubi"] .home-sheet .home-pot.home-grand,
+body[data-v-home="rubi"] .home-sheet .home-pot.home-major,
+body[data-v-home="rubi"] .home-sheet .home-pot.home-minor,
+body[data-v-home="rubi"] .home-sheet .home-pot.home-mini {
+    background:
+        radial-gradient(ellipse 70% 80% at 70% 40%, rgba(255, 40, 90, 0.18) 0%, transparent 70%) padding-box,
+        linear-gradient(160deg, #3d0013 0%, #14000a 70%) padding-box,
+        linear-gradient(135deg, #fff3a3 0%, #ffd24f 25%, #8f4a08 55%, #ffd24f 80%, #fff3a3 100%) border-box;
+    box-shadow: 0 0.5vh 0 #8f5a0b, 0 1vh 0 #4f2e04, 0 1.8vh 1.6vh rgba(0, 0, 0, 0.85), 0 0 2vh rgba(255, 40, 90, 0.35);
+    --ola-c: rgba(255, 210, 79, 0.4);
+}
+body[data-v-home="rubi"] .home-sheet .home-pot::before {
+    background: radial-gradient(circle, rgba(255, 210, 79, 0.08) 30%, transparent 36%) 0 0 / 1.5vh 1.5vh;
+}
+body[data-v-home="rubi"] .home-sheet .home-digit:not(.comma) {
+    background: linear-gradient(180deg, #1a0008, #050002);
+    box-shadow: inset 0 0.8vh 1vh #000, 0 0 0 0.18vh #ffd24f, 0 0 0 0.35vh #2a000e, 0 0.6vh 0 0.35vh #8f5a0b, 0 1.6vh 1.4vh rgba(0, 0, 0, 0.9);
+}
+body[data-v-home="rubi"] .home-sheet .home-rombo {
+    background: linear-gradient(135deg, #ff9fb4, #e0103f 35%, #6a0018 70%, #ff4d6a);
+}
+/* destellos de joya: dos capas de estrellas que titilan desfasadas */
+body[data-v-home="rubi"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: 0;
+    background: none;
+    animation: none;
+}
+body[data-v-home="rubi"] .home-sheet .home-pot .home-destello::before,
+body[data-v-home="rubi"] .home-sheet .home-pot .home-destello::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    will-change: opacity;
+    animation: vRubiTitila 2.6s ease-in-out infinite;
+}
+body[data-v-home="rubi"] .home-sheet .home-pot .home-destello::before {
+    background:
+        radial-gradient(circle at 12% 18%, #fff 0, rgba(255, 220, 140, 0.9) 0.25vh, transparent 0.9vh),
+        radial-gradient(circle at 48% 9%, #fff 0, rgba(255, 220, 140, 0.9) 0.2vh, transparent 0.7vh),
+        radial-gradient(circle at 92% 62%, #fff 0, rgba(255, 220, 140, 0.9) 0.25vh, transparent 0.9vh),
+        radial-gradient(circle at 30% 88%, #fff 0, rgba(255, 220, 140, 0.9) 0.2vh, transparent 0.7vh);
+}
+body[data-v-home="rubi"] .home-sheet .home-pot .home-destello::after {
+    background:
+        radial-gradient(circle at 78% 14%, #fff 0, rgba(255, 150, 180, 0.9) 0.25vh, transparent 0.9vh),
+        radial-gradient(circle at 6% 58%, #fff 0, rgba(255, 150, 180, 0.9) 0.2vh, transparent 0.7vh),
+        radial-gradient(circle at 60% 78%, #fff 0, rgba(255, 150, 180, 0.9) 0.25vh, transparent 0.9vh),
+        radial-gradient(circle at 96% 92%, #fff 0, rgba(255, 150, 180, 0.9) 0.2vh, transparent 0.7vh);
+    animation-delay: -1.3s;
+}
+@keyframes vRubiTitila {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* ============================================================
+   DISTRIBUCIONES DEL DASHBOARD (body[data-d-home]): la posicion de
+   cada card la calcula homePositionPots (js/principal.js); aqui se
+   acomoda el contenido de las cards a su nueva forma.
+   ============================================================ */
+/* FILAS: franjas bajas y anchas -> titulo a la izquierda, S/. y monto a la derecha */
+body[data-d-home="filas"] .home-sheet .home-pot {
+    --t: min(6vh, 3.6vw);
+}
+body[data-d-home="filas"] .home-sheet .home-pot-label,
+body[data-d-home="filas"] .home-sheet .home-pot-mini-header {
+    top: 50%;
+    transform: translateY(-58%);
+    right: auto;
+    width: 40cqw;
+}
+body[data-d-home="filas"] .home-sheet .home-pot-mini-header {
+    width: 40cqw;
+}
+body[data-d-home="filas"] .home-sheet .home-pot.sprite-off .home-pot-altprefix {
+    top: 50%;
+    right: 56cqw; /* termina en 44cqw, igual que el S/. de MINI y MINOR */
+    transform: translateY(-58%);
+}
+body[data-d-home="filas"] .home-sheet .home-pot.home-mini .home-odometer,
+body[data-d-home="filas"] .home-sheet .home-pot.home-minor .home-odometer,
+body[data-d-home="filas"] .home-sheet .home-pot.sprite-off .home-pot-altodo {
+    left: 46cqw;
+    right: 3cqw;
+    top: 10cqh;
+    bottom: 14cqh;
+    justify-content: flex-start;
+}
+body[data-d-home="filas"] .home-sheet .home-pot.home-grand .home-pot-vehicle-box,
+body[data-d-home="filas"] .home-sheet .home-pot.home-major .home-pot-vehicle-box {
+    --sprite-size: 175cqh;
+}
+
+/* DESTACADO y PODIO: las cards chicas usan letras mas chicas para que entre el monto */
+body[data-d-home="destacado"] .home-sheet .home-pot:not(.home-grand) {
+    --t: min(5vh, 3vw);
+}
+body[data-d-home="destacado"] .home-sheet .home-pot.home-grand {
+    --t: min(9vh, 6.5vw);
+}
+/* cards chicas de la derecha: el monto termina antes de "POZO ACTIVO" (que va sobre el borde de abajo) */
+body[data-d-home="destacado"] .home-sheet .home-pot:is(.home-mini, .home-minor) .home-odometer,
+body[data-d-home="destacado"] .home-sheet .home-pot.home-major.sprite-off .home-pot-altodo {
+    bottom: 19cqh;
+}
+/* GRAND destacado es una card alta: el vehiculo ocupa el espacio debajo del titulo */
+body[data-d-home="destacado"] .home-sheet .home-pot.home-grand .home-pot-vehicle-box {
+    --sprite-size: min(88cqh, 84cqw);
+    right: 8cqw;
+    top: 60%;
+}
+body[data-d-home="podio"] .home-sheet .home-pot:not(.home-grand) {
+    --t: min(6vh, 3.4vw);
+}
+body[data-d-home="podio"] .home-sheet .home-pot.home-grand .home-pot-vehicle-box {
+    --sprite-size: 130cqh;
+}
+
+/* cards chicas y angostas (podio): el vehiculo va abajo a la derecha, sin tapar el titulo */
+body[data-d-home="podio"] .home-sheet .home-pot.home-major .home-pot-vehicle-box {
+    --sprite-size: min(92cqh, 58cqw);
+    top: auto;
+    bottom: 2cqh;
+    transform: none;
+}
+
+/* ============================================================
+   DASHBOARD - MARQUESINA: cada card enmarcada en bombillas de
+   casino que se encienden alternadas (va bien con "Jerarquía")
+   ============================================================ */
+body[data-v-home="marquesina"] .home-sheet {
+    background:
+        radial-gradient(circle, rgba(255, 230, 160, 0.04) 30%, transparent 36%) 0 0 / 2.2vh 2.2vh,
+        radial-gradient(ellipse at 50% 40%, #1d1026 0%, #07040c 75%) #07040c;
+}
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: 0.2vh;
+    border-radius: 1.3vh;
+    z-index: 3;
+    background: none;
+    animation: none;
+    --bt: min(1.3vh, 1.3vw);
+    --bc: color-mix(in srgb, var(--pot-c) 30%, #fff2c0);
+}
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::before,
+body[data-v-home="marquesina"] .home-sheet .home-pot .home-destello::after {
+    inset: 0;
+}
+
+/* ============================================================
+   DASHBOARD - ART DECO: negro laca con abanico dorado, cards con
+   marco de oro de esquinas escalonadas y filete del color del pozo
+   ============================================================ */
+body[data-v-home="deco"] .home-sheet {
+    background:
+        repeating-conic-gradient(from 0deg at 50% 110%, rgba(255, 210, 80, 0.06) 0deg 4deg, transparent 4deg 9deg),
+        #050307;
+}
+body[data-v-home="deco"] .home-sheet .home-pot.home-grand,
+body[data-v-home="deco"] .home-sheet .home-pot.home-major,
+body[data-v-home="deco"] .home-sheet .home-pot.home-minor,
+body[data-v-home="deco"] .home-sheet .home-pot.home-mini {
+    border: 0.7vh solid transparent;
+    border-radius: 0;
+    background:
+        radial-gradient(ellipse 70% 80% at 50% 50%, color-mix(in srgb, var(--pot-c) 14%, transparent) 0%, transparent 70%) padding-box,
+        linear-gradient(#07040a, #07040a) padding-box,
+        linear-gradient(180deg, #fff3a3, #c8861a 30%, #fff0a0 52%, #8f4a08 80%, #ffd24f) border-box;
+    box-shadow: inset 0 0 0 0.5vh #07040a, inset 0 0 0 0.8vh color-mix(in srgb, var(--pot-c) 80%, #fff), inset 0 0 5vh color-mix(in srgb, var(--pot-c) 20%, transparent);
+    clip-path: polygon(3vh 0, calc(100% - 3vh) 0, calc(100% - 3vh) 1.5vh, calc(100% - 1.5vh) 1.5vh, calc(100% - 1.5vh) 3vh, 100% 3vh,
+        100% calc(100% - 3vh), calc(100% - 1.5vh) calc(100% - 3vh), calc(100% - 1.5vh) calc(100% - 1.5vh), calc(100% - 3vh) calc(100% - 1.5vh), calc(100% - 3vh) 100%,
+        3vh 100%, 3vh calc(100% - 1.5vh), 1.5vh calc(100% - 1.5vh), 1.5vh calc(100% - 3vh), 0 calc(100% - 3vh), 0 3vh, 1.5vh 3vh, 1.5vh 1.5vh, 3vh 1.5vh);
+    --ola-c: rgba(255, 210, 79, 0.3);
+}
+body[data-v-home="deco"] .home-sheet .home-pot::before {
+    background: none;
+}
+/* barrido de luz dorada que cruza cada panel */
+body[data-v-home="deco"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: 0;
+    width: 30%;
+    background: linear-gradient(105deg, transparent 20%, rgba(255, 220, 140, 0.16) 50%, transparent 80%);
+    animation: vCromoDestello 6s ease-in-out infinite;
+    will-change: transform;
+}
+body[data-v-home="deco"] .home-sheet .home-major .home-destello { animation-delay: -1.5s; }
+body[data-v-home="deco"] .home-sheet .home-minor .home-destello { animation-delay: -3s; }
+body[data-v-home="deco"] .home-sheet .home-mini .home-destello { animation-delay: -4.5s; }
+body[data-v-home="deco"] .home-sheet .home-rombo {
+    background: linear-gradient(135deg, #fff3a3, #c8861a 40%, #8f4a08 70%, #ffd24f);
+}
+
+/* ============================================================
+   DASHBOARD - FICHAS: pano verde y cada card como una ficha de
+   casino: canto a franjas blancas y del color del pozo, aro punteado
+   ============================================================ */
+body[data-v-home="fichas"] .home-sheet {
+    background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0 0.3vh, transparent 0.3vh 0.9vh),
+        radial-gradient(ellipse at 50% 50%, #0d3a24 0%, #04170e 60%, #020a06 100%) #020a06;
+}
+body[data-v-home="fichas"] .home-sheet .home-pot.home-grand,
+body[data-v-home="fichas"] .home-sheet .home-pot.home-major,
+body[data-v-home="fichas"] .home-sheet .home-pot.home-minor,
+body[data-v-home="fichas"] .home-sheet .home-pot.home-mini {
+    border: 1.2vh solid transparent;
+    border-radius: 2.6vh;
+    background:
+        radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--pot-c) 28%, #0a0610), #07040a 75%) padding-box,
+        repeating-linear-gradient(90deg, var(--pot-c) 0 3vh, #f4f4f4 3vh 4.6vh) border-box;
+    box-shadow: 0 1vh 0 color-mix(in srgb, var(--pot-c) 40%, #000), 0 2vh 2.4vh rgba(0, 0, 0, 0.7);
+}
+body[data-v-home="fichas"] .home-sheet .home-pot::before {
+    background: none;
+}
+/* aro punteado interior de la ficha */
+body[data-v-home="fichas"] .home-sheet .home-pot .home-destello {
+    display: block;
+    inset: 0.7vh;
+    border-radius: 1.6vh;
+    border: 0.3vh dashed color-mix(in srgb, var(--pot-c) 60%, #fff);
+    opacity: 0.5;
+    background: none;
+    animation: none;
+}
+
+/* ============================================================
+   DASHBOARD - DISTRIBUCION JERARQUIA: GRAND arriba a todo lo ancho
+   y MAJOR, MINOR y MINI en franjas debajo (homePositionPots)
+   ============================================================ */
+body[data-d-home="jerarquia"] .home-sheet .home-pot:is(.home-minor, .home-mini, .home-major.sprite-off) {
+    --t: min(5.4vh, 3.4vw);
+}
+body[data-d-home="jerarquia"] .home-sheet .home-pot:is(.home-minor, .home-mini, .home-major.sprite-off) .home-pot-label,
+body[data-d-home="jerarquia"] .home-sheet .home-pot:is(.home-minor, .home-mini) .home-pot-mini-header {
+    top: 50%;
+    transform: translateY(-50%);
+    right: auto;
+    width: 40cqw;
+}
+/* franjas bajas: sin subtitulo ni placa "en juego" (taparian el titulo) */
+body[data-d-home="jerarquia"] .home-sheet .home-pot:is(.home-minor, .home-mini, .home-major.sprite-off) .home-pot-subtitle,
+body[data-d-home="jerarquia"] .home-sheet :is(#home-estado-minor, #home-estado-mini),
+body[data-d-home="jerarquia"] .home-sheet:has(.home-major.sprite-off) #home-estado-major {
+    display: none;
+}
+body[data-d-home="jerarquia"] .home-sheet .home-pot.home-major.sprite-off .home-pot-altprefix {
+    top: 50%;
+    right: 56cqw;
+    transform: translateY(-58%);
+}
+body[data-d-home="jerarquia"] .home-sheet .home-pot.home-mini .home-odometer,
+body[data-d-home="jerarquia"] .home-sheet .home-pot.home-minor .home-odometer,
+body[data-d-home="jerarquia"] .home-sheet .home-pot.home-major.sprite-off .home-pot-altodo {
+    left: 46cqw;
+    right: 3cqw;
+    top: 10cqh;
+    bottom: 14cqh;
+    justify-content: flex-start;
+}
+body[data-d-home="jerarquia"] .home-sheet .home-pot.home-grand .home-pot-vehicle-box {
+    --sprite-size: 120cqh;
+}

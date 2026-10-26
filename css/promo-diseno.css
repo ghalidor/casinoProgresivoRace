@@ -1,0 +1,251 @@
+/* ============================================================
+   PROMO - diseno "pozo destacado"
+   Video a pantalla completa con vineta, letrero dorado arriba a la izquierda,
+   tiempo del video en una placa dorada arriba a la derecha y abajo una placa
+   grande que rota entre los 4 pozos (la arma js/promo-hud.js).
+   Se carga despues de principal.css y reemplaza el estilo anterior de la promo.
+   ============================================================ */
+
+/* ---------- video a pantalla completa ---------- */
+.promo-video {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+/* vineta suave en lugar de las lineas VHS, para que la placa y el letrero se lean */
+.promo-vhs-overlay {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    mix-blend-mode: normal;
+    background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 55%, rgba(0, 0, 0, 0.7));
+}
+.promo-vhs-overlay.showing {
+    animation: none;
+}
+
+/* ---------- piezas comunes ---------- */
+.promo-marca,
+.promo-pozos,
+.promo-puntos {
+    position: fixed;
+    z-index: 1002;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease;
+}
+.promo-marca.showing,
+.promo-pozos.showing,
+.promo-puntos.showing {
+    opacity: 1;
+    visibility: visible;
+}
+.promo-marca,
+.promo-timer {
+    border: 0.4vh solid #ffd24f;
+    border-radius: 1.6vh;
+    background:
+        radial-gradient(circle, rgba(255, 194, 26, 0.13) 30%, transparent 36%) 0 0 / 1.5vh 1.5vh,
+        linear-gradient(180deg, #0a0500, #1a0e02 50%, #0a0500);
+    box-shadow:
+        0 0 0 0.25vh #6f3700 inset, 0 0 0 0.55vh #ffd24f inset,
+        0 0.5vh 0 #8f5a0b, 0 1vh 0 #4f2e04, 0 1.6vh 1.6vh rgba(0, 0, 0, 0.85), 0 0 2.4vh rgba(255, 200, 40, 0.5);
+}
+
+/* ---------- letrero ---------- */
+.promo-marca {
+    left: 2.5vw;
+    top: 2.5vh;
+    padding: 1vh 2vw;
+    font-family: "Orbitron", sans-serif;
+    font-size: 3.2vh;
+}
+.promo-marca span {
+    display: inline-block;
+    font-weight: 900;
+    white-space: nowrap;
+    letter-spacing: 0.1em;
+    transform: skewX(-6deg);
+    color: transparent;
+    background: linear-gradient(180deg, #fff8c2 0%, #ffd24f 18%, #b96b10 35%, #fff3a3 48%, #ffce45 58%, #8f4a08 76%, #ffd24f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-stroke: 0.015em #6f3700;
+    filter: drop-shadow(0 0.03em 0 #7a4c06) drop-shadow(0 0.07em 0.05em rgba(0, 0, 0, 0.8)) drop-shadow(0 0 0.25em rgba(255, 176, 0, 0.5));
+}
+
+/* ---------- tiempo del video (lo maneja promos.js) ---------- */
+.promo-timer {
+    top: 3vh;
+    bottom: auto;
+    left: auto;
+    right: 2.5vw;
+    transform: none;
+    width: auto;
+    height: auto;
+    display: none;
+    align-items: center;
+    gap: 1vw;
+    padding: 0.8vh 1.2vw;
+    z-index: 1002;
+}
+.promo-timer.showing {
+    display: flex;
+}
+.promo-timer-track {
+    width: 14vw;
+    height: 0.9vh;
+    border-radius: 0.45vh;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    overflow: hidden;
+}
+.promo-timer-fill {
+    background: linear-gradient(90deg, #ff6600, #ffaa00, #ffd700);
+    box-shadow: 0 0 1vh #ffaa00;
+}
+.promo-timer-text {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 700;
+    font-size: 2vh;
+    color: #ffd24f;
+    min-width: 0;
+}
+
+/* ---------- placa del pozo destacado ---------- */
+.promo-pozos {
+    left: 50%;
+    bottom: 4.5vh;
+    transform: translateX(-50%);
+    font-family: "Orbitron", sans-serif;
+}
+.promo-placa {
+    display: none;
+    align-items: center;
+    gap: 3vw;
+    padding: 2.6vh 3.6vw;
+    border-radius: 2vh;
+    font-size: min(7.6vh, 3.9vw); /* en 4:3 la placa no pasa del ancho */
+    white-space: nowrap;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--pot-c) 30%, #0a0206) 0%, rgba(7, 2, 6, 0.95) 70%);
+    border: 0.5vh solid var(--pot-c);
+    box-shadow:
+        0 0.6vh 0 color-mix(in srgb, var(--pot-c) 45%, #000), 0 1.2vh 0 color-mix(in srgb, var(--pot-c) 25%, #000),
+        0 2vh 2vh rgba(0, 0, 0, 0.85), 0 0 3vh color-mix(in srgb, var(--pot-c) 55%, transparent);
+}
+.promo-placa.activa {
+    display: flex;
+    animation: promoPlacaEntra 0.35s ease-out;
+}
+@keyframes promoPlacaEntra {
+    from {
+        opacity: 0;
+        transform: translateY(1.5vh);
+    }
+}
+
+/* titulo y S/. con el acabado metalico del HOME, en el color del pozo */
+.promo-placa-titulo,
+.promo-soles {
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    transform: skewX(-8deg);
+    color: transparent;
+    -webkit-text-stroke: 0.018em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0.03em 0 color-mix(in srgb, var(--pot-c) 40%, #000)) drop-shadow(0 0.06em 0.04em rgba(0, 0, 0, 0.85)) drop-shadow(0 0 0.3em color-mix(in srgb, var(--pot-c) 75%, transparent));
+}
+
+/* monto: casillas negras con numero de oro (como el odometro del HOME) */
+.promo-placa-monto {
+    display: flex;
+    align-items: center;
+    gap: 0.08em;
+    font-size: min(9.6vh, 4.9vw);
+}
+.promo-soles {
+    margin-right: 0.25em;
+}
+.promo-d {
+    width: 0.78em;
+    height: 1.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.12em;
+    /* casilla oscura con profundidad (igual al dashboard): hundida, con borde fino del color del pozo y canto 3D */
+    background: linear-gradient(180deg, #000 0%, #070709 55%, #101014 100%);
+    box-shadow:
+        inset 0 0.12em 0.14em rgba(0, 0, 0, 0.95), inset 0.05em 0 0.08em rgba(0, 0, 0, 0.6), inset -0.05em 0 0.08em rgba(0, 0, 0, 0.6),
+        inset 0 -0.015em 0 rgba(255, 255, 255, 0.08),
+        0 0 0 0.015em color-mix(in srgb, var(--pot-c) 60%, #000), 0 0 0 0.035em #000,
+        0 0.035em 0 0.035em color-mix(in srgb, var(--pot-c) 28%, #000), 0 0.07em 0 0.035em color-mix(in srgb, var(--pot-c) 16%, #000),
+        0 0.105em 0 0.035em #000, 0 0.2em 0.16em rgba(0, 0, 0, 0.9);
+}
+.promo-d b,
+.promo-p {
+    font-weight: 900;
+    line-height: 1;
+    color: transparent;
+    /* numeros en el color de su pozo, con el mismo acabado metalico del titulo */
+    -webkit-text-stroke: 0.015em color-mix(in srgb, var(--pot-c) 30%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* sin brillo ni sombra difusa: solo un canto fino pegado al numero */
+    filter: drop-shadow(0 0.025em 0 color-mix(in srgb, var(--pot-c) 35%, #000));
+    font-size: 0.78em;
+}
+.promo-p {
+    width: 0.3em;
+    align-self: flex-end;
+    text-align: center;
+    font-size: 0.8em;
+}
+
+/* GRAND/MAJOR con vehiculo: en vez del monto, el premio */
+.promo-placa-premio {
+    display: none;
+    font-weight: 700;
+    font-size: 3vh;
+    letter-spacing: 0.14em;
+    color: #fff;
+    text-shadow: 0 0.08em 0 #000, 0 0 0.5em color-mix(in srgb, var(--pot-c) 80%, transparent);
+}
+.promo-placa.vehiculo .promo-placa-monto {
+    display: none;
+}
+.promo-placa.vehiculo .promo-placa-premio {
+    display: block;
+}
+
+/* ---------- puntos: cual pozo se esta mostrando ---------- */
+.promo-puntos {
+    left: 50%;
+    bottom: 1.6vh;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1vw;
+}
+.promo-puntos i {
+    width: 1.2vh;
+    height: 1.2vh;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+}
+.promo-puntos i.on {
+    background: #ffd24f;
+    box-shadow: 0 0 1vh #ffd24f;
+}

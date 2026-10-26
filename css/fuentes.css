@@ -1,0 +1,30 @@
+/* Fuentes locales (offline) */
+@font-face {
+    font-family: "Share Tech Mono";
+    src: url("../fonts/ShareTechMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Orbitron";
+    src: url("../fonts/Orbitron-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Orbitron";
+    src: url("../fonts/Orbitron-Black.woff2") format("woff2");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+/* Montserrat variable (subset latin), cubre los pesos 800 y 900 */
+@font-face {
+    font-family: "Montserrat";
+    src: url("../fonts/Montserrat-ExtraBold-Black.woff2") format("woff2");
+    font-weight: 800 900;
+    font-style: normal;
+    font-display: swap;
+}

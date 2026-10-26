@@ -34,6 +34,7 @@
     },
     "files": [
       "main.js",
+      "src/**/*",
       "dashboard.html",
       "*.png",
       "*.jpg",
@@ -47,6 +48,7 @@
       "css/**/*",
       "js/**/*",
       "fonts/**/*",
+      "img/**/*",
       "audio/**/*",
       "node_modules/**/*",
       "!dist/**/*",

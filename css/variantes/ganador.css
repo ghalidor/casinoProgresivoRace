@@ -1,0 +1,530 @@
+/* ============================================================
+   VARIANTES - MODAL GANADOR (data-v-ganador)
+   El contenido de la caja interna se ordena con una grilla de zonas fijas:
+   trofeo, titulo, mensaje, premio (monto o vehiculo), maquina y acreditacion.
+   Las zonas grandes se reparten el alto disponible (fr) y cada pieza se
+   ajusta al alto de su zona, asi todo entra en cualquier pantalla (de
+   1024x600 a 1920x1080 o 4:3) sin pisarse. La zona del mensaje de
+   acreditacion se reserva siempre: al aparecer no mueve nada.
+   Reemplaza los translateY/padding fijos de css/ganador.css (se usa #winnerModal
+   para ganarles a sus reglas con :not(:has(...)) e !important).
+   ============================================================ */
+
+/* ---------- comun a todas: la grilla ---------- */
+body #winnerModal .winner-inner {
+    display: grid !important;
+    grid-template-columns: 100%;
+    grid-template-areas: "trofeo" "titulo" "mensaje" "premio" "maquina" "acreditado";
+    grid-template-rows: minmax(0, 15fr) minmax(0, 20fr) auto minmax(0, 28fr) auto auto;
+    justify-items: center;
+    align-items: center;
+    row-gap: 1.3vh;
+    padding: 3.5vh 2vw 2.2vh !important;
+}
+/* titulo y mensaje pasan a ser piezas de la grilla */
+body #winnerModal .winner-title-row,
+body #winnerModal .winner-title-text {
+    display: contents !important;
+}
+body #winnerModal .winner-trophy {
+    grid-area: trofeo;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: auto !important;
+    height: 100% !important;
+    max-width: 70%;
+    object-fit: contain;
+    transform: none;
+    animation: vGanTrofeo 2s ease-in-out infinite;
+}
+@keyframes vGanTrofeo {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-0.4vh) rotate(2deg); }
+}
+body #winnerModal .winner-title {
+    grid-area: titulo;
+    height: 100%;
+    min-height: 0;
+}
+body #winnerModal .winner-title-svg {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+}
+body #winnerModal .winner-message {
+    grid-area: mensaje;
+    font-size: min(3.2vh, 2.6vw) !important;
+    max-width: 100%;
+    white-space: normal !important; /* si no entra en una linea, pasa a dos (centrado) */
+    text-wrap: balance; /* dos lineas parejas, sin una palabra sola abajo */
+    text-align: center;
+}
+/* premio: el monto o el vehiculo ocupan la misma zona */
+body #winnerModal .winner-amount,
+body #winnerModal .winner-vehicle-center {
+    grid-area: premio;
+}
+/* la placa del monto mantiene siempre su proporcion (1257x353) y el texto queda dentro:
+   la zona es un contenedor y la placa toma el mayor tamano que entra, a lo ancho o a lo alto */
+body #winnerModal .winner-amount {
+    height: 100%;
+    width: 96% !important;
+    max-width: none !important;
+    container-type: size;
+}
+body #winnerModal .winner-amount-bg,
+body #winnerModal .winner-amount-svg {
+    position: absolute;
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: min(100cqw, calc(100cqh * 1257 / 353));
+    height: auto;
+    aspect-ratio: 1257 / 353;
+    transform: translate(-50%, -50%);
+}
+body #winnerModal .winner-vehicle-center {
+    width: 100%;
+    height: 100%;
+    container-type: size;
+    transform: none;
+}
+/* el sprite es cuadrado: se ajusta al alto de la zona (el auto es bajo y puede ser mas ancho) */
+body #winnerModal .winner-vehicle-center .winner-sprite {
+    --winner-sprite-size: min(calc(100cqh / var(--box-h, 1)), 90cqw);
+}
+body #winnerModal .winner-machine,
+body #winnerModal .winner-inner:has(.winner-vehicle-center.show) .winner-machine,
+body #winnerModal .winner-inner:not(:has(.winner-vehicle-center.show)) .winner-machine {
+    grid-area: maquina;
+    transform: none !important;
+}
+body #winnerModal #winnerMachineText {
+    font-size: min(3.4vh, 2.5vw) !important;
+    padding: 1.2vh 3.2vh !important;
+}
+body #winnerModal .winner-inner .winner-title-row {
+    transform: none !important;
+}
+
+/* ---------- mensaje de acreditacion: zona reservada, con icono segun el caso ---------- */
+body #winnerModal .winner-acreditado {
+    grid-area: acreditado;
+    width: 96%;
+    min-height: 6.6vh;
+    margin: 0;
+    gap: 1.2vh;
+    font-size: min(2.6vh, 2vw);
+}
+/* el contador va en la esquina de abajo a la derecha: el mensaje le deja ese lugar libre */
+body #winnerModal .winner-inner {
+    --libre-contador: max(7.5vh, 72px);
+}
+body #winnerModal .winner-acreditado {
+    max-width: calc(100% - var(--libre-contador) * 2);
+}
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-acreditado {
+    max-width: calc(100% - var(--libre-contador));
+    margin-right: var(--libre-contador) !important;
+    justify-self: end;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-acreditado {
+    width: calc(100% - var(--libre-contador)) !important;
+}
+body #winnerModal .winner-acreditado::before {
+    flex: none;
+    width: 1.5em;
+    height: 1.5em;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 1em;
+    color: #07150d;
+    text-shadow: none;
+}
+body #winnerModal .winner-acreditado.ok::before {
+    content: "\2714";
+    background: #0aff7a;
+}
+body #winnerModal .winner-acreditado.error::before {
+    content: "\2716";
+    background: #ff4040;
+    color: #2a0505;
+}
+/* no llego la confirmacion: rojo (como antes) pero con reloj, distinto del error */
+body #winnerModal .winner-acreditado.sin::before {
+    content: "\23F1";
+    background: #ff4040;
+    color: #2a0505;
+}
+
+/* ############################################################
+   VARIANTES: cada una cambia fondo, marco, imagen del trofeo, placa
+   del monto, placa de la maquina y el mensaje de acreditacion.
+   Sin banderas a cuadros ni el fondo de ondas del original.
+   El monto va en una placa dibujada con CSS que llena toda su zona
+   (no la imagen monto.png), asi no quedan espacios vacios.
+   ############################################################ */
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal :is(.winner-flag, .winner-checkered-bg, .capa-confeti) {
+    display: none !important;
+}
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-frame {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+    box-shadow: none !important;
+}
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-inner {
+    width: 100%;
+}
+/* placa del monto: llena su zona; el numero (svg) se centra dentro */
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-amount {
+    width: 100% !important;
+    height: 100%;
+}
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-amount-bg {
+    display: none;
+}
+/* el svg del numero mide 620x240 y el texto ocupa ~84% de su ancho y ~48% de su alto:
+   se agranda hasta que el numero llegue al 88% del ancho o al 80% del alto de la placa */
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-amount-svg {
+    left: 50%;
+    top: 50%;
+    width: min(105cqw, 430cqh);
+    height: auto;
+    aspect-ratio: 620 / 240;
+    transform: translate(-50%, -50%);
+}
+/* placa de la maquina: sin la placa hexagonal azul del original */
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-machine-deco {
+    display: none;
+}
+body:is([data-v-ganador="marquesina"], [data-v-ganador="deco"], [data-v-ganador="tesoro"]) #winnerModal .winner-machine {
+    min-width: 0 !important;
+    max-width: 100% !important;
+}
+
+/* ============================================================
+   MARQUESINA: letrero de casino. Fondo vino con puntos de luz,
+   caja con bombillas que se encienden alternadas, corona de oro
+   con focos, titulo blanco con brillo del color del pozo y el
+   monto en un cartel luminoso. Dos columnas: titulo | premio.
+   ============================================================ */
+body[data-v-ganador="marquesina"] #winnerModal {
+    background:
+        radial-gradient(circle, rgba(255, 220, 150, 0.06) 30%, transparent 36%) 0 0 / 2.4vh 2.4vh,
+        radial-gradient(ellipse at 50% 40%, #3a0716 0%, #12020a 70%) !important;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner {
+    --bt: 1.6vh;
+    --bc: color-mix(in srgb, var(--winner-accent, #ffd700) 30%, #fff2c0);
+    background: radial-gradient(ellipse at 30% 40%, color-mix(in srgb, var(--winner-accent, #ffd700) 22%, #1a0610), #0c0208 75%);
+    border: 0.5vh solid var(--winner-accent, #ffd700);
+    border-radius: 3vh;
+    box-shadow: 0 0 4vh color-mix(in srgb, var(--winner-accent, #ffd700) 45%, transparent), inset 0 0 6vh rgba(0, 0, 0, 0.6);
+    /* titulo a la izquierda con la corona a su derecha; el premio a todo lo ancho (el cartel
+       queda bajo y largo, sin espacio vacio dentro); abajo la maquina y la acreditacion */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "titulo titulo trofeo" "mensaje mensaje trofeo" "premio premio premio" "maquina acreditado acreditado";
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.3fr) auto;
+    column-gap: 2.5vw;
+    row-gap: 1.8vh;
+    padding: 5vh 3.5vw 4.5vh !important;
+}
+/* bombillas en damero sobre el borde (igual que las otras variantes con bombillas) */
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner::before,
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner::after {
+    content: "";
+    position: absolute;
+    inset: 0.8vh;
+    border: none;
+    border-radius: 2.4vh;
+    padding: var(--bt);
+    pointer-events: none;
+    z-index: 0;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    background-size: calc(var(--bt) * 2) calc(var(--bt) * 2);
+    background-repeat: round;
+    will-change: opacity;
+    animation: vFoco 1s steps(1) infinite;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner::before {
+    background-image:
+        radial-gradient(circle at 25% 25%, #fff 0 12%, var(--bc) 21%, transparent 31%),
+        radial-gradient(circle at 75% 75%, #fff 0 12%, var(--bc) 21%, transparent 31%);
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner::after {
+    background-image:
+        radial-gradient(circle at 75% 25%, #fff 0 12%, var(--bc) 21%, transparent 31%),
+        radial-gradient(circle at 25% 75%, #fff 0 12%, var(--bc) 21%, transparent 31%);
+    animation-delay: -0.5s;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-trophy {
+    content: url("../../img/ganador/corona.svg");
+    max-width: 90%;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-title-svg {
+    filter: drop-shadow(0 0 1.2vh var(--winner-accent, #ffd700)) drop-shadow(0 0.4vh 0 rgba(0, 0, 0, 0.6));
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-title-svg text {
+    fill: #fff;
+    stroke: var(--winner-accent, #ffd700);
+    stroke-width: 5;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-message {
+    color: var(--winner-accent, #ffd700) !important;
+    font-size: min(3.6vh, 2.2vw) !important;
+    white-space: normal !important;
+    text-align: center;
+}
+/* cartel luminoso del monto: vidrio oscuro con doble borde del color del pozo */
+body[data-v-ganador="marquesina"] #winnerModal .winner-amount {
+    border-radius: 2.4vh;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 45%) #0a0207 !important;
+    border: 0.6vh solid var(--winner-accent, #ffd700) !important;
+    box-shadow: 0 0 3vh color-mix(in srgb, var(--winner-accent, #ffd700) 60%, transparent), inset 0 0 0 0.8vh #0a0207,
+        inset 0 0 0 1.1vh color-mix(in srgb, var(--winner-accent, #ffd700) 50%, transparent), inset 0 0 6vh color-mix(in srgb, var(--winner-accent, #ffd700) 25%, transparent) !important;
+}
+body[data-v-ganador="marquesina"] #winnerModal #winnerAmountText {
+    fill: #fff;
+    stroke: var(--winner-accent, #ffd700);
+    stroke-width: 3;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-amount-svg {
+    filter: drop-shadow(0 0 1vh var(--winner-accent, #ffd700));
+}
+body[data-v-ganador="marquesina"] #winnerModal #winnerMachineText {
+    font-size: min(2.6vh, 1.5vw) !important;
+    padding: 1.1vh 2.2vh !important;
+    border-radius: 6vh;
+    background: #0a0207;
+    border: 0.35vh solid var(--winner-accent, #ffd700);
+    box-shadow: 0 0 1.6vh color-mix(in srgb, var(--winner-accent, #ffd700) 50%, transparent);
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-acreditado {
+    width: 100%;
+    justify-self: stretch;
+    min-height: 7.5vh;
+    border-radius: 1.6vh;
+    font-size: min(3vh, 1.8vw);
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-acreditado.ok {
+    background: rgba(10, 255, 122, 0.12);
+    box-shadow: inset 0 0 0 0.3vh rgba(10, 255, 122, 0.7);
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-acreditado.error {
+    background: rgba(255, 64, 64, 0.12);
+    box-shadow: inset 0 0 0 0.3vh rgba(255, 64, 64, 0.7);
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-countdown {
+    border-color: var(--winner-accent, #ffd700) !important;
+    color: #fff !important;
+    background: #0a0207 !important;
+}
+
+/* ============================================================
+   ART DECO: salon clasico. Negro laca con abanico dorado que gira
+   lento, marco de oro con esquinas escalonadas, medallon deco en
+   lugar del trofeo, titulo de oro y el monto en un marco dorado con
+   filete del color del pozo. La maquina en una cartela dorada.
+   ============================================================ */
+body[data-v-ganador="deco"] #winnerModal {
+    background: #050307 !important;
+}
+body[data-v-ganador="deco"] #winnerModal::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 115%;
+    width: 300vmax;
+    height: 300vmax;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgba(255, 210, 80, 0.07) 0deg 4deg, transparent 4deg 9deg);
+    animation: vGanGira 120s linear infinite;
+    will-change: transform;
+}
+@keyframes vGanGira {
+    to { rotate: 360deg; }
+}
+body[data-v-ganador="deco"] #winnerModal .winner-inner {
+    background:
+        radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--winner-accent, #ffd700) 14%, transparent), transparent 65%),
+        #07040a;
+    border: 0.7vh solid #c8861a;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 0.6vh #07040a, inset 0 0 0 0.9vh #ffd24f, 0 2vh 6vh rgba(0, 0, 0, 0.8);
+    clip-path: polygon(3vh 0, calc(100% - 3vh) 0, calc(100% - 3vh) 1.5vh, calc(100% - 1.5vh) 1.5vh, calc(100% - 1.5vh) 3vh, 100% 3vh,
+        100% calc(100% - 3vh), calc(100% - 1.5vh) calc(100% - 3vh), calc(100% - 1.5vh) calc(100% - 1.5vh), calc(100% - 3vh) calc(100% - 1.5vh), calc(100% - 3vh) 100%,
+        3vh 100%, 3vh calc(100% - 1.5vh), 1.5vh calc(100% - 1.5vh), 1.5vh calc(100% - 3vh), 0 calc(100% - 3vh), 0 3vh, 1.5vh 3vh, 1.5vh 1.5vh, 3vh 1.5vh);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "trofeo trofeo" "titulo titulo" "mensaje mensaje" "premio premio" "maquina acreditado";
+    grid-template-rows: minmax(0, 17fr) minmax(0, 27fr) auto minmax(0, 30fr) auto;
+    column-gap: 2vw;
+    row-gap: 1.6vh;
+    padding: 4.5vh 4vw 4vh !important;
+}
+body[data-v-ganador="deco"] #winnerModal .winner-inner::before {
+    display: none;
+}
+body[data-v-ganador="deco"] #winnerModal .winner-trophy {
+    content: url("../../img/ganador/medallon-deco.svg");
+    max-width: 80%;
+    animation: none;
+}
+body[data-v-ganador="deco"] #winnerModal .winner-message {
+    color: #ffd24f !important;
+    letter-spacing: 0.22em !important;
+    font-size: min(3vh, 2vw) !important;
+    white-space: nowrap !important;
+    display: flex;
+    align-items: center;
+    gap: 2vw;
+}
+body[data-v-ganador="deco"] #winnerModal .winner-message::before,
+body[data-v-ganador="deco"] #winnerModal .winner-message::after {
+    content: "";
+    flex: 0 1 8vw;
+    min-width: 1.5vw;
+    height: 0.4vh;
+    background: linear-gradient(90deg, transparent, #c8861a);
+}
+body[data-v-ganador="deco"] #winnerModal .winner-message::after {
+    transform: scaleX(-1);
+}
+/* marco dorado con esquinas cortadas y filete interior del color del pozo */
+body[data-v-ganador="deco"] #winnerModal .winner-amount {
+    background: #07040a !important;
+    border: 0.7vh solid #c8861a !important;
+    box-shadow: inset 0 0 0 0.6vh #07040a, inset 0 0 0 0.9vh var(--winner-accent, #ffd700), inset 0 0 5vh color-mix(in srgb, var(--winner-accent, #ffd700) 22%, transparent) !important;
+    clip-path: polygon(2.4vh 0, calc(100% - 2.4vh) 0, 100% 2.4vh, 100% calc(100% - 2.4vh), calc(100% - 2.4vh) 100%, 2.4vh 100%, 0 calc(100% - 2.4vh), 0 2.4vh);
+}
+body[data-v-ganador="deco"] #winnerModal #winnerMachineText {
+    font-size: min(2.8vh, 1.8vw) !important;
+    color: #1a0e00 !important;
+    text-shadow: none !important;
+    font-weight: 800 !important;
+    background: linear-gradient(180deg, #fff3a3, #c8861a 45%, #fff0a0 60%, #8f4a08);
+    clip-path: polygon(2vh 0, calc(100% - 2vh) 0, 100% 50%, calc(100% - 2vh) 100%, 2vh 100%, 0 50%);
+}
+body[data-v-ganador="deco"] #winnerModal .winner-acreditado {
+    width: auto;
+    max-width: calc(100% - var(--libre-contador));
+    min-height: 6.4vh;
+    padding: 0.6vh 2.6vh;
+    border: 0.3vh solid currentColor;
+    font-size: min(2.5vh, 1.5vw);
+}
+
+/* ============================================================
+   TESORO: fondo verde de pano con monedas que caen, cofre abierto
+   en lugar del trofeo (ocupa el alto del titulo y el mensaje), el
+   monto en un lingote de oro y la maquina en una ficha.
+   ============================================================ */
+body[data-v-ganador="tesoro"] #winnerModal {
+    background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0 0.3vh, transparent 0.3vh 0.9vh),
+        radial-gradient(ellipse at 50% 45%, #0f4a2c 0%, #052114 60%, #020a06 100%) !important;
+}
+/* monedas que caen detras de la caja (solo transform) */
+body[data-v-ganador="tesoro"] #winnerModal::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -100vh;
+    height: 200vh;
+    background:
+        radial-gradient(circle at 12% 18%, #fff8d2 0, #ffd24f 0.8vh, #b96b10 1.5vh, transparent 1.7vh),
+        radial-gradient(circle at 78% 34%, #fff8d2 0, #ffd24f 0.7vh, #b96b10 1.3vh, transparent 1.5vh),
+        radial-gradient(circle at 46% 62%, #fff8d2 0, #ffd24f 0.6vh, #b96b10 1.1vh, transparent 1.3vh),
+        radial-gradient(circle at 92% 82%, #fff8d2 0, #ffd24f 0.8vh, #b96b10 1.5vh, transparent 1.7vh);
+    background-size: 30vw 34vh;
+    animation: vGanLluvia 6s linear infinite;
+    will-change: transform;
+}
+@keyframes vGanLluvia {
+    to { transform: translateY(100vh); }
+}
+/* ficha de casino: canto a rayas del color del pozo y blanco */
+body[data-v-ganador="tesoro"] #winnerModal .winner-inner {
+    background:
+        linear-gradient(180deg, #06301c, #021409) padding-box,
+        repeating-linear-gradient(90deg, var(--winner-accent, #ffd700) 0 3vh, #f4f4f4 3vh 4.6vh) border-box;
+    border: 1.3vh solid transparent;
+    border-radius: 3vh;
+    box-shadow: 0 1.4vh 0 color-mix(in srgb, var(--winner-accent, #ffd700) 40%, #000), 0 3vh 5vh rgba(0, 0, 0, 0.7);
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
+    grid-template-areas: "trofeo titulo" "trofeo mensaje" "premio premio" "maquina acreditado";
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.25fr) auto;
+    column-gap: 3.5vw;
+    row-gap: 2vh;
+    padding: 4vh 3.5vw 3.5vh !important;
+}
+body[data-v-ganador="tesoro"] #winnerModal .winner-inner::before {
+    inset: 1vh;
+    border: 0.3vh dashed rgba(255, 255, 255, 0.35);
+    border-radius: 1.8vh;
+}
+body[data-v-ganador="tesoro"] #winnerModal .winner-trophy {
+    content: url("../../img/ganador/cofre.svg");
+    max-width: 100%;
+    max-height: 100%;
+}
+body[data-v-ganador="tesoro"] #winnerModal .winner-message {
+    color: #ffe98a !important;
+}
+/* lingote de oro: trapecio dorado con el numero oscuro grabado */
+body[data-v-ganador="tesoro"] #winnerModal .winner-amount {
+    background: linear-gradient(180deg, #fff6c2 0%, #ffd24f 22%, #c8861a 55%, #ffe98a 72%, #8f4a08 100%) !important;
+    clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
+    border: none !important;
+    box-shadow: none !important;
+}
+body[data-v-ganador="tesoro"] #winnerModal #winnerAmountText {
+    fill: #3a1d00;
+    stroke: #fff3a3;
+    stroke-width: 1.5;
+}
+body[data-v-ganador="tesoro"] #winnerModal #winnerMachineText {
+    font-size: min(2.8vh, 1.8vw) !important;
+    color: #fff !important;
+    border-radius: 6vh;
+    background: #07291a;
+    border: 0.6vh dashed var(--winner-accent, #ffd700);
+}
+body[data-v-ganador="tesoro"] #winnerModal .winner-acreditado {
+    width: auto;
+    max-width: calc(100% - var(--libre-contador));
+    min-height: 6.4vh;
+    padding: 0.6vh 2.6vh;
+    border-radius: 6vh;
+    font-size: min(2.5vh, 1.5vw);
+    background: rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
+   GRAND/MAJOR con auto o moto: no hay monto, asi que la fila del
+   premio toma mas alto y el vehiculo se ve mas grande (sin dejar
+   franjas vacias a los costados)
+   ============================================================ */
+body #winnerModal .winner-inner:has(.winner-vehicle-center.show) {
+    grid-template-rows: minmax(0, 11.5fr) minmax(0, 20fr) auto minmax(0, 35.5fr) auto auto;
+}
+body[data-v-ganador="marquesina"] #winnerModal .winner-inner:has(.winner-vehicle-center.show) {
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 2.1fr) auto;
+}
+body[data-v-ganador="deco"] #winnerModal .winner-inner:has(.winner-vehicle-center.show) {
+    grid-template-rows: minmax(0, 12.5fr) minmax(0, 25fr) auto minmax(0, 41.5fr) auto;
+}
+body[data-v-ganador="tesoro"] #winnerModal .winner-inner:has(.winner-vehicle-center.show) {
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 2fr) auto;
+}
+

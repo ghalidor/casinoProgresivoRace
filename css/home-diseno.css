@@ -1,0 +1,607 @@
+/* ============================================================
+   VISTA HOME - diseno "riel de oro"
+   Se carga despues de principal.css y solo afecta a la hoja HOME:
+   cards con bisel y canto 3D en su color, fondo de LEDs, titulos metalicos,
+   odometro en bloques 3D, rombo central, estado sobre el borde y riel de oro.
+   ============================================================ */
+.home-sheet {
+    --t: min(8vh, 4.6vw); /* tamano base de los titulos (los 4 iguales) */
+    padding: 0;
+    background:
+        linear-gradient(rgba(255, 170, 0, 0.07) 1px, transparent 1px) 0 0 / 3.4vh 3.4vh,
+        linear-gradient(90deg, rgba(255, 170, 0, 0.07) 1px, transparent 1px) 0 0 / 3.4vh 3.4vh,
+        radial-gradient(ellipse at 50% 45%, #1c0a12 0%, #070206 75%) #070206;
+}
+
+/* ---------- riel de oro ---------- */
+.home-sheet .home-riel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+.home-riel .ola { animation: homeRielOla 6s linear infinite; }
+.home-riel .ola2 { animation: homeRielOla 6s linear infinite; animation-delay: -3s; }
+@keyframes homeRielOla { to { stroke-dashoffset: -1; } }
+.home-riel .gema { animation: homeLatido 1.5s ease-in-out infinite; }
+/* la capa animada del riel va en su propia capa de composicion */
+.home-sheet .home-riel-anim { will-change: transform; }
+@keyframes homeLatido { 50% { opacity: 0.3; } }
+
+/* ---------- letrero: marco dorado, LEDs y canto 3D ---------- */
+.home-sheet .home-marquee-title {
+    top: 3.6vh;
+    width: 62vw;
+    height: 13vh;
+    padding: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0.4vh solid #ffd24f;
+    border-radius: 1.6vh;
+    background: linear-gradient(180deg, #0a0500 0%, #1a0e02 50%, #0a0500 100%);
+    box-shadow:
+        0 0 0 0.25vh #6f3700 inset, 0 0 0 0.55vh #ffd24f inset,
+        0 0.12vh 0 #fff1a8, 0 0.25vh 0 #e8a91c, 0 0.4vh 0 #d39516, 0 0.55vh 0 #bd8112, 0 0.7vh 0 #a66d0e,
+        0 0.85vh 0 #8f5a0b, 0 1vh 0 #7a4a08, 0 1.15vh 0 #653c06, 0 1.3vh 0 #4f2e04, 0 1.4vh 0 #ffd24f,
+        0 2.2vh 2vh rgba(0, 0, 0, 0.85), 0 0 2.4vh rgba(255, 200, 40, 0.5), 0 0 5vh rgba(255, 170, 0, 0.3);
+}
+.home-sheet .home-marquee-title h1 {
+    position: relative;
+    z-index: 1;
+    font-size: 8.4vh;
+    letter-spacing: 0.1em;
+    transform: skewX(-6deg);
+    -webkit-text-stroke: 0.015em #6f3700;
+    filter: drop-shadow(0 0.03em 0 #7a4c06) drop-shadow(0 0.07em 0.05em rgba(0, 0, 0, 0.8)) drop-shadow(0 0 0.25em rgba(255, 176, 0, 0.5));
+}
+.home-sheet .home-marquee-title::before,
+.home-sheet .home-marquee-title::after {
+    content: "";
+    position: absolute;
+    inset: 0.7vh;
+    border-radius: 1vh;
+    pointer-events: none;
+}
+.home-sheet .home-marquee-title::before {
+    background: radial-gradient(circle, rgba(255, 194, 26, 0.13) 30%, transparent 36%) 0 0 / 1.5vh 1.5vh;
+}
+.home-sheet .home-marquee-title::after {
+    background: radial-gradient(circle, rgba(255, 210, 79, 0.5) 30%, transparent 40%) 0 0 / 1.5vh 1.5vh;
+    opacity: 0.75;
+    -webkit-mask: linear-gradient(100deg, transparent 35%, #000 47%, #000 53%, transparent 65%) 0 0 / 300% 100%;
+    animation: homeOlaLed 3.5s linear infinite;
+    animation-delay: -0.9s;
+}
+@keyframes homeOlaLed {
+    from { -webkit-mask-position: 100% 0; }
+    to { -webkit-mask-position: 0 0; }
+}
+
+/* ---------- cards: bisel en su color, canto 3D hacia el centro, fondo de LEDs ---------- */
+.home-sheet .home-pot.home-grand,
+.home-sheet .home-pot.home-major,
+.home-sheet .home-pot.home-minor,
+.home-sheet .home-pot.home-mini {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
+    container-type: size;
+    filter: none;
+    border-radius: 1.6vh;
+    border: 0.45vh solid transparent;
+    background:
+        radial-gradient(ellipse 65% 80% at 72% 60%, color-mix(in srgb, var(--pot-c) 30%, transparent) 0%, transparent 70%) padding-box,
+        linear-gradient(135deg, color-mix(in srgb, var(--pot-c) 22%, #0a0206) 0%, #070206 60%) padding-box,
+        linear-gradient(135deg, color-mix(in srgb, var(--pot-c) 30%, #fff) 0%, var(--pot-c) 25%, color-mix(in srgb, var(--pot-c) 45%, #000) 55%, var(--pot-c) 80%, color-mix(in srgb, var(--pot-c) 40%, #fff) 100%) border-box;
+    box-shadow: 
+        /* canto 3D: capas de su color cada vez mas oscuras */
+        calc(var(--sx) * 0.09vh) calc(var(--sy) * 0.09vh) 0 color-mix(in srgb, var(--pot-c) 85%, #fff),
+        calc(var(--sx) * 0.18vh) calc(var(--sy) * 0.18vh) 0 color-mix(in srgb, var(--pot-c) 66%, #000),
+        calc(var(--sx) * 0.27vh) calc(var(--sy) * 0.27vh) 0 color-mix(in srgb, var(--pot-c) 62%, #000),
+        calc(var(--sx) * 0.36vh) calc(var(--sy) * 0.36vh) 0 color-mix(in srgb, var(--pot-c) 59%, #000),
+        calc(var(--sx) * 0.45vh) calc(var(--sy) * 0.45vh) 0 color-mix(in srgb, var(--pot-c) 56%, #000),
+        calc(var(--sx) * 0.54vh) calc(var(--sy) * 0.54vh) 0 color-mix(in srgb, var(--pot-c) 52%, #000),
+        calc(var(--sx) * 0.63vh) calc(var(--sy) * 0.63vh) 0 color-mix(in srgb, var(--pot-c) 49%, #000),
+        calc(var(--sx) * 0.72vh) calc(var(--sy) * 0.72vh) 0 color-mix(in srgb, var(--pot-c) 46%, #000),
+        calc(var(--sx) * 0.81vh) calc(var(--sy) * 0.81vh) 0 color-mix(in srgb, var(--pot-c) 43%, #000),
+        calc(var(--sx) * 0.90vh) calc(var(--sy) * 0.90vh) 0 color-mix(in srgb, var(--pot-c) 40%, #000),
+        calc(var(--sx) * 0.99vh) calc(var(--sy) * 0.99vh) 0 color-mix(in srgb, var(--pot-c) 36%, #000),
+        calc(var(--sx) * 1.08vh) calc(var(--sy) * 1.08vh) 0 color-mix(in srgb, var(--pot-c) 33%, #000),
+        calc(var(--sx) * 1.17vh) calc(var(--sy) * 1.17vh) 0 color-mix(in srgb, var(--pot-c) 30%, #000),
+        calc(var(--sx) * 1.26vh) calc(var(--sy) * 1.26vh) 0 color-mix(in srgb, var(--pot-c) 26%, #000),
+        calc(var(--sx) * 1.35vh) calc(var(--sy) * 1.35vh) 0 color-mix(in srgb, var(--pot-c) 23%, #000),
+        calc(var(--sx) * 1.44vh) calc(var(--sy) * 1.44vh) 0 color-mix(in srgb, var(--pot-c) 20%, #000),
+        calc(var(--sx) * 1.6vh) calc(var(--sy) * 1.6vh) 2vh rgba(0, 0, 0, 0.85),
+        0 0 2.4vh color-mix(in srgb, var(--pot-c) 40%, transparent),
+        inset 0 0.35vh 0 rgba(255, 255, 255, 0.12),
+        inset 0 0 0 0.25vh color-mix(in srgb, var(--pot-c) 30%, #000),
+        inset 0 0 3vh rgba(0, 0, 0, 0.7);
+}
+/* direccion del canto: cada card se hunde hacia el rombo central */
+.home-sheet .home-pot.home-grand { --sx: 1; --sy: 1; }
+.home-sheet .home-pot.home-major { --sx: -1; --sy: 1; }
+.home-sheet .home-pot.home-minor { --sx: 1; --sy: -1; }
+.home-sheet .home-pot.home-mini { --sx: -1; --sy: -1; }
+
+/* LEDs de su color con una ola de luz que los enciende */
+.home-sheet .home-pot::before,
+.home-sheet .home-pot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+.home-sheet .home-pot::before {
+    background: radial-gradient(circle, color-mix(in srgb, var(--pot-c) 11%, transparent) 30%, transparent 36%) 0 0 / 1.5vh 1.5vh;
+}
+.home-sheet .home-pot::after {
+    background: radial-gradient(circle, color-mix(in srgb, var(--pot-c) 45%, transparent) 30%, transparent 40%) 0 0 / 1.5vh 1.5vh;
+    opacity: 0.7;
+    -webkit-mask: linear-gradient(100deg, transparent 35%, #000 47%, #000 53%, transparent 65%) 0 0 / 300% 100%;
+    animation: homeOlaLed 3.5s linear infinite;
+}
+.home-sheet .home-pot.home-major::after,
+.home-sheet .home-pot.home-mini::after {
+    animation-delay: -1.75s;
+}
+
+/* ---------- textos ---------- */
+.home-sheet .home-pot-label,
+.home-sheet .home-pot-mini-header {
+    position: absolute;
+    left: 4cqw;
+    top: 9cqh;
+    padding: 0;
+    z-index: 2;
+}
+.home-sheet .home-pot-mini-header {
+    right: 4cqw;
+    width: auto;
+}
+.home-sheet .home-pot-title,
+.home-sheet .home-pot.home-major .home-pot-title,
+.home-sheet .home-pot.home-grand .home-pot-title {
+    font-size: var(--t);
+    letter-spacing: 0.04em;
+    transform: skewX(-8deg);
+    transform-origin: left center;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.018em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0.03em 0 color-mix(in srgb, var(--pot-c) 40%, #000)) drop-shadow(0 0.05em 0 color-mix(in srgb, var(--pot-c) 25%, #000))
+        drop-shadow(0 0.08em 0.05em rgba(0, 0, 0, 0.85)) drop-shadow(0 0 0.3em color-mix(in srgb, var(--pot-c) 75%, transparent));
+}
+.home-sheet .home-pot-subtitle {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 700;
+    font-size: calc(var(--t) * 0.3);
+    letter-spacing: 0.16em;
+    color: #fff;
+    margin-top: 1vh;
+    text-shadow: 0 0.08em 0 #000, 0 0 0.5em color-mix(in srgb, var(--pot-c) 70%, transparent);
+}
+.home-sheet .home-odometer-prefix-top,
+.home-sheet .home-pot.sprite-off .home-pot-altprefix {
+    /* mismo acabado metalico que el titulo, en el color de la card */
+    font-size: calc(var(--t) * 0.95);
+    letter-spacing: 0.02em;
+    transform: skewX(-8deg);
+    transform-origin: right center;
+    text-shadow: none;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.018em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0.03em 0 color-mix(in srgb, var(--pot-c) 40%, #000)) drop-shadow(0 0.05em 0 color-mix(in srgb, var(--pot-c) 25%, #000))
+        drop-shadow(0 0.08em 0.05em rgba(0, 0, 0, 0.85)) drop-shadow(0 0 0.3em color-mix(in srgb, var(--pot-c) 75%, transparent));
+}
+.home-sheet .home-pot.sprite-off .home-pot-altprefix {
+    top: 9cqh;
+    right: 4cqw;
+}
+
+/* ---------- vehiculo: entero dentro de la card ---------- */
+.home-sheet .home-pot.home-major .home-pot-right-stack,
+.home-sheet .home-pot.home-grand .home-pot-right-stack {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    display: block;
+}
+.home-sheet .home-pot-vehicle-row {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.home-sheet .home-pot.home-grand .home-pot-vehicle-box,
+.home-sheet .home-pot.home-major .home-pot-vehicle-box {
+    /* alto de la card, pero sin pasar del 58% de su ancho: en cards angostas (4:3, destacado)
+       el vehiculo no se corta ni se mete sobre el titulo */
+    --sprite-size: min(122cqh, 58cqw);
+    position: absolute;
+    right: 4cqw;
+    top: 50%;
+    margin: 0;
+    transform: translateY(-49%);
+}
+.home-sheet .home-pot-vehicle-box::before,
+.home-sheet .home-pot-vehicle-box::after {
+    display: none;
+}
+.home-sheet .home-pot.home-grand .home-pot-sprite,
+.home-sheet .home-pot.home-major .home-pot-sprite {
+    transform: none;
+    filter: drop-shadow(0 2vh 2vh rgba(0, 0, 0, 0.8));
+}
+
+/* ---------- odometro: casillas negras en bloque 3D, numero de oro metalico ---------- */
+.home-sheet .home-pot.home-mini .home-odometer,
+.home-sheet .home-pot.home-minor .home-odometer,
+.home-sheet .home-pot.sprite-off .home-pot-altodo {
+    position: absolute;
+    left: 4cqw;
+    right: 4cqw;
+    top: calc(9cqh + var(--t) * 1.75);
+    bottom: 10cqh;
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: calc(var(--dw, 40px) * 0.06);
+    transform: none;
+    z-index: 2;
+}
+.home-sheet .home-digit {
+    width: var(--dw, 40px);
+    height: calc(var(--dw, 40px) * 1.1);
+    font-size: calc(var(--dw, 40px) * 0.77);
+    flex: 0 0 auto;
+    border: none;
+    border-radius: 0.9vh;
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+    /* casilla oscura con profundidad: hundida en la card (sombra interior arriba y a los lados),
+       con un borde fino del color del pozo y un canto 3D que la levanta */
+    background: linear-gradient(180deg, #000 0%, #070709 55%, #101014 100%);
+    box-shadow:
+        inset 0 1.2vh 1.4vh rgba(0, 0, 0, 0.95), inset 0.5vh 0 0.8vh rgba(0, 0, 0, 0.6), inset -0.5vh 0 0.8vh rgba(0, 0, 0, 0.6),
+        inset 0 -0.15vh 0 rgba(255, 255, 255, 0.08),
+        0 0 0 0.15vh color-mix(in srgb, var(--pot-c) 60%, #000), 0 0 0 0.35vh #000,
+        0 0.35vh 0 0.35vh color-mix(in srgb, var(--pot-c) 28%, #000), 0 0.7vh 0 0.35vh color-mix(in srgb, var(--pot-c) 16%, #000),
+        0 1.05vh 0 0.35vh #000, 0 2vh 1.6vh rgba(0, 0, 0, 0.9);
+}
+.home-sheet .home-digit .home-digit-n {
+    /* numero con el mismo acabado metalico del titulo de su card */
+    line-height: 1;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.018em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* solo un canto fino pegado al numero, sin resplandor ni sombra difusa */
+    filter: drop-shadow(0 0.025em 0 color-mix(in srgb, var(--pot-c) 35%, #000));
+    font-size: 1.08em;
+}
+.home-sheet .home-digit.comma {
+    width: calc(var(--dw, 40px) * 0.3);
+    background: transparent;
+    box-shadow: none;
+    align-items: flex-end;
+    color: #ffd700;
+}
+.home-sheet .home-digit.comma .home-digit-n {
+    -webkit-text-fill-color: color-mix(in srgb, var(--pot-c) 70%, #fff);
+    background: none;
+    filter: none;
+    text-shadow: 0 0.04em 0 color-mix(in srgb, var(--pot-c) 55%, #000), 0 0.08em 0 color-mix(in srgb, var(--pot-c) 25%, #000), 0 0 0.3em color-mix(in srgb, var(--pot-c) 60%, transparent);
+}
+.home-sheet .home-digit.home-digit-hidden {
+    display: none;
+}
+
+/* ---------- rombo dorado en el cruce ---------- */
+.home-sheet .home-rombo {
+    position: absolute;
+    z-index: 7;
+    width: 9vh;
+    height: 9vh;
+    translate: -50% -50%;
+    rotate: 45deg;
+    border-radius: 1vh;
+    background: linear-gradient(135deg, #fff3a3, #ffd24f 30%, #8f4a08 70%, #ffd24f);
+    box-shadow: 0 0 0 0.6vh #070206, 0 0 2.5vh rgba(255, 200, 40, 0.7), inset 0 0 0 0.5vh #3a1d00;
+}
+.home-sheet .home-rombo::after {
+    content: "";
+    position: absolute;
+    inset: 1.6vh;
+    border-radius: 0.5vh;
+    background: radial-gradient(circle, #fff 0%, #ffcc33 30%, #b35d00 100%);
+    animation: homeLatido 1.5s infinite;
+}
+
+/* ---------- POZO ACTIVO (encima del borde) y EN JUEGO (placa sobre la linea) ---------- */
+.home-sheet .home-estado {
+    position: absolute;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    translate: 0 -50%;
+    font-size: calc(var(--t) * 0.24);
+    white-space: nowrap;
+}
+.home-sheet .home-estado .home-pot-tag {
+    translate: 0 -0.95em;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 700;
+    font-size: 1em;
+    letter-spacing: 0.1em;
+    color: #fff;
+    text-shadow: 0 0 0.15em #070206, 0 0 0.3em #070206, 0 0 0.5em #070206, 0 0 0.9em color-mix(in srgb, var(--pot-c) 70%, transparent);
+}
+.home-sheet .home-estado .home-pot-status {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 900;
+    font-size: 1.3em;
+    letter-spacing: 0.06em;
+    padding: 0.15em 0.8em;
+    gap: 0.45em;
+    border-radius: 0.2em;
+    transform: skewX(-8deg);
+    background: linear-gradient(180deg, #23101a, #0a0306);
+    border: 0.12em solid var(--pot-c);
+    box-shadow: inset 0 0 0.6em color-mix(in srgb, var(--pot-c) 35%, transparent), 0 0 0.8em color-mix(in srgb, var(--pot-c) 60%, transparent);
+}
+.home-sheet .home-estado .home-pot-status::before {
+    width: 0.4em;
+    height: 0.4em;
+}
+.home-sheet .home-estado-txt {
+    color: transparent;
+    -webkit-text-stroke: 0.02em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0.05em 0 color-mix(in srgb, var(--pot-c) 35%, #000)) drop-shadow(0 0 0.3em color-mix(in srgb, var(--pot-c) 70%, transparent));
+}
+
+/* ---------- SIGUIENTE VIDEO: placa dorada abajo a la derecha (HOME y hojas de los pozos) ---------- */
+body .next-promo-bar {
+    left: auto;
+    right: 6vw;
+    bottom: 0.3vh;
+    width: max-content;
+    height: auto;
+    padding: 0.5vh 1.2vw;
+    gap: 1vw;
+    border-radius: 1vh;
+    background: linear-gradient(180deg, #1a0e02, #070206);
+    border: 0.25vh solid #ffd24f;
+    box-shadow: 0 0 1.5vh rgba(255, 200, 40, 0.5), 0 0.4vh 0.4vh rgba(0, 0, 0, 0.8);
+    font-family: "Orbitron", sans-serif;
+}
+body .next-promo-bar-track {
+    flex: 0 0 24vw;
+    width: 24vw;
+    height: 0.9vh;
+    align-self: center;
+    margin: 0;
+}
+body:has(.sheet.home-sheet.active) .next-promo-text {
+    flex: 0 0 auto;
+    font-size: 1.8vh;
+    min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-sheet *,
+    .home-sheet::before,
+    .home-sheet::after {
+        animation: none !important;
+    }
+}
+
+/* ---------- foco por turnos (3 estilos para elegir: data-foco-modo en <body>) ---------- */
+.home-sheet .home-pot,
+.home-sheet .home-estado {
+    transition: transform 1.2s cubic-bezier(0.34, 1.3, 0.5, 1), filter 1s ease, opacity 1s ease;
+}
+/* la card en foco crece desde su centro, sobre las demas */
+.home-sheet .home-pot.en-foco,
+.home-sheet .home-estado.en-foco {
+    z-index: 6;
+}
+
+/* A - LATIDO: la card en foco late (crece y vuelve, lento); las otras quedan igual */
+body[data-foco-modo="a"] .home-sheet .home-pot.en-foco {
+    animation: homeFocoLatido 2.4s ease-in-out infinite;
+}
+@keyframes homeFocoLatido {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.045); }
+}
+/* brillo y halo del latido: capas fijas que solo cambian de opacidad (la GPU no redibuja la card) */
+body[data-foco-modo="a"] .home-sheet .home-pot.en-foco {
+    will-change: transform;
+}
+.home-sheet .home-brillo {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.09);
+    opacity: 0;
+}
+.home-sheet .home-halo {
+    position: absolute;
+    z-index: 1;
+    border-radius: 1.6vh;
+    pointer-events: none;
+    box-shadow: 0 0 2.6vh 0.6vh color-mix(in srgb, var(--pot-c) 80%, transparent);
+    opacity: 0;
+}
+body[data-foco-modo="a"] .home-sheet .home-pot.en-foco .home-brillo,
+body[data-foco-modo="a"] .home-sheet .home-halo.en-foco {
+    animation: homeFocoBrillo 2.4s ease-in-out infinite;
+}
+body[data-foco-modo="a"] .home-sheet .home-halo.en-foco {
+    animation-name: homeFocoHalo;
+}
+@keyframes homeFocoBrillo {
+    50% { opacity: 1; }
+}
+@keyframes homeFocoHalo {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.045); }
+}
+
+/* B - AL FRENTE: la card en foco se levanta hacia el espectador (crece y proyecta sombra),
+   las otras se van hacia atras (se achican un poco desde su centro y se oscurecen) */
+body[data-foco-modo="b"] .home-sheet .home-pot.en-foco {
+    transform: scale(1.05);
+    filter: brightness(1.15) drop-shadow(0 2.5vh 2.5vh rgba(0, 0, 0, 0.9)) drop-shadow(0 0 2.4vh color-mix(in srgb, var(--pot-c) 75%, transparent));
+}
+body[data-foco-modo="b"] .home-sheet .home-estado.en-foco {
+    transform: translate(-2%, 0) scale(1.08);
+}
+body[data-foco-modo="b"] .home-sheet.con-foco .home-pot:not(.en-foco) {
+    transform: scale(0.965);
+    filter: brightness(0.6) saturate(0.7);
+}
+body[data-foco-modo="b"] .home-sheet.con-foco .home-estado:not(.en-foco) {
+    opacity: 0.7;
+}
+
+/* C - REFLECTOR: nadie cambia de tamano; la card en foco se ilumina con un destello que la
+   barre y su borde brilla fuerte; las otras quedan en penumbra */
+body[data-foco-modo="c"] .home-sheet .home-pot.en-foco {
+    filter: brightness(1.2) drop-shadow(0 0 3vh color-mix(in srgb, var(--pot-c) 90%, transparent));
+}
+body[data-foco-modo="c"] .home-sheet .home-pot .home-destello {
+    display: block;
+}
+body[data-foco-modo="c"] .home-sheet.con-foco .home-pot:not(.en-foco) {
+    filter: brightness(0.5) saturate(0.6);
+}
+.home-sheet .home-destello {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.28) 48%, color-mix(in srgb, var(--pot-c) 45%, transparent) 50%, rgba(255, 255, 255, 0.28) 52%, transparent 60%) 0 0 / 300% 100% no-repeat;
+    background-position: 100% 0;
+}
+.home-sheet .home-pot.en-foco .home-destello {
+    animation: homeDestello 2.4s ease-in-out infinite;
+}
+@keyframes homeDestello {
+    0% { background-position: 100% 0; }
+    60%, 100% { background-position: 0% 0; }
+}
+
+/* ---------- rendimiento ---------- */
+/* la capa con la barra neon y el vehiculo se compone aparte */
+.shield-anim {
+    pointer-events: none;
+    will-change: transform;
+}
+/* en el HOME el escudo queda tapado por la hoja: no dibujarlo (los paths siguen midiendose) */
+body:has(.sheet.home-sheet.active) .shield-svg {
+    visibility: hidden;
+}
+/* las hojas que esperan su turno (invisibles, opacidad 0) no corren animaciones ni se dibujan;
+   al entrar (se quita enter-from-back) vuelven a animarse con su transicion normal */
+.sheet.enter-from-back,
+.sheet.enter-from-back * {
+    animation-play-state: paused !important;
+    visibility: hidden !important;
+}
+
+/* ---------- ola de luz sobre LEDs, sin redibujar ----------
+   Antes la ola movia una mascara (mask-position) y obligaba a redibujar toda la card en cada cuadro.
+   Ahora una banda con la mascara fija se desplaza (transform) y los puntos de adentro se desplazan
+   al reves, asi quedan quietos en pantalla: la GPU solo mueve capas, no vuelve a pintar.
+   Se arma con <i class="ola-led"><i class="ola-banda"><i class="ola-puntos"></i></i></i> (olaLed() en js/home-diseno.js)
+   y se configura con variables en el contenedor. */
+.ola-led {
+    position: absolute;
+    inset: var(--ola-inset, 0);
+    border-radius: var(--ola-radio, 0);
+    z-index: var(--ola-z, 0);
+    overflow: hidden;
+    pointer-events: none;
+    opacity: var(--ola-op, 0.7);
+}
+.ola-banda,
+.ola-puntos {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    animation-duration: var(--ola-dur, 3.5s);
+    animation-delay: var(--ola-retraso, 0s);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+}
+.ola-banda {
+    width: 90%;
+    overflow: hidden;
+    -webkit-mask: linear-gradient(100deg, transparent 0%, #000 40%, #000 60%, transparent 100%);
+    animation-name: olaBanda;
+}
+.ola-puntos {
+    width: 111.12%; /* = ancho del contenedor */
+    background: radial-gradient(circle, var(--ola-c) 30%, transparent 40%) 0 0 / var(--ola-tam, 1.5vh) var(--ola-tam, 1.5vh);
+    animation-name: olaPuntos;
+}
+@keyframes olaBanda {
+    from { transform: translateX(-105.6%); }
+    to { transform: translateX(116.7%); }
+}
+@keyframes olaPuntos {
+    from { transform: translateX(95%); }
+    to { transform: translateX(-105%); }
+}
+/* cards del HOME */
+.home-sheet .home-pot {
+    --ola-c: color-mix(in srgb, var(--pot-c) 45%, transparent);
+    --ola-tam: 1.5vh;
+    --ola-op: 0.7;
+    --ola-z: -1;
+}
+.home-sheet .home-pot.home-major,
+.home-sheet .home-pot.home-mini {
+    --ola-retraso: -1.75s;
+}
+.home-sheet .home-pot::after {
+    display: none;
+}
+/* letrero del HOME */
+.home-sheet .home-marquee-title {
+    --ola-c: rgba(255, 210, 79, 0.5);
+    --ola-tam: 1.5vh;
+    --ola-op: 0.75;
+    --ola-inset: 0.7vh;
+    --ola-radio: 1vh;
+    --ola-retraso: -0.9s;
+}
+.home-sheet .home-marquee-title::after {
+    display: none;
+}

@@ -1,0 +1,477 @@
+/* ============================================================
+   HOJAS DE LOS POZOS (MINI, MINOR, MAJOR, GRAND)
+   - El titulo (mismo tamano del original) va dentro de un letrero del color del
+     pozo, arriba al centro. El camino neon del escudo pasa por su borde superior
+     (la forma la calcula buildShield a partir de este letrero).
+   - El odometro y su contenedor con la luz que recorre el borde no cambian.
+   - MAJOR/GRAND con vehiculo: el letrero va encima (absoluto) y el vehiculo con sus
+     paneles ocupa la hoja como antes; en modo efectivo se comportan igual que MINI/MINOR.
+   ============================================================ */
+.sheet[data-id="mini"],
+.sheet[data-id="minor"],
+.sheet[data-id="major"].sprite-off,
+.sheet[data-id="grand"].sprite-off {
+    justify-content: space-between;
+    /* el borde superior del letrero cae sobre el tramo elevado del camino (24.5 de 620) */
+    padding-top: calc(100cqh * 24.5 / 620);
+    padding-bottom: 8cqh;
+}
+
+.sheet-letrero {
+    position: relative;
+    padding: 1.6cqh 4cqw 2.2cqh;
+    text-align: center;
+    border-radius: 2.2cqh;
+    border: 0.45cqh solid var(--pot-c);
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--pot-c) 14%, transparent) 30%, transparent 36%) 0 0 / 1.5cqh 1.5cqh,
+        linear-gradient(180deg, #120408, #070206);
+    box-shadow:
+        inset 0 0 0 0.3cqh #070206,
+        inset 0 0 0 0.6cqh color-mix(in srgb, var(--pot-c) 50%, #000),
+        0 0.6cqh 0 color-mix(in srgb, var(--pot-c) 45%, #000),
+        0 1.2cqh 0 color-mix(in srgb, var(--pot-c) 25%, #000),
+        0 2cqh 2cqh rgba(0, 0, 0, 0.85),
+        0 0 3cqh color-mix(in srgb, var(--pot-c) 50%, transparent);
+}
+/* ola de luz sobre los LEDs del letrero */
+.sheet-letrero::after {
+    content: "";
+    position: absolute;
+    inset: 0.6cqh;
+    border-radius: 1.6cqh;
+    pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--pot-c) 45%, transparent) 30%, transparent 40%) 0 0 / 1.5cqh 1.5cqh;
+    opacity: 0.6;
+    -webkit-mask: linear-gradient(100deg, transparent 35%, #000 47%, #000 53%, transparent 65%) 0 0 / 300% 100%;
+    animation: hojaOlaLed 3.5s linear infinite;
+}
+@keyframes hojaOlaLed {
+    from { -webkit-mask-position: 100% 0; }
+    to { -webkit-mask-position: 0 0; }
+}
+
+/* titulo: mismo tamano que el original, con el acabado metalico del HOME */
+.sheet-letrero .sheet-title {
+    position: relative;
+    z-index: 1;
+    -webkit-text-stroke: 0.012em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0.02em 0 color-mix(in srgb, var(--pot-c) 40%, #000)) drop-shadow(0 0.04em 0.03em rgba(0, 0, 0, 0.85)) drop-shadow(0 0 0.2em color-mix(in srgb, var(--pot-c) 70%, transparent));
+}
+.sheet-letrero .sheet-subtitle {
+    position: relative;
+    z-index: 1;
+}
+
+/* en pantallas anchas principal.css pone titulo y subtitulo en absoluto: dentro del letrero van en flujo */
+.sheet[data-id] .sheet-letrero .sheet-title,
+.sheet[data-id] .sheet-letrero .sheet-subtitle {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+}
+.sheet[data-id] .sheet-letrero .sheet-subtitle {
+    margin-top: 1.2cqh;
+    /* subtitulo legible dentro del letrero (blanco con brillo del color del pozo) */
+    color: #fff;
+    animation: none;
+    -webkit-text-stroke: 0;
+    text-shadow: 0 0.08em 0 #000, 0 0 0.6em color-mix(in srgb, var(--pot-c) 85%, transparent);
+}
+
+/* ---------- odometro: casillas en bloque 3D y numeros de oro con volumen ---------- */
+.sheet .reel-digit {
+    border: none;
+    border-radius: 1cqh;
+    overflow: hidden; /* el rodillo se recorta; la sombra exterior (bloque 3D) se sigue viendo */
+    /* casilla oscura con profundidad (igual al dashboard y al video): hundida, borde fino del color del pozo y canto 3D */
+    background: linear-gradient(180deg, #000 0%, #070709 55%, #101014 100%);
+    box-shadow:
+        inset 0 1.6cqh 1.8cqh rgba(0, 0, 0, 0.95), inset 0.7cqh 0 1cqh rgba(0, 0, 0, 0.6), inset -0.7cqh 0 1cqh rgba(0, 0, 0, 0.6),
+        inset 0 -0.2cqh 0 rgba(255, 255, 255, 0.08),
+        0 0 0 0.2cqh color-mix(in srgb, var(--pot-c) 60%, #000), 0 0 0 0.45cqh #000,
+        0 0.45cqh 0 0.45cqh color-mix(in srgb, var(--pot-c) 28%, #000), 0 0.9cqh 0 0.45cqh color-mix(in srgb, var(--pot-c) 16%, #000),
+        0 1.35cqh 0 0.45cqh #000, 0 2.6cqh 2cqh rgba(0, 0, 0, 0.9);
+}
+/* los rodillos siguen recortados dentro de la casilla */
+.sheet .reel-digit::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.75) 0%, transparent 22%, transparent 78%, rgba(0, 0, 0, 0.75) 100%);
+}
+.sheet .reel-digit::after {
+    display: none;
+}
+.sheet .reel-digit .reel-strip {
+    -webkit-text-stroke: 0;
+    text-shadow: none;
+    /* sin brillo ni sombra difusa: solo un canto fino pegado al numero */
+    filter: drop-shadow(0 0.025em 0 color-mix(in srgb, var(--pot-c) 35%, #000));
+}
+.sheet .reel-strip span {
+    color: transparent;
+    /* numero en el color de su pozo, con el acabado metalico del titulo */
+    -webkit-text-stroke: 0.015em color-mix(in srgb, var(--pot-c) 30%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 22%, color-mix(in srgb, var(--pot-c) 60%, #fff) 32%, color-mix(in srgb, var(--pot-c) 82%, #000) 44%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 50%, color-mix(in srgb, var(--pot-c) 70%, #fff) 57%, color-mix(in srgb, var(--pot-c) 78%, #000) 68%, color-mix(in srgb, var(--pot-c) 50%, #fff) 78%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.sheet .reel-sep {
+    color: color-mix(in srgb, var(--pot-c) 70%, #fff);
+    text-shadow: 0 0.025em 0 color-mix(in srgb, var(--pot-c) 35%, #000);
+}
+.sheet .reel-prefix {
+    transform: skewX(-8deg);
+    color: transparent;
+    -webkit-text-stroke: 0.018em color-mix(in srgb, var(--pot-c) 35%, #000);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0.03em 0 color-mix(in srgb, var(--pot-c) 40%, #000)) drop-shadow(0 0.06em 0.04em rgba(0, 0, 0, 0.85)) drop-shadow(0 0 0.3em color-mix(in srgb, var(--pot-c) 75%, transparent));
+}
+
+/* ---------- fondo animado: cada hoja trae su data-fondo (lo pone buildSheet) ---------- */
+.hoja-fondo {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+.sheet[data-fondo] .hoja-fondo {
+    display: block;
+}
+.hoja-fondo i {
+    position: absolute;
+    display: none;
+}
+
+/* 1 - LEDS: puntos de luz del color del pozo con una ola que los enciende (como las cards del HOME) */
+.sheet[data-fondo="1"] .hoja-fondo {
+    background: radial-gradient(circle, color-mix(in srgb, var(--pot-c) 12%, transparent) 30%, transparent 36%) 0 0 / 1.8cqh 1.8cqh;
+}
+.sheet[data-fondo="1"] .hoja-fondo i:first-child {
+    display: block;
+    inset: 0;
+    background: radial-gradient(circle, color-mix(in srgb, var(--pot-c) 50%, transparent) 30%, transparent 40%) 0 0 / 1.8cqh 1.8cqh;
+    opacity: 0.6;
+    -webkit-mask: linear-gradient(100deg, transparent 35%, #000 47%, #000 53%, transparent 65%) 0 0 / 300% 100%;
+    animation: hojaOlaLed 4s linear infinite;
+}
+
+/* 2 - RAYOS: abanico de rayos del color del pozo girando detras del odometro (jackpot) */
+.sheet[data-fondo="2"] .hoja-fondo i:first-child {
+    display: block;
+    left: 50%;
+    top: 55%;
+    width: 220cqh;
+    height: 220cqh;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: repeating-conic-gradient(color-mix(in srgb, var(--pot-c) 22%, transparent) 0deg 6deg, transparent 6deg 15deg);
+    -webkit-mask: radial-gradient(circle, #000 0%, transparent 40%);
+    animation: hojaGira 30s linear infinite;
+}
+@keyframes hojaGira {
+    to { rotate: 360deg; }
+}
+
+/* 3 - PISTA: piso en perspectiva con rejilla del color del pozo que avanza hacia el frente */
+.sheet[data-fondo="3"] .hoja-fondo i:first-child {
+    display: block;
+    left: -50%;
+    right: -50%;
+    bottom: 0;
+    height: 62%;
+    transform: perspective(70cqh) rotateX(52deg);
+    transform-origin: 50% 100%;
+    background:
+        linear-gradient(color-mix(in srgb, var(--pot-c) 75%, transparent) 0.35cqh, transparent 0.35cqh) 0 0 / 100% 6cqh,
+        linear-gradient(90deg, color-mix(in srgb, var(--pot-c) 75%, transparent) 0.35cqh, transparent 0.35cqh) 0 0 / 6cqh 100%;
+    -webkit-mask: linear-gradient(transparent 0%, #000 35%);
+    animation: hojaAvanza 0.8s linear infinite;
+}
+.sheet[data-fondo="3"] .hoja-fondo i:last-child {
+    display: block;
+    left: 0;
+    right: 0;
+    top: 52%;
+    height: 0.3cqh;
+    background: var(--pot-c);
+    box-shadow: 0 0 3cqh 0.6cqh var(--pot-c);
+    opacity: 0.55;
+}
+@keyframes hojaAvanza {
+    to { background-position: 0 6cqh, 0 0; }
+}
+
+/* 4 - VELOCIDAD: rafagas de luz del color del pozo que cruzan la pantalla como lineas de velocidad */
+.sheet[data-fondo="4"] .hoja-fondo {
+    background:
+        repeating-linear-gradient(0deg, transparent 0 3.4cqh, color-mix(in srgb, var(--pot-c) 7%, transparent) 3.4cqh 3.6cqh);
+}
+.sheet[data-fondo="4"] .hoja-fondo i {
+    display: block;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: repeating-linear-gradient(90deg, transparent 0 12cqw, var(--pot-c) 12cqw 20cqw, transparent 20cqw 34cqw) 0 0 / 34cqw 0.5cqh repeat-x,
+        repeating-linear-gradient(90deg, transparent 0 7cqw, color-mix(in srgb, var(--pot-c) 80%, transparent) 7cqw 11cqw, transparent 11cqw 22cqw) 0 40% / 22cqw 0.4cqh repeat-x,
+        repeating-linear-gradient(90deg, transparent 0 15cqw, color-mix(in srgb, #fff 35%, var(--pot-c)) 15cqw 18cqw, transparent 18cqw 40cqw) 0 80% / 40cqw 0.45cqh repeat-x;
+    filter: drop-shadow(0 0 1cqh var(--pot-c)) drop-shadow(0 0 2cqh var(--pot-c));
+    animation: hojaRafaga 1.1s linear infinite;
+}
+.sheet[data-fondo="4"] .hoja-fondo i:first-child { top: 8%; }
+.sheet[data-fondo="4"] .hoja-fondo i:last-child { bottom: 8%; animation-duration: 0.8s; }
+@keyframes hojaRafaga {
+    to { background-position: -34cqw 0, -22cqw 40%, -40cqw 80%; }
+}
+
+/* MAJOR/GRAND con vehiculo: el letrero arranca a la altura del tramo elevado del camino
+   (abajo deja un margen para que el pedestal no toque el borde) */
+.sheet[data-id="major"]:not(.sprite-off),
+.sheet[data-id="grand"]:not(.sprite-off) {
+    padding-top: calc(100cqh * 24.5 / 620);
+    padding-bottom: 10cqh;
+}
+/* en pantalla ancha el vehiculo y sus paneles ocupan toda la hoja (como el original):
+   el letrero va encima, centrado (sin transform para que buildShield mida bien su posicion) */
+@container shield (min-aspect-ratio: 1.4) {
+    .sheet[data-id="major"]:not(.sprite-off) .sheet-letrero,
+    .sheet[data-id="grand"]:not(.sprite-off) .sheet-letrero {
+        position: absolute;
+        top: calc(100cqh * 24.5 / 620);
+        left: 0;
+        right: 0;
+        width: fit-content;
+        margin: 0 auto;
+        z-index: 5;
+    }
+    .sheet[data-id="major"]:not(.sprite-off),
+    .sheet[data-id="grand"]:not(.sprite-off) {
+        padding-top: 9%;
+    }
+}
+
+/* ---------- sin la fila de telemetria (CALOR, GEAR, KM/H...): el odometro queda centrado en el espacio libre ---------- */
+.sheet[data-id] > .bottom-row {
+    display: none !important;
+}
+.sheet[data-id="mini"] > .amount-frame,
+.sheet[data-id="minor"] > .amount-frame,
+.sheet[data-id="major"].sprite-off > .amount-frame,
+.sheet[data-id="grand"].sprite-off > .amount-frame {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+/* ---------- placa bajo el odometro: "el pozo sigue creciendo" u "hora y fecha" (la elige js/hojas-diseno.js) ---------- */
+.hoja-extra {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    bottom: 10%;
+    z-index: 6;
+    pointer-events: none;
+    font-family: "Orbitron", sans-serif;
+}
+.hoja-placa {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 2.4cqw;
+}
+.sheet[data-placa="crece"] .hoja-placa[data-placa="crece"],
+.sheet[data-placa="hora"] .hoja-placa[data-placa="hora"] {
+    display: flex;
+    animation: hojaPlacaEntra 0.6s ease-out;
+}
+@keyframes hojaPlacaEntra {
+    from { opacity: 0; transform: translateY(2cqh); }
+}
+.hoja-marco {
+    padding: 1.4cqh 2.4cqw;
+    border-radius: 1.6cqh;
+    /* placa en el color de su pozo (marco, LEDs y canto) */
+    border: 0.4cqh solid var(--pot-c);
+    white-space: nowrap;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--pot-c) 14%, transparent) 30%, transparent 36%) 0 0 / 1.5cqh 1.5cqh,
+        linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 8%, #000), color-mix(in srgb, var(--pot-c) 16%, #000) 50%, color-mix(in srgb, var(--pot-c) 8%, #000));
+    box-shadow: 0 0 0 0.25cqh color-mix(in srgb, var(--pot-c) 35%, #000) inset, 0 0 0 0.55cqh var(--pot-c) inset,
+        0 0.6cqh 0 color-mix(in srgb, var(--pot-c) 40%, #000), 0 1.6cqh 1.6cqh rgba(0, 0, 0, 0.85), 0 0 2.4cqh color-mix(in srgb, var(--pot-c) 50%, transparent);
+}
+.hoja-marco small {
+    display: block;
+    font-weight: 700;
+    font-size: 1.8cqh;
+    letter-spacing: 0.25em;
+    color: rgba(255, 255, 255, 0.75);
+}
+.hoja-txt {
+    display: inline-block;
+    font-weight: 900;
+    font-size: 4.4cqh;
+    letter-spacing: 0.06em;
+    transform: skewX(-8deg);
+    /* texto con el acabado metalico del titulo, en el color de su pozo */
+    color: transparent;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--pot-c) 15%, #fff) 0%, color-mix(in srgb, var(--pot-c) 60%, #fff) 18%, color-mix(in srgb, var(--pot-c) 82%, #000) 36%,
+        color-mix(in srgb, var(--pot-c) 20%, #fff) 48%, color-mix(in srgb, var(--pot-c) 70%, #fff) 60%, color-mix(in srgb, var(--pot-c) 78%, #000) 80%, color-mix(in srgb, var(--pot-c) 50%, #fff) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-stroke: 0.015em color-mix(in srgb, var(--pot-c) 35%, #000);
+    filter: drop-shadow(0 0.025em 0 color-mix(in srgb, var(--pot-c) 35%, #000));
+}
+.hoja-flecha {
+    font-size: 6cqh;
+    color: var(--pot-c);
+    filter: drop-shadow(0 0 1cqh var(--pot-c));
+    animation: hojaFlechaSube 1s ease-in-out infinite;
+}
+@keyframes hojaFlechaSube {
+    50% { transform: translateY(-1.2cqh); }
+}
+/* con la placa abajo, el odometro se centra en el espacio que queda arriba */
+.sheet[data-id="mini"],
+.sheet[data-id="minor"],
+.sheet[data-id="major"].sprite-off,
+.sheet[data-id="grand"].sprite-off {
+    padding-bottom: 22cqh;
+}
+/* GRAND/MAJOR con vehiculo: sin placa abajo, el vehiculo queda solo en su pedestal */
+.sheet[data-id="major"]:not(.sprite-off) .hoja-extra,
+.sheet[data-id="grand"]:not(.sprite-off) .hoja-extra {
+    display: none;
+}
+
+/* ---------- GRAND/MAJOR con vehiculo: sin telemetria lateral (CALOR, FUEL, relojes, RPM/VELOC...)
+   para que no se monte sobre el letrero ni sobre el vehiculo; queda el vehiculo en su pedestal al centro ---------- */
+.sheet[data-id="major"]:not(.sprite-off) .vehicle-side-left,
+.sheet[data-id="major"]:not(.sprite-off) .vehicle-side-right,
+.sheet[data-id="grand"]:not(.sprite-off) .vehicle-side-left,
+.sheet[data-id="grand"]:not(.sprite-off) .vehicle-side-right,
+.sheet[data-id="major"]:not(.sprite-off) .cluster-gauges,
+.sheet[data-id="grand"]:not(.sprite-off) .cluster-gauges,
+.sheet[data-id="major"]:not(.sprite-off) .cluster-kpi-col,
+.sheet[data-id="grand"]:not(.sprite-off) .cluster-kpi-col {
+    visibility: hidden;
+}
+/* el vehiculo y su pedestal viven dentro de esos contenedores: se mantienen visibles */
+.sheet[data-id="major"]:not(.sprite-off) .sprite-wrapper,
+.sheet[data-id="grand"]:not(.sprite-off) .sprite-wrapper,
+.sheet[data-id="major"]:not(.sprite-off) .pedestal-3d,
+.sheet[data-id="grand"]:not(.sprite-off) .pedestal-3d,
+.sheet[data-id="major"]:not(.sprite-off) .sprite-wrapper *,
+.sheet[data-id="grand"]:not(.sprite-off) .sprite-wrapper *,
+.sheet[data-id="major"]:not(.sprite-off) .pedestal-3d *,
+.sheet[data-id="grand"]:not(.sprite-off) .pedestal-3d * {
+    visibility: visible;
+}
+
+/* ---------- contenedor del odometro (borde con la luz que lo recorre) en el color de su pozo ---------- */
+.sheet[data-id] .amount-frame {
+    border-image: linear-gradient(135deg, color-mix(in srgb, var(--pot-c) 40%, #fff) 0%, var(--pot-c) 25%, color-mix(in srgb, var(--pot-c) 50%, #000) 50%, var(--pot-c) 75%, color-mix(in srgb, var(--pot-c) 40%, #fff) 100%) 1;
+    box-shadow:
+        inset 0 0 40px color-mix(in srgb, var(--pot-c) 30%, transparent),
+        0 0 25px color-mix(in srgb, var(--pot-c) 55%, transparent),
+        inset 0 0 0 2px #000;
+}
+/* la luz que recorre el contenedor: el brillo se arma con 3 trazos (ancho tenue, medio y nucleo)
+   en vez de filtros borrosos, que obligaban a la GPU a recalcular todo el borde en cada cuadro */
+.sheet[data-id] .amount-frame-neon .neon-pulse {
+    stroke: color-mix(in srgb, var(--pot-c) 45%, #fff);
+    filter: none;
+}
+.sheet[data-id] .amount-frame-neon .neon-pulse-glow {
+    stroke: var(--pot-c);
+    stroke-width: 2.6cqw;
+    opacity: 0.16;
+    filter: none;
+}
+.amount-frame-neon .neon-pulse-mid {
+    width: 100%;
+    height: 100%;
+    stroke-width: 1.3cqw;
+    stroke-dasharray: 240 1880;
+    stroke-dashoffset: 0;
+    animation: neonTravel 3.5s linear infinite;
+    opacity: 0.4;
+}
+.sheet[data-id] .amount-frame-neon .neon-pulse-mid {
+    stroke: var(--pot-c);
+}
+
+/* ---------- odometro mas grande en las hojas de cada pozo (en modo efectivo) ----------
+   zoom escala casillas, rodillos y separadores juntos, asi el giro (pasos de 16cqh) sigue alineado */
+.sheet[data-id="mini"] > .amount-frame .reel-row,
+.sheet[data-id="minor"] > .amount-frame .reel-row,
+.sheet[data-id="major"].sprite-off > .amount-frame .reel-row,
+.sheet[data-id="grand"].sprite-off > .amount-frame .reel-row {
+    /* el tamano lo calcula ajustarOdometro() en js/hojas-diseno.js para llenar el ancho sin salirse */
+    zoom: var(--zoom-odo, 1.24);
+}
+/* el contenedor crece con el odometro: mas ancho (menos margen lateral en la hoja) y mas alto */
+.sheet[data-id="mini"],
+.sheet[data-id="minor"],
+.sheet[data-id="major"].sprite-off,
+.sheet[data-id="grand"].sprite-off {
+    padding-left: 4%;
+    padding-right: 4%;
+}
+.sheet[data-id="mini"] > .amount-frame,
+.sheet[data-id="minor"] > .amount-frame,
+.sheet[data-id="major"].sprite-off > .amount-frame,
+.sheet[data-id="grand"].sprite-off > .amount-frame {
+    padding: 4cqh 1.5cqw;
+    justify-content: center;
+}
+/* la luz del contenedor va en su propia capa: al moverse no obliga a redibujar el contenedor
+   (sus sombras difusas) ni el odometro que tiene debajo */
+.sheet[data-id] .amount-frame-neon {
+    will-change: transform;
+}
+
+/* olas de LEDs sin redibujar (ver .ola-led en css/home-diseno.css) */
+.sheet-letrero {
+    --ola-c: color-mix(in srgb, var(--pot-c) 45%, transparent);
+    --ola-tam: 1.5cqh;
+    --ola-op: 0.6;
+    --ola-inset: 0.6cqh;
+    --ola-radio: 1.6cqh;
+}
+.sheet-letrero::after {
+    display: none;
+}
+.sheet[data-fondo="1"] .hoja-fondo {
+    --ola-c: color-mix(in srgb, var(--pot-c) 50%, transparent);
+    --ola-tam: 1.8cqh;
+    --ola-op: 0.6;
+    --ola-dur: 4s;
+}
+.sheet[data-fondo="1"] .hoja-fondo i:first-child {
+    display: none;
+}
+.sheet[data-fondo="1"] .hoja-fondo i.ola-led,
+.hoja-fondo i.ola-banda,
+.hoja-fondo i.ola-puntos {
+    display: block;
+}
+/* los fondos animados de cada pozo van en su propia capa: al moverse no redibujan la hoja */
+.sheet[data-fondo] .hoja-fondo,
+.sheet[data-fondo] .hoja-fondo i {
+    will-change: transform;
+}
